@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>周末去哪儿 · 城市探索指南</title>
+  <meta name="description" content="面向大学生的周末城市探索指南：按偏好、天气、预算推荐本地活动，支持组队出发、打卡记录、攻略分享。" />
+  <meta name="theme-color" content="#5B5BF0" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">🧭 周末去哪儿</div>
+      <button class="city-btn" id="cityBtn">📍 <span id="cityName">上海</span> ▾</button>
+    </header>
+    <main id="view"></main>
+    <nav class="tabbar" id="tabbar">
+      <button data-tab="discover" class="active"><span>🔍</span>发现</button>
+      <button data-tab="team"><span>👥</span>组队</button>
+      <button data-tab="checkin"><span>📸</span>打卡</button>
+      <button data-tab="guide"><span>📖</span>攻略</button>
+      <button data-tab="me"><span>🙂</span>我的</button>
+    </nav>
+  </div>
+  <div class="sheet-mask" id="mask"></div>
+  <section class="sheet" id="sheet"></section>
+  <div class="toast" id="toast"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
