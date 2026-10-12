@@ -658,8 +658,12 @@ function genScriptEp(e,c,cfg,v=0){
 function newArt(key,label,kind,status='empty'){return{key,label,kind,status,data:null,versions:0,task:null,prev:null,notice:''}}
 function segRanges(P){const{c1,c2,c3}=P.cards;const N=P.params.episodes;const r=[{k:'c1',label:'一卡',from:1,to:c1},{k:'c2',label:'二卡',from:c1+1,to:c2},{k:'c3',label:'三卡',from:c2+1,to:c3}];if(c3<N)r.push({k:'end',label:'结局段',from:c3+1,to:N});return r}
 function outlineKeys(P){return P.outlineMode==='all'?['all']:P.outlineMode==='cards'?segRanges(P).map(r=>r.k):[]}
-function rangeOf(P,k){return k==='all'?{k,label:'全部',from:1,to:P.params.episodes}:segRanges(P).find(r=>r.k===k)}
-function nextSeg(P,k){if(P.outlineMode!=='cards')return null;const o=segRanges(P);const i=o.findIndex(r=>r.k===k);return o[i+1]||null}
+function rangeOf(P,k){if(k==='all'||k==='full')return{k,label:'全部',from:1,to:P.params.episodes};const m=/^r(\d+)_(\d+)$/.exec(k||'');if(m)return{k,label:`第 ${m[1]}–${m[2]} 集`,from:+m[1],to:+m[2]};return P.cards?segRanges(P).find(r=>r.k===k)||null:null}
+function rangeKey(P,from,to){if(from===1&&to===P.params.episodes)return'full';if(P.outlineMode==='cards'){const s=segRanges(P).find(r=>r.from===from&&r.to===to);if(s)return s.k}return`r${from}_${to}`}
+function epsInRange(P,k){const r=rangeOf(P,k);if(!r)return[];const seen=new Set();return outlineKeys(P).flatMap(x=>P.arts[x]?.data?.eps||[]).filter(e=>e.no>=r.from&&e.no<=r.to&&!e.placeholder&&!seen.has(e.no)&&seen.add(e.no)).sort((a,b)=>a.no-b.no)}
+function missingSegs(P,from,to){if(P.outlineMode==='all')return has(P.arts.all)?[]:['all'];if(P.outlineMode!=='cards')return[];return segRanges(P).filter(r=>r.from<=to&&r.to>=from&&!has(P.arts[r.k])).map(r=>r.k)}
+function overlaps(P,a,r){return[a.src,...(a.extra||[])].some(x=>{const q=rangeOf(P,x);return q&&q.from<=r.to&&q.to>=r.from})}
+function nextSeg(P,k){if(P.outlineMode!=='cards')return null;const o=segRanges(P);const i=o.findIndex(r=>r.k===k);return i<0?null:o[i+1]||null}
 function getArt(k,P=S.project){if(!P||!k)return null;if(k.startsWith('ia:'))return P.ia[k.slice(3)];if(k.startsWith('sc:'))return P.sc[k.slice(3)];return P.arts[k]}
 function cost(n){if(S.credits<n){toast(`积分不足：需要 ${n}，剩余 ${S.credits}`);return false}return true}
 function newProject(f,mode,gen){return{id:'p'+Date.now()+Math.random().toString(36).slice(2,5),mode,gen,params:f,stage:'draft',title:'',arts:{plan:newArt('plan','策划案','plan')},cards:null,outlineMode:null,parsed:null,benchDir:null,ia:{},sc:{},chat:[],versions:{},created:Date.now(),updated:Date.now(),cover:COVERS[S.projects.length%COVERS.length]}}
@@ -728,7 +732,7 @@ function afterReady(P,art){
   if(P.outlineMode==='cards'&&['c1','c2','c3'].includes(art.key)){const nx=nextSeg(P,art.key);if(nx&&P.arts[nx.k]&&P.arts[nx.k].status==='blocked')go('artifact',P.arts[nx.k],'empty')}
 }
 function markEdited(P,art){if(['ready','outdated','edited'].includes(art.status)){go('artifact',art,'edited');propagate(P,art.key)}P.updated=Date.now();save()}
-function downstream(P,key){if(key==='plan')return['all','c1','c2','c3','end'].filter(k=>P.arts[k]);return[...Object.keys(P.ia).filter(k=>P.ia[k].src===key).map(k=>'ia:'+k),...Object.keys(P.sc).filter(k=>P.sc[k].src===key).map(k=>'sc:'+k)]}
+function downstream(P,key){if(key==='plan')return['all','c1','c2','c3','end'].filter(k=>P.arts[k]);const r=rangeOf(P,key);if(!r)return[];return[...Object.values(P.ia),...Object.values(P.sc)].filter(a=>overlaps(P,a,r)).map(a=>a.key)}
 function propagate(P,key){
   for(const k of downstream(P,key)){const a=getArt(k,P);if(!a||!a.data)continue;
     if(a.status==='locked')a.notice=key==='plan'?'策划案有改动':'对应的集纲有改动';
@@ -753,27 +757,41 @@ function genOutline(P,k){
 function outlineDone(P,k){
   const r=rangeOf(P,k);const nx=nextSeg(P,k);const last=P.arts[k].data.eps.find(e=>e.no===r.to);
   if(nx&&S.auto&&P.arts[nx.k].status==='empty'){say(P,`${r.label}集纲写好了，按你的设置自动接着写${nx.label}。`);setTimeout(()=>{if(S.curId===P.id)S.sel=nx.k;genOutline(P,nx.k)},400);return}
-  if(nx){const acts=[['outline:'+nx.k,`继续写${nx.label}集纲`],['script:'+k,`先写${r.label}剧本`],['view:'+k,'我先看看']];
+  if(nx){const acts=[['outline:'+nx.k,`继续写${nx.label}集纲`],['scriptcur:'+k,`先写${r.label}剧本`],['view:'+k,'我先看看']];
     say(P,`${r.label}集纲写好了（第 ${r.from}–${r.to} 集）。卡点落在第 ${r.to} 集「${last?.title||''}」。`,acts);
     showNudge(P,`${r.label}集纲写好了`,`第 ${r.from}–${r.to} 集，第 ${r.to} 集「${last?.title||''}」是付费卡点。接下来写${nx.label}（第 ${nx.from}–${nx.to} 集）？`,acts,true)}
-  else{const acts=[['script:'+k,'生成短剧剧本'],['ia:'+k,'转互动剧本'],['view:'+k,'我先看看']];
+  else{const acts=[['script:'+k,'生成全文短剧剧本'],['ia:'+k,'转互动剧本'],['view:'+k,'我先看看']];
     say(P,P.outlineMode==='all'?'全部集纲写好了。接下来可以写成短剧剧本，也可以转成互动剧本。':'所有段的集纲都写好了。接下来可以写成短剧剧本，也可以转成互动剧本。',acts);
     showNudge(P,'集纲全部写好了','可以直接写成分场剧本，也可以转成带选项和多结局的互动剧本。',acts)}
 }
 
 // ============ 短剧剧本 ============
 const DEF_SC={dur:'short',shots:true,tone:'口语'};
-function startScript(P,srcKey,cfg,chain){
-  const src=P.arts[srcKey];if(!has(src)){toast('先生成这一段的集纲');return}
-  const label=`短剧剧本 · ${rangeOf(P,srcKey).label}`;const c=costOf(Math.max(6,Math.ceil(src.data.eps.length/2)));if(!cost(c))return;
+// 范围内缺集纲时，先按段补写集纲，再继续
+function ensureOutlines(P,from,to,cb){
+  const need=missingSegs(P,from,to);if(!need.length)return cb();
+  const k=need[0];const art=P.arts[k];if(!art)return cb();
+  if(art.status==='generating'){toast('集纲还在生成中，稍等一下');return}
+  if(art.status==='blocked')art.status='empty';
+  const r=rangeOf(P,k);const ctx=outlineCtx(P);const n=r.to-r.from+1;const c=costOf(Math.max(4,Math.ceil(n/4)));if(!cost(c))return;
+  say(P,`${r.label}还没有集纲，先补写集纲（第 ${r.from}–${r.to} 集）。`);const steps=Math.min(n,30);
+  runTask(P,art,{steps,speed:Math.max(60,1800/n),cost:c,label:art.label,stream:i=>`补写${r.label}集纲：第 ${r.from+Math.floor((i-1)*n/steps)} 集`,
+    produce:()=>{const eps=[];for(let x=r.from;x<=r.to;x++)eps.push(genEpisode(x,ctx));return{from:r.from,to:r.to,eps}},
+    onDone:()=>setTimeout(()=>ensureOutlines(P,from,to,cb),300)});
+}
+function startScript(P,key,cfg,chain){
+  const r=rangeOf(P,key);if(!r)return;
+  if(missingSegs(P,r.from,r.to).length){ensureOutlines(P,r.from,r.to,()=>startScript(P,key,cfg,chain));return}
+  const eps=epsInRange(P,key);if(!eps.length){toast('这个范围还没有集纲');return}
+  const label=`短剧剧本 · ${r.label}`;const c=costOf(Math.max(6,Math.ceil(eps.length/2)));if(!cost(c))return;
   advanceStage(P,'scripting');
-  if(!P.sc[srcKey])P.sc[srcKey]=Object.assign(newArt('sc:'+srcKey,label,'script'),{src:srcKey});
-  const a=P.sc[srcKey];a.cfg=cfg||a.cfg||{...DEF_SC};if(S.curId===P.id){S.sel='sc:'+srcKey;S.inline=null}
-  const eps=src.data.eps.filter(e=>!e.placeholder);const cast=P.arts.plan.data.cast;const steps=Math.min(eps.length,24);
+  if(!P.sc[key])P.sc[key]=Object.assign(newArt('sc:'+key,label,'script'),{src:key});
+  const a=P.sc[key];a.label=label;a.cfg=cfg||a.cfg||{...DEF_SC};if(S.curId===P.id){S.sel='sc:'+key;S.inline=null}
+  const cast=P.arts.plan.data.cast;const steps=Math.min(eps.length,24);
   runTask(P,a,{steps,speed:Math.max(70,2000/eps.length),cost:c,label,
     stream:i=>{const e=eps[Math.min(eps.length-1,Math.floor((i-1)*eps.length/steps))];return`正在写第 ${e.no} 集「${e.title}」的分场`},
     produce:()=>({eps:eps.map(e=>genScriptEp(e,cast,a.cfg))}),
-    onDone:()=>scriptDone(P,srcKey,chain)});
+    onDone:()=>scriptDone(P,key,chain)});
 }
 function scriptDone(P,k,chain){
   const r=rangeOf(P,k);const nx=nextSeg(P,k);
@@ -793,15 +811,7 @@ function rewriteEp(P,a,ei){
 }
 function continueScript(P,k){
   const nx=nextSeg(P,k);if(!nx){openExtend(P,k);return}
-  const cfg=P.sc[k]?.cfg;
-  if(has(P.arts[nx.k])){startScript(P,nx.k,cfg);return}
-  say(P,`${nx.label}还没有集纲，我先把集纲写出来，写完直接续写剧本。`);
-  if(P.arts[nx.k].status==='blocked')go('artifact',P.arts[nx.k],'empty');
-  S.sel=nx.k;const art=P.arts[nx.k];
-  const r=nx;const ctx=outlineCtx(P);const n=r.to-r.from+1;const c=costOf(Math.max(4,Math.ceil(n/4)));if(!cost(c))return;
-  runTask(P,art,{steps:Math.min(n,30),speed:Math.max(60,1800/n),cost:c,label:art.label,lines:[`补写${r.label}集纲…`],
-    produce:()=>{const eps=[];for(let x=r.from;x<=r.to;x++)eps.push(genEpisode(x,ctx));return{from:r.from,to:r.to,eps}},
-    onDone:()=>setTimeout(()=>startScript(P,nx.k,cfg),300)});
+  startScript(P,nx.k,P.sc[k]?.cfg);
 }
 // 加更：在结尾后续写 N 集（集纲 + 剧本一起延长）
 function extendStory(P,k,n){
@@ -812,12 +822,12 @@ function extendStory(P,k,n){
   closeModal();S.sel=ok;
   runTask(P,oa,{steps:Math.max(6,n),speed:180,cost:c,label:`加更 ${n} 集`,stream:i=>`正在续写第 ${oldN+Math.min(n,i)} 集…`,
     produce:()=>{const eps=(oa.data?.eps||[]).slice();for(let x=oldN+1;x<=oldN+n;x++)eps.push(genEpisode(x,ctx));return{from:oa.data?.from??oldN+1,to:oldN+n,eps}},
-    onDone:()=>{propagate(P,ok);const sk=P.sc[ok];
+    onDone:()=>{propagate(P,ok);const sk=[P.sc.full,P.sc.all,P.sc.end].find(x=>has(x));
       say(P,`已在结尾后加更 ${n} 集大纲（第 ${oldN+1}–${oldN+n} 集），接着写这几集的剧本。`);
       if(sk&&has(sk)){const cast=P.arts.plan.data.cast;const add=P.arts[ok].data.eps.filter(e=>e.no>oldN);
-        S.sel='sc:'+ok;runTask(P,sk,{steps:Math.max(6,n),speed:200,cost:costOf(n*2),label:`续写剧本第 ${oldN+1}–${oldN+n} 集`,stream:i=>`正在写第 ${oldN+Math.min(n,i)} 集分场…`,
-          produce:()=>({eps:[...sk.data.eps,...add.map(e=>genScriptEp(e,cast,sk.cfg))]}),onDone:()=>{sk.status='ready';sk.notice='';flashEps=add.map(e=>e.no);scriptDone(P,ok)}})}
-      else setTimeout(()=>startScript(P,ok,P.sc[k]?.cfg),300)}});
+        S.sel=sk.key;runTask(P,sk,{steps:Math.max(6,n),speed:200,cost:costOf(n*2),label:`续写剧本第 ${oldN+1}–${oldN+n} 集`,stream:i=>`正在写第 ${oldN+Math.min(n,i)} 集分场…`,
+          produce:()=>({eps:[...sk.data.eps,...add.map(e=>genScriptEp(e,cast,sk.cfg))]}),onDone:()=>{sk.status='ready';sk.notice='';flashEps=add.map(e=>e.no);scriptDone(P,sk.src)}})}
+      else setTimeout(()=>startScript(P,rangeKey(P,oldN+1,oldN+n),P.sc[k]?.cfg),300)}});
 }
 
 // ============ 互动剧本 ============
@@ -858,11 +868,12 @@ function buildInteractive(eps,cfg,P,scMap){
 }
 const DEF_IA={form:'value',density:'mid',converge:'multi',endings:3,paywall:true,pov:'first'};
 function scMapOf(P,keys){const m={};keys.forEach(k=>{const s=P.sc[k];if(has(s))s.data.eps.forEach(e=>m[e.no]=e)});return m}
-function iaEps(P,a){let eps=[...P.arts[a.src].data.eps];(a.extra||[]).forEach(k=>{if(has(P.arts[k]))eps=eps.concat(P.arts[k].data.eps)});return eps.filter(e=>!e.placeholder)}
+function iaEps(P,a){const seen=new Set();return[a.src,...(a.extra||[])].flatMap(k=>epsInRange(P,k)).filter(e=>!seen.has(e.no)&&seen.add(e.no))}
 function convertToInteractive(P,srcKey,cfg){
-  const src=P.arts[srcKey];if(!has(src)){toast('先生成这一段的集纲');return}
+  const rr=rangeOf(P,srcKey);if(!rr)return;
+  if(missingSegs(P,rr.from,rr.to).length){ensureOutlines(P,rr.from,rr.to,()=>convertToInteractive(P,srcKey,cfg));return}
   const c=costOf(20);if(!cost(c))return;advanceStage(P,'scripting');
-  const label=`互动剧本 · ${rangeOf(P,srcKey).label}`;
+  const label=P.ia[srcKey]?.extra?.length?P.ia[srcKey].label:`互动剧本 · ${rr.label}`;
   if(!P.ia[srcKey])P.ia[srcKey]=Object.assign(newArt('ia:'+srcKey,label,'interactive'),{src:srcKey,validate:{status:'unchecked'},extra:[]});
   const a=P.ia[srcKey];a.cfg=cfg||a.cfg||{...DEF_IA};S.sel='ia:'+srcKey;S.selNode=null;S.iaTab='canvas';S.inline=null;VIEW.key=null;PL=null;
   runTask(P,a,{steps:10,speed:160,cost:c,label,lines:['读取集纲…','找出关键冲突点…','设计选择点…','分配数值…','写分支剧情…','收束支线…','写结局…','排布节点…','打磨台词…','完成'],
@@ -873,8 +884,7 @@ function convertToInteractive(P,srcKey,cfg){
 }
 function continueIA(P,k){
   const a=P.ia[k];const nx=nextSeg(P,[k,...a.extra].pop());if(!nx){toast('已经写到最后一段了');return}
-  if(!has(P.arts[nx.k])){toast(`先生成${nx.label}集纲`);S.sel=nx.k;render();return}
-  a.extra.push(nx.k);a.label=`互动剧本 · ${rangeOf(P,k).label}–${nx.label}`;convertToInteractive(P,k,a.cfg);
+  ensureOutlines(P,nx.from,nx.to,()=>{a.extra.push(nx.k);a.label=`互动剧本 · ${rangeOf(P,k).label}–${nx.label}`;convertToInteractive(P,k,a.cfg)});
 }
 function edgesOf(n){if(n.type==='choice')return n.options.map(o=>o.to);if(n.type==='condition')return[...n.rules.map(r=>r.to),n.else];if(n.type==='ending')return[];return[n.to]}
 function validateIA(a,silent){
@@ -1246,13 +1256,23 @@ function renderPlan(P){
     ${sec('ending','结局方向',`<p ${ce} data-field="ending">${esc(d.ending)}</p>`)}
   </div>`;
 }
+function inlineRange(P,i){const N=P.params.episodes;const cur=rangeOf(P,i.src);const c=i.cfg;
+  if(c.range==='full')return[1,N];if(c.range==='cur'&&cur)return[cur.from,cur.to];return[clamp(c.from,1,N),clamp(Math.max(c.from,c.to),1,N)]}
+function openInline(type,src,range){const P=S.project;const r=rangeOf(P,src)||{from:1,to:P.params.episodes};
+  S.inline={type,src,cfg:{...(type==='script'?DEF_SC:DEF_IA),range:range||'full',from:r.from,to:r.to}}}
 function inlinePanel(P,k){
-  if(!S.inline||S.inline.src!==k)return'';const t=S.inline.type;const c=S.inline.cfg;const r=rangeOf(P,k);
+  if(!S.inline||S.inline.src!==k)return'';const t=S.inline.type;const c=S.inline.cfg;
+  const N=P.params.episodes;const cur=rangeOf(P,k);const showCur=cur&&!(cur.from===1&&cur.to===N);
+  const[f,to]=inlineRange(P,S.inline);const n=to-f+1;
+  const miss=missingSegs(P,f,to).map(x=>rangeOf(P,x)?.label||'全部');
   const opt=(lb,key,arr)=>`<div><span class="lbl">${lb}</span><div class="seg">${arr.map(([v,l])=>`<button class="${String(c[key])===String(v)?'on':''}" data-io="${key}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
-  if(t==='script')return`<div class="inline"><h4>${ic('film')}写成短剧剧本<span class="sm muted">第 ${r.from}–${r.to} 集 · 分场 + 台词</span></h4>
+  const rangeRow=`<div class="row"><div><span class="lbl">生成范围</span><div class="seg"><button class="${c.range==='full'?'on':''}" data-io="range" data-v="full">全文 · 第 1–${N} 集</button>${showCur?`<button class="${c.range==='cur'?'on':''}" data-io="range" data-v="cur">只写${esc(cur.label)} · 第 ${cur.from}–${cur.to} 集</button>`:''}<button class="${c.range==='custom'?'on':''}" data-io="range" data-v="custom">自定义</button></div></div>
+    ${c.range==='custom'?`<div><span class="lbl">从第几集到第几集</span><span style="display:flex;gap:6px;align-items:center"><span class="stepper"><input type="number" id="rgFrom" value="${f}" min="1" max="${N}" aria-label="起始集"></span><span class="muted">至</span><span class="stepper"><input type="number" id="rgTo" value="${to}" min="1" max="${N}" aria-label="结束集"></span></span></div>`:''}</div>
+    ${miss.length?`<div class="note info">${ic('warn')}${esc(miss.join('、'))}还没有集纲，会先补写集纲，再接着写${t==='script'?'剧本':'互动剧本'}。</div>`:''}`;
+  if(t==='script')return`<div class="inline"><h4>${ic('film')}写成短剧剧本<span class="sm muted">第 ${f}–${to} 集 · 共 ${n} 集 · 分场 + 台词</span></h4>${rangeRow}
     <div class="row">${opt('单集时长','dur',[['short','1–2 分钟（2 场）'],['long','2–3 分钟（3 场）']])}${opt('镜头提示','shots',[[true,'带镜头提示'],[false,'只写台词动作']])}${opt('台词风格','tone',[['口语','口语爽快'],['文艺','克制文艺']])}</div>
-    <div class="foot"><span class="credits" style="margin-right:auto"><i></i>约 ${costOf(Math.max(6,Math.ceil((r.to-r.from+1)/2)))} 积分 · ${esc(modelOf(S.model).name)}</span><button class="btn ghost" data-act="inlineClose">取消</button><button class="btn pri" data-act="inlineGo">开始写剧本</button></div></div>`;
-  return`<div class="inline"><h4>${ic('branch')}转成互动剧本<span class="sm muted">第 ${r.from}–${r.to} 集${P.ia[k]?' · 会覆盖当前互动版本':''}</span></h4>
+    <div class="foot"><span class="credits" style="margin-right:auto"><i></i>约 ${costOf(Math.max(6,Math.ceil(n/2)))} 积分 · ${esc(modelOf(S.model).name)}</span><button class="btn ghost" data-act="inlineClose">取消</button><button class="btn pri" data-act="inlineGo">开始写剧本</button></div></div>`;
+  return`<div class="inline"><h4>${ic('branch')}转成互动剧本<span class="sm muted">第 ${f}–${to} 集 · 共 ${n} 集${P.ia[rangeKey(P,f,to)]?' · 会覆盖这个范围已有的互动版本':''}</span></h4>${rangeRow}
     <div class="row">${opt('互动形式','form',[['branch','选项分支'],['value','数值养成'],['qte','限时选择'],['mix','混合']])}${opt('选择密度','density',[['low','每 3 集一次'],['mid','每集一次'],['high','每集三选一']])}</div>
     <div class="row">${opt('结局','converge',[['merge','单结局'],['multi','多结局']])}${c.converge==='multi'?`<div><span class="lbl">结局数</span><span class="stepper"><button data-ien="-1" aria-label="减少">−</button><input type="number" id="iEnds" value="${c.endings}" aria-label="结局数"><button data-ien="1" aria-label="增加">+</button></span></div>`:''}${opt('视角','pov',[['first','第一人称'],['third','第三人称']])}${opt('付费','paywall',[[true,'卡点设付费'],[false,'不设付费']])}</div>
     <div class="foot"><span class="credits" style="margin-right:auto"><i></i>约 ${costOf(20)} 积分 · ${esc(modelOf(S.model).name)}</span><button class="btn ghost" data-act="inlineClose">取消</button><button class="btn pri" data-act="inlineGo">开始转换</button></div></div>`;
@@ -1261,11 +1281,14 @@ function renderOutline(P,a){
   if(!a)return'';
   const isSeg=a.kind==='segment';const r=rangeOf(P,a.key);
   const items=[];
-  if(P.outlineMode==='cards')items.push(['adjustCards','调整卡点位置'],['toAll','合并为全部集纲']);else items.push(['toCards','按卡点拆分']);
-  if(has(a)){items.push(lockItem(a),verItem(a));if(a.status!=='locked')items.push(['retry:'+a.key,'重新生成本页'])}
-  const hasSc=!!P.sc[a.key],hasIa=!!P.ia[a.key];
+  if(P.outlineMode==='cards')items.push(['adjustCards','调整卡点位置']);
+  const scHit=Object.values(P.sc).find(x=>x.src==='full')||Object.values(P.sc).find(x=>overlaps(P,x,r));
+  const iaHit=Object.values(P.ia).find(x=>x.src==='full')||Object.values(P.ia).find(x=>overlaps(P,x,r));
+  if(has(a)){if(scHit)items.push(['newSC','按其他范围写剧本']);if(iaHit)items.push(['newIA','按其他范围转互动剧本']);items.push(lockItem(a),verItem(a));if(a.status!=='locked')items.push(['retry:'+a.key,'重新生成本页'])}
+  const hasSc=!!scHit,hasIa=!!iaHit;
+  const viewSeg=`<div class="seg" role="group" aria-label="集纲视图"><button class="${P.outlineMode==='cards'?'on':''}" data-act="viewCards">按卡点分段</button><button class="${P.outlineMode==='all'?'on':''}" data-act="viewAll">合并为全部集纲</button></div>`;
   const head=`<div class="dh"><div><h2>${isSeg?r.label+'集纲':'全部集纲'}${stBadge(a)}</h2><div class="meta mono">第 ${r.from}–${r.to} 集 · ${r.to-r.from+1} 集${isSeg&&a.key!=='end'?` · 第 ${r.to} 集是付费卡点`:''}</div></div>
-    <div class="acts">${moreBtn(items)}<button class="btn" data-act="${hasIa?'goIA':'openIA'}" ${has(a)?'':'disabled'}>${ic('branch')}${hasIa?'查看互动剧本':'转互动剧本'}</button><button class="btn pri" data-act="${hasSc?'goSC':'openSC'}" ${has(a)?'':'disabled'}>${ic('film')}${hasSc?'查看短剧剧本':'生成短剧剧本'}</button></div></div>`;
+    <div class="acts">${viewSeg}${moreBtn(items)}<button class="btn" data-act="${hasIa?'goIA':'openIA'}" ${has(a)?'':'disabled'}>${ic('branch')}${hasIa?'查看互动剧本':'转互动剧本'}</button><button class="btn pri" data-act="${hasSc?'goSC':'openSC'}" ${has(a)?'':'disabled'}>${ic('film')}${hasSc?'查看短剧剧本':'生成短剧剧本'}</button></div></div>`;
   if(a.status==='blocked'){const pv=segRanges(P)[segRanges(P).findIndex(x=>x.k===a.key)-1];return`<div class="doc">${head}<div class="empty">${ic('lock')}<div>「${pv.label}」写完后，这一段会接着往下写</div><button class="btn" data-sel="${pv.k}">去${pv.label}</button></div></div>`}
   if(a.status==='generating')return`<div class="doc">${head}${genHTML(a)}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
@@ -1393,8 +1416,9 @@ function doAction(k){
   const P=S.project;if(!P)return;S.nudge=null;renderNudge();
   const i=k.indexOf(':');const cmd=i<0?k:k.slice(0,i),arg=i<0?'':k.slice(i+1);
   if(cmd==='outline'){S.sel=arg;if(P.arts[arg].status==='empty'||P.arts[arg].status==='blocked'){if(P.arts[arg].status==='blocked')go('artifact',P.arts[arg],'empty');genOutline(P,arg)}else render()}
-  else if(cmd==='script'){S.sel=arg;S.inline={type:'script',src:arg,cfg:{...DEF_SC}};render()}
-  else if(cmd==='ia'){S.sel=arg;S.inline={type:'ia',src:arg,cfg:{...DEF_IA}};render()}
+  else if(cmd==='script'){S.sel=arg;openInline('script',arg,'full');render()}
+  else if(cmd==='scriptcur'){S.sel=arg;openInline('script',arg,'cur');render()}
+  else if(cmd==='ia'){S.sel=arg;openInline('ia',arg,'full');render()}
   else if(cmd==='view'){S.sel=arg;render()}
   else if(cmd==='cont')continueScript(P,arg);
   else if(cmd==='extend')openExtend(P,arg);
@@ -1422,7 +1446,8 @@ function menuAct(k){
   if(cmd==='regenAll')regen(P,'plan');
   if(cmd==='adjustCards')openOutlineModal(false,true);
   if(cmd==='toCards'){MC={total:P.params.episodes,...(P.cards||defaultCards(P.params.episodes)),mode:'cards',adjust:false};drawOutlineModal()}
-  if(cmd==='toAll')mergeToAll(P);
+  if(cmd==='newSC'){openInline('script',S.sel,'full');S.inline.cfg.range='custom';render()}
+  if(cmd==='newIA'){openInline('ia',S.sel,'full');S.inline.cfg.range='custom';render()}
   if(cmd==='reconf'){const a=getArt(S.sel);S.sel=a.src;S.inline={type:'ia',src:a.src,cfg:{...a.cfg}};render()}
   if(cmd==='iacont')continueIA(P,arg);
   if(cmd==='extend')openExtend(P,arg);
@@ -1520,10 +1545,7 @@ function splitAll(P,nc){
   const all=P.arts.all;P.cards=nc;P.outlineMode='cards';const ctx={...outlineCtx(P),cards:nc};
   segRanges(P).forEach(r=>{const a=newArt(r.k,r.label+'集纲','segment',all.data?(all.status==='locked'?'ready':all.status):'empty');
     if(all.data)a.data={from:r.from,to:r.to,eps:all.data.eps.filter(e=>e.no>=r.from&&e.no<=r.to).map(e=>({...e,card:genEpisode(e.no,ctx).card}))};a.versions=all.versions;P.arts[r.k]=a});
-  const sa=P.sc.all;if(sa){segRanges(P).forEach(r=>{const eps=(sa.data?.eps||[]).filter(e=>e.no>=r.from&&e.no<=r.to);if(!eps.length)return;
-      P.sc[r.k]=Object.assign(newArt('sc:'+r.k,'短剧剧本 · '+r.label,'script',sa.status==='locked'?'ready':sa.status),{src:r.k,cfg:sa.cfg,data:{eps},versions:1})});delete P.sc.all}
-  const ia=P.ia.all;if(ia){const ks=segRanges(P).map(r=>r.k);Object.assign(ia,{key:'ia:c1',src:'c1',extra:ks.slice(1),label:'互动剧本 · 一卡–'+segRanges(P).slice(-1)[0].label});P.ia.c1=ia;delete P.ia.all}
-  delete P.arts.all;S.sel='c1';toast('已按卡点拆分');
+  delete P.arts.all;S.sel='c1';toast('已按卡点分段，剧本不受影响');
 }
 function mergeToAll(P){
   const segs=segRanges(P);const eps=[];
@@ -1531,14 +1553,7 @@ function mergeToAll(P){
   const sts=segs.map(r=>P.arts[r.k].status);const a=newArt('all','全部集纲','outline',sts.every(s=>['ready','edited','locked'].includes(s))?(sts.includes('edited')?'edited':'ready'):'outdated');
   a.data={from:1,to:P.params.episodes,eps};a.versions=1;if(a.status==='outdated')a.notice='还有几段没生成，先用占位补齐了';
   segs.forEach(r=>delete P.arts[r.k]);P.arts.all=a;P.outlineMode='all';S.sel='all';
-  const scs=segs.map(r=>P.sc[r.k]).filter(Boolean);
-  if(scs.length){const eps=scs.flatMap(x=>x.data?.eps||[]).sort((x,y)=>x.no-y.no);const st=scs.some(x=>x.status==='edited')?'edited':'ready';
-    const m=Object.assign(newArt('sc:all','短剧剧本 · 全部','script',st),{src:'all',cfg:scs[0].cfg,data:{eps},versions:1});
-    if(eps.length<P.params.episodes){m.notice=`目前写了 ${eps.length} 集剧本，其余的集可以接着续写`}
-    segs.forEach(r=>delete P.sc[r.k]);P.sc.all=m}
-  const ias=segs.map(r=>P.ia[r.k]).filter(Boolean);
-  if(ias.length){const x=ias[0];Object.assign(x,{key:'ia:all',src:'all',extra:[],label:'互动剧本 · 全部'});if(['ready','edited'].includes(x.status)){x.status='outdated';x.notice='集纲已合并，可以按全部集纲重新生成互动剧本'}segs.forEach(r=>delete P.ia[r.k]);P.ia.all=x}
-  save();render();toast('已合并为全部集纲');
+  save();render();toast('已合并为全部集纲，剧本不受影响');
 }
 function openExport(P,a){
   let txt='',json='',tab='txt';
@@ -1641,6 +1656,9 @@ function bindMain(){
   M.querySelectorAll('[data-genseg]').forEach(b=>b.onclick=()=>genOutline(P,b.dataset.genseg));
   M.querySelectorAll('[data-io]').forEach(b=>b.onclick=()=>{const v=b.dataset.v;S.inline.cfg[b.dataset.io]=v==='true'?true:v==='false'?false:v;renderMain()});
   M.querySelectorAll('[data-ien]').forEach(b=>b.onclick=()=>{S.inline.cfg.endings=clamp(S.inline.cfg.endings+(+b.dataset.ien),2,5);renderMain()});
+  const rf=$('#rgFrom'),rt=$('#rgTo');const N=P.params.episodes;
+  if(rf)rf.onchange=()=>{S.inline.cfg.from=clamp(+rf.value||1,1,N);if(S.inline.cfg.to<S.inline.cfg.from)S.inline.cfg.to=S.inline.cfg.from;renderMain()};
+  if(rt)rt.onchange=()=>{S.inline.cfg.to=clamp(+rt.value||N,1,N);if(S.inline.cfg.from>S.inline.cfg.to)S.inline.cfg.from=S.inline.cfg.to;renderMain()};
   const ie=$('#iEnds');if(ie)ie.onchange=()=>{S.inline.cfg.endings=clamp(+ie.value||3,2,5);renderMain()};
   if(S.sel==='plan'&&P.arts.plan.data){const a=P.arts.plan,d=a.data;
     M.querySelectorAll('[data-field]').forEach(el=>el.onblur=()=>{const v=el.innerText.trim();if(v!==d[el.dataset.field]){d[el.dataset.field]=v;markEdited(P,a);render()}});
@@ -1700,14 +1718,16 @@ function act(x){
     case'reparse':{const o={status:'parse_failed'};go('project',o,'parsing');P.stage='parsing';P.parseState='parsing';render();setTimeout(()=>doParse(P),900);break}
     case'toPlan':startPlan(P);break;
     case'outlineNext':if(P.outlineMode){S.sel=outlineKeys(P)[0];render()}else openOutlineModal(false);break;
-    case'openSC':S.inline={type:'script',src:S.sel,cfg:{...DEF_SC}};renderMain();break;
-    case'openIA':S.inline={type:'ia',src:S.sel,cfg:{...DEF_IA}};renderMain();break;
-    case'scToIA':S.inline={type:'ia',src:getArt(S.sel).src,cfg:{...DEF_IA}};renderMain();break;
+    case'openSC':openInline('script',S.sel,'full');renderMain();break;
+    case'viewAll':if(P.outlineMode==='cards')mergeToAll(P);break;
+    case'viewCards':if(P.outlineMode==='all'){MC={total:P.params.episodes,...(P.cards||defaultCards(P.params.episodes)),mode:'cards',adjust:false};drawOutlineModal()}break;
+    case'openIA':openInline('ia',S.sel,'full');renderMain();break;
+    case'scToIA':{const a=getArt(S.sel);openInline('ia',a.src,a.src==='full'||a.src==='all'?'full':'cur');renderMain();break}
     case'scGoIA':S.sel='ia:'+getArt(S.sel).src;S.iaTab='canvas';render();break;
-    case'goSC':S.sel='sc:'+S.sel;render();break;
-    case'goIA':S.sel='ia:'+S.sel;render();break;
+    case'goSC':case'goIA':{const r=rangeOf(P,S.sel);const g=x==='goSC'?P.sc:P.ia;const hit=Object.values(g).find(a=>a.src==='full')||Object.values(g).find(a=>overlaps(P,a,r));if(hit){S.sel=hit.key;render()}break}
     case'inlineClose':S.inline=null;renderMain();break;
-    case'inlineGo':{const i=S.inline;if(i.type==='script')startScript(P,i.src,{...i.cfg});else convertToInteractive(P,i.src,{...i.cfg});break}
+    case'inlineGo':{const i=S.inline;const[f,t]=inlineRange(P,i);if(f>t){toast('起始集不能大于结束集');return}const key=rangeKey(P,f,t);const{range,from,to,...cfg}=i.cfg;
+      if(i.type==='script')startScript(P,key,cfg);else{if(P.ia[key])P.ia[key].extra=[];convertToInteractive(P,key,cfg)}break}
     case'showIssues':S.iaTab='canvas';S.selNode=null;renderMain();break;
     case'export':openExport(P,getArt(S.sel));break;
     case'fit':fit();break;
