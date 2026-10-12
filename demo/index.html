@@ -416,6 +416,10 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .map{width:100%;border-collapse:collapse;font-size:13px}.map th,.map td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}.map th{font-size:12px;color:var(--muted);font-weight:500}.map td:first-child{white-space:nowrap;color:var(--fg2)}
 .simrow{display:grid;grid-template-columns:80px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13px;color:var(--fg2)}.simbar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.simbar i{display:block;height:100%;background:var(--accent);border-radius:4px}
 .acard b{font-size:15px}.acard .pv{font-size:12px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.acard .aa{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.newcard .sm{font-size:12px}
+.autobar{max-width:860px;margin:0 auto 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:14px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface));font-size:13px}
+.autobar b{display:flex;align-items:center;gap:6px;color:var(--accent)}.autobar .dash{width:18px;height:1px;background:var(--line2)}
+.ab{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}.ab i{width:8px;height:8px;border-radius:50%;background:var(--line2)}.ab.ok{color:var(--fg2)}.ab.ok svg{color:var(--accent)}.ab.cur{color:var(--fg);font-weight:600}
+.modehint{font-size:12px;color:var(--muted);margin-top:-4px}
 .jump{position:sticky;top:59px;z-index:5;display:flex;gap:4px;overflow-x:auto;padding:8px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);scrollbar-width:thin}
 .jump button{flex:none;min-width:34px;height:26px;padding:0 6px;border-radius:7px;font-family:var(--f-mono);font-size:11px;color:var(--fg2);border:1px solid var(--line);background:var(--surface)}
 .jump button:hover{border-color:var(--accent);color:var(--fg)}.jump button.card{border-color:var(--coral);color:var(--coral)}
@@ -557,6 +561,7 @@ const SAMPLE_BENCH=`第1集 女主被逼替嫁，新郎是传闻中的残疾大�
 第30集【二卡】双重身份曝光
 第55集【三卡】幕后反派现身`;
 const SCENES=['酒店宴会厅','林家老宅客厅','集团顶层会议室','雨夜街头','医院走廊','机场贵宾通道','商业峰会会场','地下停车场','街角咖啡馆','法院门口','天台','私人会所包厢'];
+const SCENES_M=['武道学院测试台','城市武道会擂台','秘境入口','王家演武场','地下拳场','学院后山','医院走廊','天台','古武世家祠堂','江城夜市街头','藏经阁','训练馆'];
 const COVERS=['linear-gradient(135deg,#0f4c5c,#1b8a8f)','linear-gradient(135deg,#1d3557,#457b9d)','linear-gradient(135deg,#3a2e5c,#6a5acd)','linear-gradient(135deg,#7a3e2b,#d1785c)','linear-gradient(135deg,#1f4037,#59a78f)'];
 
 // ============ 状态机（内部；用户只看到简洁状态） ============
@@ -598,13 +603,16 @@ const has=a=>!!(a&&['ready','edited','locked','outdated'].includes(a.status)&&a.
 const fmtTime=t=>{const d=new Date(t);const n=new Date();const hm=d.toTimeString().slice(0,5);if(d.toDateString()===n.toDateString())return'今天 '+hm;const y=new Date(n-864e5);if(d.toDateString()===y.toDateString())return'昨天 '+hm;return`${d.getMonth()+1}月${d.getDate()}日 ${hm}`};
 
 // ============ 内容模板（模拟 AI） ============
-function eff(f){const m=f.market||'cn';return{...clone(f),market:m,genres:f.genres.length?f.genres:['豪门','复仇'],styles:f.styles.length?f.styles:['爽感','反转密集'],audience:f.audience||'女频'}}
+function guessFromIdea(t){t=t||'';const male=/男频|高武|战神|赘婿|兵王|龙王|修仙|武道|神医|逆袭/.test(t);
+  const g=/高武|武道|修仙|玄幻/.test(t)?['玄幻','战神']:/战神|兵王|龙王/.test(t)?['战神','复仇']:/赘婿/.test(t)?['赘婿','复仇']:/重生/.test(t)?['重生','复仇']:/末世/.test(t)?['末世']:/甜|恋爱|闪婚/.test(t)?['甜宠','霸总']:/萌宝/.test(t)?['萌宝','霸总']:/狼人|Alpha/i.test(t)?['狼人','甜宠']:['豪门','复仇'];
+  return{audience:male?'男频':'女频',genres:g,styles:male?['热血','爽感']:['爽感','反转密集']}}
+function eff(f){const m=f.market||'cn';const gu=guessFromIdea(f.idea);return{...clone(f),market:m,genres:f.genres.length?f.genres:gu.genres,styles:f.styles.length?f.styles:gu.styles,audience:f.audience||gu.audience}}
 function cast(f){
   const male=f.genres.some(g=>['战神','赘婿'].includes(g))||f.audience==='男频';const m=f.market;
   const city={na:'New York',la:'Ciudad de México',me:'Dubai',sea:'Singapore'}[m];
-  if(m==='cn')return male?{P:'叶辰',L:'秦雪',A:'王浩',X:'福伯',city:'江城'}:{P:'林晚',L:'顾承砚',A:'苏婉柔',X:'林父',city:'江城'};
-  if(m==='jk')return male?{P:'真司',L:'美咲',A:'黑泽',X:'老管家',city:'东京'}:{P:'美咲',L:'神宫寺凛',A:'绫子',X:'父亲',city:'东京'};
-  return male?{P:'Leo',L:'Mia',A:'Derek',X:'Old Sam',city}:{P:'Ava',L:'Ethan Blake',A:'Chloe',X:'Mr. Hayes',city};
+  if(m==='cn')return male?{P:'叶辰',L:'秦雪',A:'王浩',X:'福伯',city:'江城',male:true}:{P:'林晚',L:'顾承砚',A:'苏婉柔',X:'林父',city:'江城'};
+  if(m==='jk')return male?{P:'真司',L:'美咲',A:'黑泽',X:'老管家',city:'东京',male:true}:{P:'美咲',L:'神宫寺凛',A:'绫子',X:'父亲',city:'东京'};
+  return male?{P:'Leo',L:'Mia',A:'Derek',X:'Old Sam',city,male:true}:{P:'Ava',L:'Ethan Blake',A:'Chloe',X:'Mr. Hayes',city};
 }
 const fill=(s,c)=>s.replace(/\{(\w+)\}/g,(_,k)=>c[k]||k);
 const T={
@@ -629,12 +637,29 @@ const T={
     {q:'{A}深夜约见{P}',o:[['赴约，看看对方要耍什么花样',{实力:10}],['带上{L}一起去',{好感:10}],['不理会',{}]]}],
   titles:{豪门:['豪门千金归来','退婚后，我成了顶级大佬','她的马甲藏不住了'],复仇:['三年后，前夫跪求复婚','复仇千金','血色订婚宴'],甜宠:['闪婚后被大佬宠上天','顾总的心尖宠'],重生:['重生后我手撕白月光','重来一次，换我主宰'],战神:['战神归来，满城跪迎','北境之王'],赘婿:['上门女婿竟是首富','龙婿'],霸总:['霸总的契约新娘','总裁他追妻火葬场'],萌宝:['天才萌宝寻爹记','妈咪是大佬'],狼人:['Alpha 的替身新娘','月下之约'],末世:['末世：我囤了一座城'],_:['逆光而来','她从深渊归来','不再回头']}
 };
+// 男频 / 高武模板
+const TM={
+  open:[['废脉之耻','武道测试台上，{P}被判定为“废脉”，{A}当众嘲讽，全场哄笑。'],['传承觉醒','深夜，{P}意外激活上古传承，一夜连破三境。'],['一拳破石','学院复测，{P}一拳击碎测力石，全场死寂。']],
+  rise:[['越级挑战','{A}派人围堵{P}，{P}以一敌五，越级取胜。'],['秘境夺宝','{P}与{L}闯入秘境，抢在各大家族之前拿到至宝。'],['扮猪吃虎','{P}故意隐藏实力，引{A}的爪牙露出破绽。'],['门卫老头','{X}看似随手一指，点破{P}修炼的瓶颈。'],['家族施压','{A}背后的家族出手打压，{P}被逐出学院。'],['武道会预选','{P}报名城市武道会，被分进死亡之组。'],['血脉之谜','{P}发现自己的血脉与上古传说有关。'],['当众打脸','{A}设局陷害，{P}当众拿出证据，反手一巴掌。'],['红颜相助','{L}冒着被家族惩罚的风险，帮{P}拿到修炼资源。'],['突破瓶颈','{P}在生死边缘突破第五境，气息震动全城。'],['强敌入城','境外强者来到{city}，点名挑战{P}。'],['以战养战','{P}连挑十二家武馆，名声大噪。']],
+  card:[['身份将现','武道会决赛，{P}即将出手，场外传来一声：“少主，请留手。”','全场目光同时看向门口。'],['生死二选一','{L}被{A}背后的势力抓走，{P}必须在突破关口和救人之间做出选择。','对方只留下一句话：天亮之前，一个人来。'],['幕后之人','{P}终于找到打压自己的幕后黑手，竟然是{X}的师兄。','那人摘下面具，露出一张熟悉的脸。']],
+  climax:[['武道之巅','{P}与幕后强者决战之巅，一拳定胜负。'],['真相大白','{X}说出{P}的身世：上古武神的唯一传人。'],['众叛亲离','{A}被家族抛弃，跪在{P}面前求饶。']],
+  final:['武神归位','{P}登顶武道之巅，{city}万人跪迎；更高的世界之门，缓缓打开。'],
+  extra:[['新的世界','{P}踏入更高一层的武道世界，发现自己只是起点。'],['旧敌复苏','被封印的上古强者苏醒，第一个目标就是{P}。'],['师门之秘','{X}留下的一枚玉简，指向一个失落的宗门。']],
+  hooks:['{A}在暗处冷笑：这只是开始。','一道陌生的气息锁定了{P}。','{X}低声自语：传承，终于醒了。','擂台下，一个戴面具的人悄悄离开。','{P}的掌心浮现出一枚古老的印记。','{L}收到一条家族密令，脸色大变。'],
+  lines:['废脉？那今天就让你们看看，什么叫废脉。','一拳之内，我让你跪下。','我给过你机会。','从今天起，{city}武道，我说了算。','你们欠我的，我会一拳一拳讨回来。','还有谁？'],
+  aLines:[['冷笑','废脉也配站在这里？'],['咬牙','你别得意得太早！'],['阴恻恻','在{city}，我王家说了算。'],['慌乱','这……这不可能！']],
+  lLines:[['低声','你小心点。'],['看着他','我就知道你不简单。'],['挡在前面','要动他，先过我这一关。'],['红着眼','你答应过我会回来。']],
+  xLines:[['叹气','有些事，是时候告诉你了。'],['眯起眼','你的拳，比你父亲当年还快。']],
+  acts:['全场死寂，所有人都盯着{P}的拳头。','{A}脸色铁青，指节捏得发白。','{L}推开人群，站到{P}身边。','测力石轰然碎裂，碎片落了一地。','看台上的家族长老同时站了起来。','{X}在角落里，慢慢放下了手里的扫帚。'],
+  shots:['【慢镜】拳风掠过，测力石裂出蛛网纹。','【特写】{P}眼底闪过一道金光。','【俯拍】擂台四周鸦雀无声。','【推近】{A}的笑容一点点僵住。','【跟拍】{P}一步步走上擂台。']};
+const tpl=c=>c&&c.male?{...T,...TM}:T;
 function genPlan(f,P){
   const c=cast(f);const m=MARKETS.find(x=>x.k===f.market);
   const titles=f.market!=='cn'&&f.market!=='jk'?EN_TITLES.slice(0,3):[...new Set([...(T.titles[f.genres[0]]||[]),...(T.titles[f.genres[1]]||[]),...T.titles._])].slice(0,3);
   const idea=P.mode==='novel'?`改编自《${f.novelName||'未命名小说'}》：${P.parsed?.mainline||'女主被退婚后归来复仇的故事。'}`:P.mode==='benchmark'?(f.conv==='global'?`爆款转换 · ${m.name}本土化：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，人物、城市、文化细节和台词语言全部换成${m.name}观众熟悉的版本（${m.lang}）。`:`爆款转换 · 国内题材迭代：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，换成「${f.genres.join('、')}」题材，重写人设、金手指和名场面。`):f.idea;
   const cards=defaultCards(f.episodes);const set=f.setting||{};
   const local=f.market!=='cn'?`\n本土化：故事发生在 ${c.city}，人物使用当地常见名字，台词语言为 ${m.lang}。`:'';
+  if(f.audience==='男频'&&P.mode==='original')return genPlanMale(f,P,c,m,titles,idea,cards,set,local);
   return{titles,title:titles[0],logline:idea,
     synopsis:fill(`{P}在订婚宴上被{A}设计陷害，被{L}所在的家族当众退婚，又被逐出家门。三年后，{P}以神秘身份回到{city}，一边揭开当年陷害的真相，一边与{L}在误会与守护中重新靠近。随着{P}的马甲一层层掉落，{A}的阴谋步步败露，最终{X}道出当年隐情：那场退婚另有隐衷。`,c)+local,
     world:fill(`${set.world||'现代都市'} · {city}。两大豪门家族与新兴资本三方角力；{P}三年间建立的商业版图，是回归后反击的底牌。`,c),
@@ -647,10 +672,23 @@ function genPlan(f,P){
     cards,ending:fill('{A}伏法，{P}与{L}和解。互动版可延伸出好结局、坏结局和隐藏结局（{X}的秘密）。',c),
     cast:c,skills:skillNames(f.skills)};
 }
+function genPlanMale(f,P,c,m,titles,idea,cards,set,local){
+  const xuan=f.genres.includes('玄幻');
+  return{titles:xuan?['我在都市修成武神','高武时代，我一拳破天','觉醒吧，武道至尊']:titles,title:xuan?'我在都市修成武神':titles[0],logline:idea,
+    synopsis:fill(xuan?`灵气复苏后的{city}，武道境界决定一切。{P}因为测不出武道天赋，被{A}当众羞辱、被学院除名。就在当晚，{P}意外激活了上古传承，一夜之间连破三境。从学院大比到城市武道会，{P}一路打脸所有看不起自己的人，而{X}守护多年的秘密，正把{P}推向一场关乎整个{city}的生死之战。`:`{P}隐姓埋名回到{city}，被{A}一家百般羞辱。没人知道，这个被看不起的人，手里握着整座城市的命脉。`,c)+local,
+    world:fill(`${set.world||(xuan?'灵气复苏的现代都市':'现代都市')} · {city}。武道分为九境，大家族垄断修炼资源；武道会是普通人唯一的上升通道。`,c),
+    chars:[{n:c.P,r:'主角',d:fill(`${set.role?set.role+'。':''}被判定为“废脉”的普通学生，激活上古传承后实力暴涨。${set.cheat?'金手指：'+set.cheat+'。':'金手指：可以吞噬对手武技的传承系统。'}沉稳、护短、睚眦必报。`,c)},
+      {n:c.L,r:'女主 / 盟友',d:fill('武道世家的天之骄女，最早看出{P}不简单的人。',c)},
+      {n:c.A,r:'反派',d:fill('大家族嫡系，处处打压{P}，背后有更大的势力撑腰。',c)},
+      {n:c.X,r:'关键配角',d:fill('看似普通的门卫老头，实为隐世强者，守着{P}身世的秘密。',c)}],
+    conflict:fill('主线：{P}从“废脉”逆袭成武神，揭开身世之谜。\n爽点：越级挑战 · 当众打脸 · 境界突破 · 扮猪吃虎。\n名场面：测试台上全场哄笑 / 一拳击碎测力石 / 武道会上越三阶秒杀 / 门卫老头出手。',c),
+    pacing:`总集数 ${f.episodes}。建议卡点：一卡第 ${cards.c1} 集（觉醒传承），二卡第 ${cards.c2} 集（越级击败反派），三卡第 ${cards.c3} 集（身世揭晓）。`,
+    cards,ending:fill('{P}登顶武道之巅，{A}背后的势力覆灭；结尾留出更高境界的世界，方便加更第二季。',c),cast:c,skills:skillNames(f.skills)};
+}
 function skillNames(ids){return(ids||[]).map(id=>[...BUILTIN_SKILLS,...S.userSkills].find(s=>s.id===id)?.name).filter(Boolean)}
 function defaultCards(n){return{c1:Math.max(2,Math.round(n*0.15)),c2:Math.round(n*0.44),c3:Math.round(n*0.75)}}
 function genEpisode(no,ctx){
-  const{total,cards,c,base}=ctx;const cp=[cards.c1,cards.c2,cards.c3];const isCard=cp.includes(no);let t,s,h;
+  const{total,cards,c,base}=ctx;const T=tpl(c);const cp=[cards.c1,cards.c2,cards.c3];const isCard=cp.includes(no);let t,s,h;
   if(no<=3)[t,s]=T.open[no-1];
   else if(no===total)[t,s]=T.final;
   else if(isCard)[t,s,h]=T.card[cp.indexOf(no)];
@@ -659,17 +697,17 @@ function genEpisode(no,ctx){
   else[t,s]=T.rise[(no*7)%T.rise.length];
   return{no,title:t,summary:fill(s,c),hook:fill(h||T.hooks[no%T.hooks.length],c),card:isCard?['一卡','二卡','三卡'][cp.indexOf(no)]:''};
 }
-function genScriptEp(e,c,cfg,v=0){
+function genScriptEp(e,c,cfg,v=0){const T=tpl(c);
   const n=cfg.dur==='long'?3:2;const scenes=[];const pk=(a,i)=>a[(e.no*3+i+v*5)%a.length];
   for(let i=0;i<n;i++){
-    const loc=pk(SCENES,i*5);const time=(e.no+i)%3===0?'夜':'日';const io=loc.includes('街')||loc.includes('门口')||loc.includes('天台')?'外':'内';
+    const loc=pk(c.male?SCENES_M:SCENES,i*5);const time=(e.no+i)%3===0?'夜':'日';const io=loc.includes('街')||loc.includes('门口')||loc.includes('天台')?'外':'内';
     const lines=[];
     if(i===0)lines.push({t:'act',x:e.summary});
     lines.push({t:'act',x:fill(pk(T.acts,i),c)});
     if(cfg.shots)lines.push({t:'shot',x:fill(pk(T.shots,i),c)});
     const a=pk(T.aLines,i),l=pk(T.lLines,i+1),x=pk(T.xLines,i);
-    if(i===0){lines.push({t:'dlg',w:c.A,p:a[0],x:a[1]});lines.push({t:'dlg',w:c.P,p:'平静',x:pk(T.lines,i)})}
-    else{lines.push({t:'dlg',w:c.L,p:l[0],x:l[1]});if(e.no%2)lines.push({t:'dlg',w:c.X,p:x[0],x:x[1]});lines.push({t:'dlg',w:c.P,p:'抬眼',x:pk(T.lines,i+2)})}
+    if(i===0){lines.push({t:'dlg',w:c.A,p:a[0],x:fill(a[1],c)});lines.push({t:'dlg',w:c.P,p:'平静',x:fill(pk(T.lines,i),c)})}
+    else{lines.push({t:'dlg',w:c.L,p:l[0],x:fill(l[1],c)});if(e.no%2)lines.push({t:'dlg',w:c.X,p:x[0],x:fill(x[1],c)});lines.push({t:'dlg',w:c.P,p:'抬眼',x:fill(pk(T.lines,i+2),c)})}
     if(i===n-1)lines.push({t:'hook',x:(e.card?`【${e.card}】`:'【钩子】')+e.hook});
     scenes.push({head:`${e.no}-${i+1}  ${time}  ${io}  ${loc}`,cast:[...new Set(lines.filter(l=>l.w).map(l=>l.w))].join('、'),lines});
   }
@@ -696,9 +734,9 @@ function addHist(P,what,key,v,c,kind='gen'){S.history.unshift({at:Date.now(),pid
 function createProject(){
   const f=eff(S.form);
   if(S.mode==='benchmark'){f.conv=S.form.conv||'cn';if(f.conv==='global'){if(!S.form.market||S.form.market==='cn')f.market='na'}else{f.market='cn';if(!S.form.genres.length)f.genres=['重生','复仇']}}const P=newProject(f,S.mode,S.fine?'fine':'quick');
-  S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;
+  S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;P.autoRun=!S.fine;
   P.chat.push({r:'me',t:S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:(S.form.conv==='global'?`把这部爆款本土化成${MARKETS.find(m=>m.k===(S.form.market&&S.form.market!=='cn'?S.form.market:'na')).name}版`:'把这部爆款迭代成国内其他爆款题材'),at:Date.now()});
-  if(S.mode==='original'){say(P,`收到。我会用${S.model==='auto'?'最合适的模型':' '+modelOf(S.model).name+' '}先写一份策划案，大约 10 秒。写好后你可以直接改，也可以在这里告诉我怎么改。`);startPlan(P);return}
+  if(S.mode==='original'){say(P,P.autoRun?`收到。一句话模式会一站直出：策划案 → 全部 ${f.episodes} 集集纲 → 全文短剧剧本，中间不用你操作。想改哪里，写完后随时改。`:`收到。我会用${S.model==='auto'?'最合适的模型':' '+modelOf(S.model).name+' '}先写一份策划案。精细模式下每一步写完都会停下来，等你确认或调整。`);startPlan(P);return}
   const o={status:'draft'};go('project',o,'parsing');P.stage='parsing';P.parseState='parsing';S.sel='parse';
   say(P,P.mode==='novel'?'正在解析小说：识别章节、人物和主线。':'正在拆解这部爆款：节奏曲线、卡点位置和钩子手法，然后给出转换方案。');render();
   setTimeout(()=>doParse(P),1200);
@@ -717,6 +755,7 @@ function startPlan(P){
   const c=costOf(10);if(!cost(c))return;advanceStage(P,'planning');if(S.curId===P.id)S.sel='plan';
   runTask(P,P.arts.plan,{steps:8,cost:c,label:'策划案',lines:['理解创意…','确定题材与卖点…','设计主角与反派…','搭建人物关系…','规划主线冲突…','设计名场面…','规划付费节奏…','整理策划案…'],
     produce:()=>genPlan(P.params,P),onDone:a=>{P.title=a.data.title;P.cards=a.data.cards;
+      if(P.autoRun){say(P,`策划案写好了：《${a.data.title}》。接着按卡点分段写全部集纲（一卡第 ${P.cards.c1} 集、二卡第 ${P.cards.c2} 集、三卡第 ${P.cards.c3} 集），写完直接出全文剧本。`);setTimeout(()=>startOutline(P,'cards'),400);return}
       say(P,`策划案写好了：《${a.data.title}》。建议按付费卡点分段写集纲：一卡第 ${P.cards.c1} 集、二卡第 ${P.cards.c2} 集、三卡第 ${P.cards.c3} 集。`,[['outlineModal','生成集纲']]);
       if(S.curId===P.id&&S.view==='project')setTimeout(()=>openOutlineModal(true),350)}});
 }
@@ -733,7 +772,7 @@ function runTask(P,art,opt){
     timers[tk]=setInterval(()=>{
       i++;art.task.progress=Math.round(i/opt.steps*100);
       art.task.line=opt.lines?opt.lines[Math.min(i-1,opt.lines.length-1)]:opt.stream?opt.stream(i):'';
-      if(willFail&&i>=Math.ceil(opt.steps*0.6)){
+      if(willFail&&i>=Math.ceil(opt.steps*0.6)){P.autoRun=false;
         clearInterval(timers[tk]);go('task',art.task,'failed');art.task.err='生成超时';
         if(hadData){art.status=art.prev;toast('生成失败，已保留上一版本，积分未扣除')}else go('artifact',art,'error');
         say(P,`「${art.label}」没生成完（生成超时），积分没有扣。`,[['retry:'+art.key,'重试']]);save();render();return}
@@ -780,7 +819,8 @@ function genOutline(P,k){
 }
 function outlineDone(P,k){
   const r=rangeOf(P,k);const nx=nextSeg(P,k);const last=P.arts[k].data.eps.find(e=>e.no===r.to);
-  if(nx&&S.auto&&P.arts[nx.k].status==='empty'){say(P,`${r.label}集纲写好了，按你的设置自动接着写${nx.label}。`);setTimeout(()=>{if(S.curId===P.id)S.sel=nx.k;genOutline(P,nx.k)},400);return}
+  if(P.autoRun&&!nx){say(P,'全部集纲写好了，接着写全文短剧剧本。');setTimeout(()=>startScript(P,'full',{...DEF_SC}),400);return}
+  if(nx&&(S.auto||P.autoRun)&&P.arts[nx.k].status==='empty'){if(P.autoRun){setTimeout(()=>{if(S.curId===P.id)S.sel=nx.k;genOutline(P,nx.k)},400);return}say(P,`${r.label}集纲写好了，按你的设置自动接着写${nx.label}。`);setTimeout(()=>{if(S.curId===P.id)S.sel=nx.k;genOutline(P,nx.k)},400);return}
   if(nx){const acts=[['outline:'+nx.k,`继续写${nx.label}集纲`],['scriptcur:'+k,`先写${r.label}剧本`],['view:'+k,'我先看看']];
     say(P,`${r.label}集纲写好了（第 ${r.from}–${r.to} 集）。卡点落在第 ${r.to} 集「${last?.title||''}」。`,acts);
     showNudge(P,`${r.label}集纲写好了`,`第 ${r.from}–${r.to} 集，第 ${r.to} 集「${last?.title||''}」是付费卡点。接下来写${nx.label}（第 ${nx.from}–${nx.to} 集）？`,acts,true)}
@@ -819,6 +859,9 @@ function startScript(P,key,cfg,chain){
 }
 function scriptDone(P,k,chain){
   const r=rangeOf(P,k);const nx=nextSeg(P,k);
+  if(P.autoRun){P.autoRun=false;const n=P.sc[k].data.eps.length;const acts=[['view:sc:'+k,'查看剧本'],['iafrom:'+k,'转互动剧本'],['extend:'+k,'加更几集'],['export:sc:'+k,'导出']];
+    say(P,`一站直出完成：策划案、${P.params.episodes} 集集纲和 ${n} 集短剧剧本都写好了。哪里不满意，直接在页面上改，或者告诉我怎么改。`,acts);
+    showNudge(P,'剧本写好了',`《${P.title}》共 ${n} 集、${P.sc[k].data.eps.reduce((t,e)=>t+e.scenes.length,0)} 场。可以直接导出，也可以转成互动剧本或加更。`,acts);save();render();return}
   if(nx&&(chain||S.auto)&&has(P.arts[nx.k])){say(P,`${r.label}剧本写好了，接着续写${nx.label}剧本。`);setTimeout(()=>startScript(P,nx.k,P.sc[k].cfg,chain),400);return}
   const acts=nx?[['cont:'+k,`续写${nx.label}剧本`],['view:sc:'+k,'我先看看']]:[['extend:'+k,'加更几集'],['export:sc:'+k,'导出剧本']];
   say(P,`${r.label}剧本写好了，共 ${P.sc[k].data.eps.length} 集。${nx?`要接着续写${nx.label}吗？${has(P.arts[nx.k])?'':'（会先补上'+nx.label+'集纲）'}`:'故事已经写到结尾，还可以在后面加更。'}`,acts);
@@ -1032,6 +1075,7 @@ function chipVal(k){
 }
 function chip(k){const c=chipVal(k);return`<button class="chip ${c.set&&!c.plain?'set':''}" data-pop="${k}" aria-haspopup="true">${c.plain?'':'<span class="star">✦</span>'}<span class="v">${esc(c.v)}</span>${c.plain?ic('down','i caret'):''}</button>`}
 function modelChip(){return`<button class="chip model" data-pop="model" aria-haspopup="true" title="生成模型"><span class="mdot"></span><span class="v">${esc(modelOf(S.model).name)}</span>${ic('down','i caret')}</button>`}
+function quickCost(){const N=S.form.episodes;return costOf(10)+costOf(Math.ceil(N/4)+8)+costOf(Math.max(6,Math.ceil(N/2)))}
 function canSend(){const f=S.form;if(S.mode==='original')return f.idea.trim().length>=15;if(S.mode==='novel')return f.novelText.trim().length>=20;return f.benchText.trim().length>=20}
 function sendHint(){const f=S.form;if(S.mode==='original'){const n=f.idea.trim().length;return n&&n<15?`还差 ${15-n} 字`:''}return''}
 function renderHome(){
@@ -1051,13 +1095,14 @@ function renderHome(){
         </div><span class="sp"></span>
         <button class="switch ${S.fine?'on':''}" data-act="fine" role="switch" aria-checked="${S.fine}"><span>精细生成</span><span class="tr"></span></button>
       </div>
+      <div class="modehint">${S.fine?'精细生成：策划案、集纲、剧本每一步写完都会停下来，你可以选卡点、选范围、挂 Skill、逐段确认。':`一句话生成：一站直出策划案、全部集纲和全文短剧剧本，中间不用操作，约 ${quickCost()} 积分。`}</div>
       <div class="cinput">${file}<textarea id="mainInput" class="${S.fine?'':'tall'}" placeholder="${ph}" aria-label="输入">${esc(val)}</textarea></div>
       <div class="cbar">
         ${m==='novel'?`<label class="chip" for="novelFile">${ic('clip')}上传小说</label><input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleNovel">示例小说</button>`:''}
         ${m==='benchmark'?`<label class="chip" for="benchFile">${ic('clip')}上传剧本</label><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleBench">示例爆款</button>`:''}
         ${m==='benchmark'?chip('conv'):''}${chip('eps')}${m!=='benchmark'||f.conv==='global'?chip('market'):''}${m!=='benchmark'||f.conv!=='global'?chip('genre'):''}${chip('style')}
         ${S.fine?chip('audience')+chip('setting')+chip('skill'):''}
-        <span class="sp"></span>${modelChip()}<span class="credits" title="本次约消耗 ${costOf(10)} 积分"><i></i>${S.credits}</span>
+        <span class="sp"></span>${modelChip()}<span class="credits" title="${S.fine?'策划案约消耗 '+costOf(10):'一站直出约消耗 '+quickCost()} 积分"><i></i>${S.credits}</span>
         <button class="send" data-act="create" ${canSend()?'':'disabled'} aria-label="开始生成">${ic('up')}</button>
       </div>
       <div class="hint" id="hint">${sendHint()}</div>
@@ -1222,8 +1267,13 @@ function renderProject(){
     <div class="msgs" id="msgs"></div>
     <div class="quick">${quickFor(getArt(S.sel)).map(q=>`<button data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
     <div class="ask"><textarea id="askInput" placeholder="告诉 AI 怎么改，例如：第 5 集加一场打脸戏" aria-label="对 AI 说"></textarea><div class="row"><span class="scope">作用于：${esc(getArt(S.sel)?.label||'当前页')}</span><span class="sp"></span><span class="credits"><i></i>${costOf(2)}</span><button class="btn pri sq" data-act="ask" aria-label="发送">${ic('send')}</button></div></div></aside>`:'';
-  return top+`<div class="ws ${S.asstOpen&&!S.asstFloat?'':'noasst'}">${tree}<section class="main" id="main">${main}</section>${asst}</div><button class="fab" data-act="asstFab" aria-label="打开 AI 助手">${ic('chat')}</button>`;
+  return top+`<div class="ws ${S.asstOpen&&!S.asstFloat?'':'noasst'}">${tree}<section class="main" id="main">${autoBar(P)}${main}</section>${asst}</div><button class="fab" data-act="asstFab" aria-label="打开 AI 助手">${ic('chat')}</button>`;
 }
+function autoBar(P){
+  if(!P.autoRun)return'';const ks=outlineKeys(P);const done=ks.filter(k=>has(P.arts[k])).length;
+  const plan=has(P.arts.plan),ol=ks.length&&done===ks.length,sc=has(P.sc.full);
+  const st=(ok,cur,t)=>`<span class="ab ${ok?'ok':cur?'cur':''}">${ok?ic('check'):cur?'<span class="spin"></span>':'<i></i>'}${t}</span>`;
+  return`<div class="autobar"><b>${ic('spark')}一站直出中</b>${st(plan,!plan,'策划案')}<span class="dash"></span>${st(ol,plan&&!ol,`集纲${ks.length?` ${done}/${ks.length} 段`:''}`)}<span class="dash"></span>${st(sc,ol&&!sc,'全文剧本')}<span class="sp"></span><button class="btn sm ghost" data-do="stopAuto">改为逐步确认</button></div>`}
 function quickFor(a){if(!a)return[];if(a.kind==='plan')return['让反派更狠一点','节奏再快一点','加强卡点悬念'];if(a.kind==='script')return['台词更口语','加强卡点钩子','第 2 集加一场打脸戏'];if(a.kind==='interactive')return['让这个选择更难选','加一点感情线'];return['加强卡点钩子','节奏再快一点','第 4 集加一点甜']}
 function renderAsstMsgs(){
   const el=$('#msgs');const P=S.project;if(!el||!P)return;
@@ -1474,6 +1524,8 @@ function doAction(k){
   else if(cmd==='toPlan')startPlan(P);
   else if(cmd==='retry')regen(P,arg);
   else if(cmd==='undo')undo();
+  else if(cmd==='iafrom'){S.sel='sc:'+arg;openInline('ia',arg,'full');render()}
+  else if(cmd==='stopAuto'){P.autoRun=false;toast('已改为逐步确认，当前这一步写完后会停下来');render()}
 }
 
 // ============ 菜单与弹窗 ============
