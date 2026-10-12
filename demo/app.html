@@ -558,6 +558,25 @@ const LOCALIZE={
   jk:{rows:[['订婚宴当众退婚','相亲会上被当众拒婚'],['豪门家族','财阀家族'],['彩礼 / 嫁妆','家族之间的联姻契约'],['跪地求饶','深深鞠躬道歉'],['隐藏身份的大佬','财阀会长的隐藏继承人']],note:'敬语体系要准确；冲突表达比国内含蓄，情绪靠表演和镜头。'},
   me:{rows:[['订婚宴当众退婚','两个家族的订婚仪式上被退婚'],['豪门家族','名门望族'],['彩礼 / 嫁妆','聘礼（Mahr）'],['跪地求饶','在族长面前公开认错'],['隐藏身份的大佬','隐藏身份的石油家族继承人']],note:'避免饮酒、暴露服装和亲密镜头；尊重家族与宗教礼仪。'},
   la:{rows:[['订婚宴当众退婚','教堂婚礼上被当众悔婚'],['豪门家族','庄园主家族'],['彩礼 / 嫁妆','家族财产与继承权'],['跪地求饶','在全家族面前忏悔'],['隐藏身份的大佬','隐藏身份的跨国集团继承人']],note:'情绪表达可以更浓烈，偏 Telenovela 节奏；家族群像戏份更重。'}};
+const SAMPLE_GAME=`《心动合租屋》
+第1集 雨夜重逢
+△ 暴雨夜，便利店门口。你浑身湿透，一把伞忽然撑在你头顶。
+沈慕白：（低头看你）这么大的雨，不要命了？
+第2集 合租室友
+△ 你搬进新公寓，发现室友是三个性格完全不同的男生。
+陆子昂：（挑眉）新来的？先说好，厨房归我。
+第3集 公司危机【一卡】
+△ 你负责的项目被人恶意举报，全公司都在看你笑话。
+苏婉柔：（冷笑）这种人也配当组长？
+第4集 天台告白
+△ 深夜天台，沈慕白递给你一罐热咖啡。
+沈慕白：（看着城市灯火）如果累了，可以靠一下。
+第5集 真相浮出【二卡】
+△ 你在旧邮件里发现，举报你的人就在合租屋里。
+陆子昂：（沉默很久）……对不起，是我。
+第6集 最终选择【三卡】
+△ 周年晚会上，三个人同时向你伸出手。
+沈慕白：（认真）这一次，换我来选你。`;
 const SAMPLE_BENCH=`第1集 女主被逼替嫁，新郎是传闻中的残疾大佬
 第2集 婚礼当天，大佬站了起来
 第8集【一卡】女主身世之谜初现
@@ -584,7 +603,7 @@ const SM={
 const STAGE_ORDER=['draft','parsing','planning','outlining','scripting','completed'];
 
 // ============ 全局状态 ============
-const defForm=()=>({conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[]});
+const defForm=()=>({gsrc:'idea',gout:'game',gtype:'love',gpov:'first',gsys:{aff:true,qte:true,col:true,ach:true,pay:true},gameText:'',conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[]});
 const S={view:'home',mode:'original',fine:false,credits:300,model:'auto',skin:'dark',auto:false,form:defForm(),
   userSkills:[],projects:[],curId:null,sel:'plan',iaTab:'canvas',selNode:null,debug:false,popKey:null,keepPop:false,
   history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:true,asstFloat:false,inline:null,failNext:false};
@@ -662,7 +681,7 @@ function genPlan(f,P){
   const idea=P.mode==='novel'?`改编自《${f.novelName||'未命名小说'}》：${P.parsed?.mainline||'女主被退婚后归来复仇的故事。'}`:P.mode==='benchmark'?(f.conv==='global'?`爆款转换 · ${m.name}本土化：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，人物、城市、文化细节和台词语言全部换成${m.name}观众熟悉的版本（${m.lang}）。`:`爆款转换 · 国内题材迭代：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，换成「${f.genres.join('、')}」题材，重写人设、金手指和名场面。`):f.idea;
   const cards=defaultCards(f.episodes);const set=f.setting||{};
   const local=f.market!=='cn'?`\n本土化：故事发生在 ${c.city}，人物使用当地常见名字，台词语言为 ${m.lang}。`:'';
-  if(f.audience==='男频'&&P.mode==='original')return genPlanMale(f,P,c,m,titles,idea,cards,set,local);
+  if(f.audience==='男频'&&(P.mode==='original'||P.mode==='game'))return genPlanMale(f,P,c,m,titles,idea,cards,set,local);
   return{titles,title:titles[0],logline:idea,
     synopsis:fill(`{P}在订婚宴上被{A}设计陷害，被{L}所在的家族当众退婚，又被逐出家门。三年后，{P}以神秘身份回到{city}，一边揭开当年陷害的真相，一边与{L}在误会与守护中重新靠近。随着{P}的马甲一层层掉落，{A}的阴谋步步败露，最终{X}道出当年隐情：那场退婚另有隐衷。`,c)+local,
     world:fill(`${set.world||'现代都市'} · {city}。两大豪门家族与新兴资本三方角力；{P}三年间建立的商业版图，是回归后反击的底牌。`,c),
@@ -736,17 +755,21 @@ function addHist(P,what,key,v,c,kind='gen'){S.history.unshift({at:Date.now(),pid
 
 function createProject(){
   const f=eff(S.form);
+  if(S.mode==='game'){const g=S.form;f.game={src:g.gsrc,out:g.gout,cfg:{...DEF_GM,type:g.gtype,pov:g.gpov,...g.gsys}}}
   if(S.mode==='benchmark'){f.conv=S.form.conv||'cn';if(f.conv==='global'){if(!S.form.market||S.form.market==='cn')f.market='na'}else{f.market='cn';if(!S.form.genres.length)f.genres=['重生','复仇']}}const P=newProject(f,S.mode,S.fine?'fine':'quick');
   S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;P.autoRun=!S.fine;
-  P.chat.push({r:'me',t:S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:(S.form.conv==='global'?`把这部爆款本土化成${MARKETS.find(m=>m.k===(S.form.market&&S.form.market!=='cn'?S.form.market:'na')).name}版`:'把这部爆款迭代成国内其他爆款题材'),at:Date.now()});
+  const outName=f.game?.out==='ia'?'互动剧本':'影游剧本';
+  P.chat.push({r:'me',t:S.mode==='game'?(f.game.src==='idea'?f.idea:`把这份剧本转成${outName}`):S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:(S.form.conv==='global'?`把这部爆款本土化成${MARKETS.find(m=>m.k===(S.form.market&&S.form.market!=='cn'?S.form.market:'na')).name}版`:'把这部爆款迭代成国内其他爆款题材'),at:Date.now()});
+  if(S.mode==='game'&&f.game.src==='idea'){say(P,P.autoRun?`收到。一句话模式会一站直出：策划案 → 集纲 → 短剧剧本 → ${outName}，中间不用你操作。`:`收到。精细模式下每一步写完都会停下来，最后再按你选的玩法转成${outName}。`);startPlan(P);return}
   if(S.mode==='original'){say(P,P.autoRun?`收到。一句话模式会一站直出：策划案 → 全部 ${f.episodes} 集集纲 → 全文短剧剧本，中间不用你操作。想改哪里，写完后随时改。`:`收到。我会用${S.model==='auto'?'最合适的模型':' '+modelOf(S.model).name+' '}先写一份策划案。精细模式下每一步写完都会停下来，等你确认或调整。`);startPlan(P);return}
   const o={status:'draft'};go('project',o,'parsing');P.stage='parsing';P.parseState='parsing';S.sel='parse';
-  say(P,P.mode==='novel'?'正在解析小说：识别章节、人物和主线。':'正在拆解这部爆款：节奏曲线、卡点位置和钩子手法，然后给出转换方案。');render();
+  say(P,P.mode==='game'?'正在解析剧本：识别分集、人物和台词。':P.mode==='novel'?'正在解析小说：识别章节、人物和主线。':'正在拆解这部爆款：节奏曲线、卡点位置和钩子手法，然后给出转换方案。');render();
   setTimeout(()=>doParse(P),1200);
 }
 function doParse(P){
-  const text=P.mode==='novel'?(P.params.novelText||''):(P.params.benchText||'');
+  const text=P.mode==='game'?(P.params.gameText||''):P.mode==='novel'?(P.params.novelText||''):(P.params.benchText||'');
   if(S.failNext||text.trim().length<20){S.failNext=false;const o={status:'parsing'};go('project',o,'parse_failed');P.stage='parse_failed';P.parseState='parse_failed';P.parseErr=text.trim().length<20?'文本太短，识别不出章节或剧情':'文件编码无法识别';save();render();return}
+  if(P.mode==='game'){parseGameScript(P,text);return}
   if(P.mode==='novel'){const chs=text.match(/第[一二三四五六七八九十百千0-9]+[章回节][^\n]*/g)||[];
     P.parsed={chapters:chs.length?chs:['全文（未识别到章节标记）'],words:text.replace(/\s/g,'').length,chars:Object.values(cast(P.params)).slice(0,4),mainline:'女主被退婚、三年后携新身份归来，揭开当年真相并完成复仇',range:[1,chs.length||1],strength:'适度改编'}}
   else{const eps=[...text.matchAll(/第\s*(\d+)\s*集/g)].map(x=>+x[1]);const cm=[...text.matchAll(/第\s*(\d+)\s*集[^\n]*【[一二三]卡】/g)].map(x=>+x[1]);
@@ -754,6 +777,36 @@ function doParse(P){
   P.parseState='done';
   if(P.gen==='quick')startPlan(P);else{say(P,P.mode==='novel'?'解析完成。确认一下改编范围和力度，没问题就生成策划案。':'拆解完成。看一下转换方案，可以改转换方向和目标，没问题就生成策划案。',[['toPlan',P.mode==='novel'?'生成策划案':'生成转换后的策划案']]);save();render()}
 }
+// 上传剧本 → 解析分集、人物和台词，直接作为集纲使用
+function parseGameScript(P,text){
+  const eps=[];let cur=null;const names={};const tline=(text.match(/《([^》]+)》/)||[])[1];
+  text.split('\n').forEach(l=>{const m=/^\s*第\s*(\d+)\s*集\s*(.*)$/.exec(l);
+    if(m){const cm=/【([一二三])卡】/.exec(m[2]);cur={title:m[2].replace(/【[一二三]卡】/,'').trim()||`第${m[1]}集`,mark:cm?cm[1]+'卡':'',body:[]};eps.push(cur);return}
+    if(cur&&l.trim()){cur.body.push(l.trim());const d=/^([^\s△（(：:]{2,4})[：:]/.exec(l.trim());if(d)names[d[1]]=(names[d[1]]||0)+1}});
+  if(!eps.length){const o={status:'parsing'};go('project',o,'parse_failed');P.stage='parse_failed';P.parseState='parse_failed';P.parseErr='没有识别到「第 N 集」这样的分集标题';save();render();return}
+  const top=Object.entries(names).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const c={P:'你',L:top[0]||'沈慕白',A:top.find(n=>/柔|浩|婉/.test(n))||top[2]||'苏婉柔',X:top[1]||'林父',city:'江城'};
+  const N=eps.length;P.params.episodes=N;
+  const marks={};eps.forEach((e,i)=>{if(e.mark)marks[e.mark]=i+1});
+  P.cards=marks['一卡']&&marks['二卡']&&marks['三卡']?{c1:marks['一卡'],c2:marks['二卡'],c3:marks['三卡']}:{c1:Math.max(1,Math.round(N*.3)),c2:Math.max(2,Math.round(N*.6)),c3:N};
+  const scm={};const oeps=eps.map((e,i)=>{const no=i+1;const act=e.body.find(b=>b.startsWith('△'))||e.body[0]||e.title;
+    const lines=e.body.map(b=>{const d=/^([^\s△（(：:]{2,4})[：:]\s*(?:[（(]([^）)]*)[）)])?(.*)$/.exec(b);return d?{t:'dlg',w:d[1],p:d[2]||'平静',x:d[3].trim()}:{t:'act',x:b.replace(/^△\s*/,'')}});
+    scm[no]={no,title:e.title,scenes:[{head:'',cast:'',lines}]};
+    const card=no===P.cards.c1?'一卡':no===P.cards.c2?'二卡':no===P.cards.c3?'三卡':'';
+    return{no,title:e.title,summary:act.replace(/^△\s*/,''),hook:e.body[e.body.length-1]||'',card}});
+  const pl=genPlan(P.params,P);pl.cast=c;pl.title=tline||'上传的剧本';pl.titles=[pl.title];pl.logline=`上传剧本，共 ${N} 集，转成${P.params.game.out==='ia'?'互动剧本':'影游剧本'}。`;
+  pl.chars=[{n:c.L,r:'主要角色',d:'剧本中台词最多的角色。'},{n:c.X,r:'主要角色',d:'剧本中的重要配角。'},{n:c.A,r:'对立角色',d:'和主角站在对立面的人。'}];
+  P.arts.plan.data=pl;P.arts.plan.status='ready';P.arts.plan.versions=1;P.title=pl.title;
+  P.outlineMode='all';P.arts.all=Object.assign(newArt('all','全部集纲','outline','ready'),{data:{from:1,to:N,eps:oeps},versions:1});
+  P.parsed={epCount:N,names:top.slice(0,4),scm,words:text.replace(/\s/g,'').length};P.parseState='done';
+  const o={status:P.stage};if(go('project',o,'planning'))P.stage='planning';advanceStage(P,'outlining');
+  const out=P.params.game.out;
+  if(P.gen==='quick'){say(P,`识别出 ${N} 集、${top.length} 个主要角色，直接转成${out==='ia'?'互动剧本':'影游剧本'}。`);
+    if(out==='ia')convertToInteractive(P,'full',{...DEF_IA});else startGame(P,'full',{...P.params.game.cfg});return}
+  S.sel='parse';openGameInline(P,'full');
+  say(P,`识别出 ${N} 集、主要角色：${top.slice(0,4).join('、')||'未识别'}。确认玩法和游戏系统后就可以转换。`);save();render();
+}
+function openGameInline(P,src){const out=P.params.game?.out||'game';openInline(out==='ia'?'ia':'game',src,'full');if(out!=='ia'&&P.params.game)Object.assign(S.inline.cfg,P.params.game.cfg,{range:'full'})}
 function startPlan(P){
   const c=costOf(10);if(!cost(c))return;advanceStage(P,'planning');if(S.curId===P.id)S.sel='plan';
   runTask(P,P.arts.plan,{steps:8,cost:c,label:'策划案',lines:['理解创意…','确定题材与卖点…','设计主角与反派…','搭建人物关系…','规划主线冲突…','设计名场面…','规划付费节奏…','整理策划案…'],
@@ -862,11 +915,14 @@ function startScript(P,key,cfg,chain){
 }
 function scriptDone(P,k,chain){
   const r=rangeOf(P,k);const nx=nextSeg(P,k);
+  if(P.autoRun&&P.mode==='game'){const out=P.params.game.out;say(P,`短剧剧本写好了，接着转成${out==='ia'?'互动剧本':'影游剧本'}。`);
+    setTimeout(()=>{if(out==='ia')convertToInteractive(P,k,{...DEF_IA});else startGame(P,k,{...P.params.game.cfg})},400);return}
   if(P.autoRun){P.autoRun=false;const n=P.sc[k].data.eps.length;const acts=[['view:sc:'+k,'查看剧本'],['iafrom:'+k,'转互动剧本'],['gamefrom:'+k,'转影游剧本'],['export:sc:'+k,'导出']];
     say(P,`一站直出完成：策划案、${P.params.episodes} 集集纲和 ${n} 集短剧剧本都写好了。哪里不满意，直接在页面上改，或者告诉我怎么改。`,acts);
     showNudge(P,'剧本写好了',`《${P.title}》共 ${n} 集、${P.sc[k].data.eps.reduce((t,e)=>t+e.scenes.length,0)} 场。可以直接导出，也可以转成互动剧本或加更。`,acts);save();render();return}
   if(nx&&(chain||S.auto)&&has(P.arts[nx.k])){say(P,`${r.label}剧本写好了，接着续写${nx.label}剧本。`);setTimeout(()=>startScript(P,nx.k,P.sc[k].cfg,chain),400);return}
-  const acts=nx?[['cont:'+k,`续写${nx.label}剧本`],['view:sc:'+k,'我先看看']]:[['extend:'+k,'加更几集'],['export:sc:'+k,'导出剧本']];
+  let acts=nx?[['cont:'+k,`续写${nx.label}剧本`],['view:sc:'+k,'我先看看']]:[['extend:'+k,'加更几集'],['export:sc:'+k,'导出剧本']];
+  if(P.mode==='game'&&!nx)acts=[[P.params.game.out==='ia'?'iafrom:'+k:'gamefrom:'+k,P.params.game.out==='ia'?'转互动剧本':'转影游剧本'],...acts];
   say(P,`${r.label}剧本写好了，共 ${P.sc[k].data.eps.length} 集。${nx?`要接着续写${nx.label}吗？${has(P.arts[nx.k])?'':'（会先补上'+nx.label+'集纲）'}`:'故事已经写到结尾，还可以在后面加更。'}`,acts);
   showNudge(P,`${r.label}剧本写好了`,nx?`第 ${r.from}–${r.to} 集分场剧本已完成。续写${nx.label}（第 ${nx.from}–${nx.to} 集）？`:'全部剧本写到结尾了。可以加更几集，也可以导出。',acts,!!nx);
 }
@@ -940,7 +996,9 @@ const DEF_GM={type:'love',pov:'first',chap:'3',aff:true,ach:true,col:true,qte:tr
 const GM_ITEMS=['旧照片','染血的玉佩','匿名信','录音笔','家族族谱','加密 U 盘','古武残页','神秘钥匙','婚戒','病历单'];
 function buildGame(eps,cfg,P,scm){
   const c=P.arts.plan.data.cast;const me=s=>cfg.pov==='first'?String(s).replace(new RegExp(c.P,'g'),'你'):s;
-  const heroes=cfg.type==='love'?(c.male?[c.L,'苏晴','林小鹿']:[c.L,'沈慕白','陆子昂']):cfg.type==='mystery'?[c.L,c.X]:[c.L,c.X];
+  const up=P.parsed?.names?.length?P.parsed.names.filter(n=>n!==c.A&&n!=='你'):null;
+  const pool=c.male?['苏晴','林小鹿','许念']:['沈慕白','陆子昂','江屿'];
+  const heroes=cfg.type==='love'?[...new Set([...(up||[c.L]),...pool])].slice(0,3):[c.L,c.X];
   const size=+cfg.chap||3;const chapters=[];
   for(let i=0;i<eps.length;i+=size){
     const grp=eps.slice(i,i+size);const no=chapters.length+1;const beats=[];
@@ -953,7 +1011,7 @@ function buildGame(eps,cfg,P,scm){
       if(cfg.qte&&e.card)beats.push({t:'qte',x:`${e.card}关键时刻：3 秒内点击「挡下」，失败进入坏结局分支`});
       if(cfg.col&&j===grp.length-1)beats.push({t:'collect',x:`获得收集品「${GM_ITEMS[(no-1)%GM_ITEMS.length]}」`});
     });
-    if(cfg.type==='love'&&heroes[no]&&no<=2){const intro=[['靠近镜头，轻笑','第一次见面，你比传闻里有意思多了。'],['挡在你身前','别怕，今天有我在。']][no-1];beats.splice(1,0,{t:'face',w:heroes[no],p:intro[0],x:intro[1]})}
+    if(cfg.type==='love'&&heroes[no]&&no<=2&&!(up&&up.includes(heroes[no]))){const intro=[['靠近镜头，轻笑','第一次见面，你比传闻里有意思多了。'],['挡在你身前','别怕，今天有我在。']][no-1];beats.splice(1,0,{t:'face',w:heroes[no],p:intro[0],x:intro[1]})}
     chapters.push({no,title:grp[0].title,from:grp[0].no,to:grp[grp.length-1].no,beats,pay:cfg.pay&&grp.some(e=>e.card),ach:cfg.ach?`${grp[grp.length-1].title}`:''});
   }
   const endings=cfg.type==='love'?[...heroes.map(h=>({name:`与${h}的结局`,cond:`${h} 好感 ≥ 80`})),{name:'孤身登顶',cond:'所有角色好感都低于 50'},...(cfg.col?[{name:'隐藏结局',cond:'集齐全部收集品'}]:[])]
@@ -973,10 +1031,10 @@ function startGame(P,key,cfg){
   P.gm=P.gm||{};const label=`影游剧本 · ${r.label}`;
   if(!P.gm[key])P.gm[key]=Object.assign(newArt('gm:'+key,label,'game'),{src:key});
   const a=P.gm[key];a.label=label;a.cfg=cfg;S.sel='gm:'+key;S.inline=null;S.gmTab='level';
-  const scm={};Object.values(P.sc).forEach(x=>{if(has(x))x.data.eps.forEach(e=>scm[e.no]=e)});
+  const scm={...(P.parsed?.scm||{})};Object.values(P.sc).forEach(x=>{if(has(x))x.data.eps.forEach(e=>scm[e.no]=e)});
   runTask(P,a,{steps:12,speed:170,cost:c,label,lines:['读取剧本…','划分章节…','改写为主视角…','整理对镜台词…','设计选择与好感…','埋 QTE…','安排收集品…','设计成就…','设计结局条件…','规划付费点…','生成拍摄清单…','完成'],
     produce:()=>buildGame(eps,cfg,P,scm),
-    onDone:()=>{const d=a.data;const acts=[['view:gm:'+key,'查看影游剧本'],['export:gm:'+key,'导出']];
+    onDone:()=>{const d=a.data;const acts=[['view:gm:'+key,'查看影游剧本'],['export:gm:'+key,'导出']];if(P.autoRun){P.autoRun=false;say(P,'一站直出完成。');}
       say(P,`影游剧本写好了：${d.chapters.length} 章、${d.endings.length} 个结局${d.achievements.length?'、'+d.achievements.length+' 个成就':''}。主视角台词和拍摄清单也整理好了。`,acts);
       showNudge(P,'影游剧本写好了',`${d.chapters.length} 章 · ${d.endings.length} 个结局。可以在「系统设计」里看好感和成就，在「拍摄清单」里看对镜镜头。`,acts)}});
 }
@@ -1019,7 +1077,7 @@ function convertToInteractive(P,srcKey,cfg){
   if(!P.ia[srcKey])P.ia[srcKey]=Object.assign(newArt('ia:'+srcKey,label,'interactive'),{src:srcKey,validate:{status:'unchecked'},extra:[]});
   const a=P.ia[srcKey];a.cfg=cfg||a.cfg||{...DEF_IA};S.sel='ia:'+srcKey;S.selNode=null;S.iaTab='canvas';S.inline=null;VIEW.key=null;PL=null;
   runTask(P,a,{steps:10,speed:160,cost:c,label,lines:['读取集纲…','找出关键冲突点…','设计选择点…','分配数值…','写分支剧情…','收束支线…','写结局…','排布节点…','打磨台词…','完成'],
-    produce:()=>buildInteractive(iaEps(P,a),a.cfg,P,scMapOf(P,[srcKey,...a.extra])),onDone:()=>{validateIA(a,true);
+    produce:()=>buildInteractive(iaEps(P,a),a.cfg,P,scMapOf(P,[srcKey,...a.extra])),onDone:()=>{validateIA(a,true);if(P.autoRun){P.autoRun=false;say(P,'一站直出完成。')}
       const nx=nextSeg(P,[srcKey,...a.extra].pop());const acts=[['play:'+srcKey,'试玩一下'],...(nx?[['iacont:'+srcKey,`续写${nx.label}`]]:[]),['export:ia:'+srcKey,'导出']];
       say(P,`互动剧本写好了：${a.data.nodes.filter(n=>n.type==='choice').length} 个选择、${a.data.nodes.filter(n=>n.type==='ending').length} 个结局，结构检查${a.validate.status==='valid'?'通过':'发现问题'}。`,acts);
       showNudge(P,'互动剧本写好了','可以先在手机预览里试玩，看看选择和结局是否顺。',acts)}});
@@ -1147,6 +1205,11 @@ function chipVal(k){
   switch(k){
     case'eps':return{v:`${f.episodes}集`,set:true,plain:true};
     case'conv':return{v:f.conv==='global'?'海外本土化':'国内爆款迭代',set:true,plain:true};
+    case'gsrc':return{v:f.gsrc==='upload'?'上传剧本转换':'一句话创作',set:true,plain:true};
+    case'gout':return{v:f.gout==='ia'?'生成互动剧本':'生成影游剧本',set:true,plain:true};
+    case'gtype':return{v:{love:'恋爱养成',mystery:'悬疑推理',power:'爽文成长'}[f.gtype],set:true};
+    case'gpov':return{v:f.gpov==='first'?'第一人称主视角':'第三人称',set:true};
+    case'gsys':{const n=Object.values(f.gsys).filter(Boolean).length;return{v:`游戏系统 · ${n}`,set:true}}
     case'market':return f.market&&!(S.mode==='benchmark'&&f.market==='cn')?{v:MARKETS.find(x=>x.k===f.market).name,set:true}:{v:'目标市场'};
     case'audience':return f.audience?{v:f.audience,set:true}:{v:'目标受众'};
     case'genre':return f.genres.length?{v:f.genres.join(' · '),set:true}:{v:S.mode==='benchmark'?'目标题材':'题材类型'};
@@ -1157,33 +1220,39 @@ function chipVal(k){
 }
 function chip(k){const c=chipVal(k);return`<button class="chip ${c.set&&!c.plain?'set':''}" data-pop="${k}" aria-haspopup="true">${c.plain?'':'<span class="star">✦</span>'}<span class="v">${esc(c.v)}</span>${c.plain?ic('down','i caret'):''}</button>`}
 function modelChip(){return`<button class="chip model" data-pop="model" aria-haspopup="true" title="生成模型"><span class="mdot"></span><span class="v">${esc(modelOf(S.model).name)}</span>${ic('down','i caret')}</button>`}
+function gameHint(){const f=S.form;const o=f.gout==='ia'?'互动剧本':'影游剧本';
+  if(S.fine)return`精细生成：每一步都会停下来，可以调整玩法、视角、游戏系统和生成范围，最后再转成${o}。`;
+  return f.gsrc==='upload'?`一句话生成：上传剧本后直接转成${o}，中间不用操作。`:`一句话生成：一站直出策划案、集纲、短剧剧本和${o}，中间不用操作，约 ${quickCost()+costOf(20)} 积分。`}
 function quickCost(){const N=S.form.episodes;return costOf(10)+costOf(Math.ceil(N/4)+8)+costOf(Math.max(6,Math.ceil(N/2)))}
-function canSend(){const f=S.form;if(S.mode==='original')return f.idea.trim().length>=15;if(S.mode==='novel')return f.novelText.trim().length>=20;return f.benchText.trim().length>=20}
-function sendHint(){const f=S.form;if(S.mode==='original'){const n=f.idea.trim().length;return n&&n<15?`还差 ${15-n} 字`:''}return''}
+function canSend(){const f=S.form;if(S.mode==='game')return f.gsrc==='upload'?f.gameText.trim().length>=20:f.idea.trim().length>=15;if(S.mode==='original')return f.idea.trim().length>=15;if(S.mode==='novel')return f.novelText.trim().length>=20;return f.benchText.trim().length>=20}
+function sendHint(){const f=S.form;if(S.mode==='original'||(S.mode==='game'&&f.gsrc==='idea')){const n=f.idea.trim().length;return n&&n<15?`还差 ${15-n} 字`:''}return''}
 function renderHome(){
   const f=S.form,m=S.mode;
-  const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'粘贴小说正文，或点下方「上传小说」。上传即表示你拥有该作品的改编权。',benchmark:'上传或粘贴一部爆款短剧的剧本 / 集纲。可以把它迭代成国内另一个爆款题材，也可以本土化成海外版本。'}[m];
-  const val=m==='original'?f.idea:m==='novel'?f.novelText:f.benchText;
+  const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'粘贴小说正文，或点下方「上传小说」。上传即表示你拥有该作品的改编权。',benchmark:'上传或粘贴一部爆款短剧的剧本 / 集纲。可以把它迭代成国内另一个爆款题材，也可以本土化成海外版本。',
+    game:f.gsrc==='upload'?'粘贴剧本（需要有「第 N 集」标题），或点下方「上传剧本」，会把它转成影游剧本或互动剧本。':'描述你想做的互动影游，比如：恋爱养成，玩家搬进合租屋，被三个性格不同的室友同时追求。至少 15 字。'}[m];
+  const val=m==='game'?(f.gsrc==='upload'?f.gameText:f.idea):m==='original'?f.idea:m==='novel'?f.novelText:f.benchText;
   const file=m==='novel'&&f.novelName?`<div><span class="filecard">${ic('book')}《${esc(f.novelName)}》<span class="muted mono">${f.novelText.replace(/\s/g,'').length} 字</span><button data-act="clearNovel" aria-label="移除">${ic('x')}</button></span></div>`:'';
   const recent=S.projects.slice(0,3);
   return`<main class="home">
-    <section class="intro"><span class="eyebrow">JINGMU · AI SCRIPT STUDIO</span><h1>让故事像<em>浪潮</em>一样推进</h1><p>懂短剧节奏，懂付费卡点，懂互动分支<br>从一个想法，写到可以开拍的短剧剧本和互动剧本</p></section>
+    <section class="intro"><span class="eyebrow">JINGMU · AI SCRIPT STUDIO</span><h1>让故事像<em>浪潮</em>一样推进</h1><p>懂短剧节奏，懂付费卡点，懂互动分支<br>从一个想法，写到可以开拍的短剧剧本、互动剧本和影游剧本</p></section>
     <section class="composer">
       <div class="ctop">
         <div class="modes" role="tablist">
           <button class="${m==='original'?'on':''}" data-mode="original" role="tab" aria-selected="${m==='original'}">${ic('doc')}原创剧本</button>
           <button class="${m==='novel'?'on':''}" data-mode="novel" role="tab" aria-selected="${m==='novel'}">${ic('book')}小说改编</button>
           <button class="${m==='benchmark'?'on':''}" data-mode="benchmark" role="tab" aria-selected="${m==='benchmark'}">${ic('fire')}爆款转换</button>
+          <button class="${m==='game'?'on':''}" data-mode="game" role="tab" aria-selected="${m==='game'}">${ic('branch')}互动影游</button>
         </div><span class="sp"></span>
         <button class="switch ${S.fine?'on':''}" data-act="fine" role="switch" aria-checked="${S.fine}"><span>精细生成</span><span class="tr"></span></button>
       </div>
-      <div class="modehint">${S.fine?'精细生成：策划案、集纲、剧本每一步写完都会停下来，你可以选卡点、选范围、挂 Skill、逐段确认。':`一句话生成：一站直出策划案、全部集纲和全文短剧剧本，中间不用操作，约 ${quickCost()} 积分。`}</div>
+      <div class="modehint">${m==='game'?gameHint():S.fine?'精细生成：策划案、集纲、剧本每一步写完都会停下来，你可以选卡点、选范围、挂 Skill、逐段确认。':`一句话生成：一站直出策划案、全部集纲和全文短剧剧本，中间不用操作，约 ${quickCost()} 积分。`}</div>
       <div class="cinput">${file}<textarea id="mainInput" class="${S.fine?'':'tall'}" placeholder="${ph}" aria-label="输入">${esc(val)}</textarea></div>
       <div class="cbar">
         ${m==='novel'?`<label class="chip" for="novelFile">${ic('clip')}上传小说</label><input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleNovel">示例小说</button>`:''}
         ${m==='benchmark'?`<label class="chip" for="benchFile">${ic('clip')}上传剧本</label><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleBench">示例爆款</button>`:''}
-        ${m==='benchmark'?chip('conv'):''}${chip('eps')}${m!=='benchmark'||f.conv==='global'?chip('market'):''}${m!=='benchmark'||f.conv!=='global'?chip('genre'):''}${chip('style')}
-        ${S.fine?chip('audience')+chip('setting')+chip('skill'):''}
+        ${m==='game'?chip('gsrc')+(f.gsrc==='upload'?`<label class="chip" for="gameFile">${ic('clip')}上传剧本</label><input type="file" id="gameFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleGame">示例剧本</button>`:'')+chip('gout')+(f.gout==='game'?chip('gtype'):'')+(S.fine&&f.gout==='game'?chip('gpov')+chip('gsys'):''):''}
+        ${m==='game'&&f.gsrc==='upload'?'':`${m==='benchmark'?chip('conv'):''}${chip('eps')}`}${m==='game'&&f.gsrc==='upload'?'':`${m!=='benchmark'||f.conv==='global'?chip('market'):''}${m!=='benchmark'||f.conv!=='global'?chip('genre'):''}${chip('style')}
+        ${S.fine?chip('audience')+chip('setting')+chip('skill'):''}`}
         <span class="sp"></span>${modelChip()}<span class="credits" title="${S.fine?'策划案约消耗 '+costOf(10):'一站直出约消耗 '+quickCost()} 积分"><i></i>${S.credits}</span>
         <button class="send" data-act="create" ${canSend()?'':'disabled'} aria-label="开始生成">${ic('up')}</button>
       </div>
@@ -1215,6 +1284,12 @@ function openChipPop(anchor){
   let h='';
   if(k==='model')h=`<h5>生成模型<span class="sp"></span>影响文风和积分消耗</h5><div class="opts">${MODELS.map(x=>`<button data-v="${x.k}" class="${S.model===x.k?'on':''}"><span class="ck">${S.model===x.k?'✓':''}</span><span class="two">${esc(x.name)}<small>${esc(x.desc)}</small></span><small>${x.m===1?'标准':'×'+x.m} 积分</small></button>`).join('')}</div><div class="pfoot" style="justify-content:flex-start"><span class="sm muted">演示数据，实际可用模型以接入为准</span></div>`;
   if(k==='eps')h=`<h5>总集数</h5><div class="opts">${EPS.map(n=>`<button data-v="${n}" class="${f.episodes===n?'on':''}"><span class="ck">${f.episodes===n?'✓':''}</span>${n} 集</button>`).join('')}</div><div class="pfield"><label for="epsCustom">自定义（10–150）</label><input type="number" id="epsCustom" min="10" max="150" value="${f.episodes}"></div>`;
+  const one=(title,key,list)=>`<h5>${title}</h5><div class="opts">${list.map(([v,t,d])=>`<button data-v="${v}" class="${f[key]===v?'on':''}"><span class="ck">${f[key]===v?'✓':''}</span><span class="two">${t}${d?`<small>${d}</small>`:''}</span></button>`).join('')}</div>`;
+  if(k==='gsrc')h=one('从哪里开始','gsrc',[['idea','一句话创作','从一个想法写起，先出短剧剧本再转换'],['upload','上传剧本转换','已有剧本，直接转成影游或互动剧本']]);
+  if(k==='gout')h=one('生成什么','gout',[['game','影游剧本','第一人称主视角 + 好感、QTE、收集、成就等游戏系统'],['ia','互动剧本','选项分支 + 数值 + 多结局，可在线试玩']]);
+  if(k==='gtype')h=one('玩法类型','gtype',[['love','恋爱养成','多位可攻略角色，好感度决定结局'],['mystery','悬疑推理','收集线索，指认真相'],['power','爽文成长','实力与声望成长，逆袭打脸']]);
+  if(k==='gpov')h=one('视角','gpov',[['first','第一人称主视角','演员对镜表演，玩家就是主角'],['third','第三人称','和普通短剧拍法一致']]);
+  if(k==='gsys')h=`<h5>游戏系统<span class="sp"></span>可多选</h5><div class="opts">${[['aff','好感度 / 角色关系'],['qte','QTE 快速反应'],['col','收集品'],['ach','成就'],['pay','付费章节']].map(([v,t])=>`<button data-v="${v}" class="${f.gsys[v]?'on':''}"><span class="ck">${f.gsys[v]?'✓':''}</span>${t}</button>`).join('')}</div>`;
   if(k==='conv')h=`<h5>转换方向</h5><div class="opts">${[['cn','国内爆款迭代','保留节奏卡点，换成另一个国内爆款题材'],['global','海外本土化','人名、城市、文化和语言换成目标市场版本']].map(([v,t,d])=>`<button data-v="${v}" class="${f.conv===v?'on':''}"><span class="ck">${f.conv===v?'✓':''}</span><span class="two">${t}<small>${d}</small></span></button>`).join('')}</div>`;
   if(k==='market')h=`<h5>目标市场<span class="sp"></span>影响人名、背景和语言</h5><div class="opts">${MARKETS.filter(x=>!(S.mode==='benchmark'&&x.k==='cn')).map(x=>`<button data-v="${x.k}" class="${f.market===x.k?'on':''}"><span class="ck">${f.market===x.k?'✓':''}</span>${x.name}<small>${x.sub}</small></button>`).join('')}</div>`;
   if(k==='audience')h=`<h5>目标受众</h5><div class="opts">${AUDIENCE.map(x=>`<button data-v="${x}" class="${f.audience===x?'on':''}"><span class="ck">${f.audience===x?'✓':''}</span>${x}</button>`).join('')}</div>`;
@@ -1232,6 +1307,8 @@ function openChipPop(anchor){
   p.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const v=b.dataset.v;
     if(k==='model'){S.model=v;save();toast(`已切换到 ${modelOf(v).name}`);render()}
     if(k==='eps'){f.episodes=+v;render()}
+    if(['gsrc','gout','gtype','gpov'].includes(k)){f[k]=v;render()}
+    if(k==='gsys'){f.gsys[v]=!f.gsys[v];keep()}
     if(k==='conv'){f.conv=v;if(v==='global'&&(!f.market||f.market==='cn')){f.market='na';f.episodes=60}if(v==='cn')f.market=null;render()}
     if(k==='market'){f.market=f.market===v?null:v;if(f.market)f.episodes=MARKETS.find(x=>x.k===v).eps;render()}
     if(k==='audience'){f.audience=f.audience===v?null:v;render()}
@@ -1261,7 +1338,7 @@ addEventListener('resize',()=>closePop());
 // ---------- 剧本库 / 素材库 / 历史 ----------
 function progOf(P){const n=['plan','outline','script','done'];const st={planning:1,outlining:2,scripting:3,completed:4}[P.stage]||0;const done=[has(P.arts.plan),outlineKeys(P).some(k=>has(P.arts[k])),Object.values(P.sc).some(has)||Object.values(P.ia).some(has),P.stage==='completed'];return`<div class="prog" title="策划案 / 集纲 / 剧本 / 导出">${n.map((_,i)=>`<i class="${done[i]?'on':''}"></i>`).join('')}</div>`}
 function projCard(P){
-  const tags=[{original:'原创',novel:'小说改编',benchmark:'爆款转换'}[P.mode],`${P.params.episodes} 集`,MARKETS.find(m=>m.k===P.params.market)?.name,...(P.sample?['示例']:[])];
+  const tags=[{original:'原创',novel:'小说改编',benchmark:'爆款转换',game:'互动影游'}[P.mode],`${P.params.episodes} 集`,MARKETS.find(m=>m.k===P.params.market)?.name,...(P.sample?['示例']:[])];
   const kinds=[Object.keys(P.sc).length?'短剧剧本':'',Object.keys(P.ia).length?'互动剧本':''].filter(Boolean).join(' · ')||'进行到'+ST_LABEL(P.stage);
   return`<div class="pcard" data-open="${P.id}" role="button" tabindex="0"><div class="cov" style="background:${P.cover}"><svg viewBox="0 0 2400 120" preserveAspectRatio="none" aria-hidden="true"><path d="${WAVE_D}"/></svg><b>${esc(P.title||'未命名项目')}</b></div>
     <div class="bd"><div class="tg">${tags.filter(Boolean).map(t=>`<span>${esc(t)}</span>`).join('')}</div>${progOf(P)}<div class="ft">${esc(kinds)}<span class="sp"></span>${fmtTime(P.updated)}</div></div></div>`;
@@ -1271,7 +1348,7 @@ function renderLibrary(){
   return`<header class="topbar"><span class="sp"></span></header><main class="page">
     <div class="ph"><h2>剧本库</h2><span class="muted sm">${S.projects.length} 部</span><span class="sp"></span>
       <label class="search">${ic('search')}<input id="libQ" placeholder="搜索剧名" value="${esc(S.libQ)}" aria-label="搜索剧名"></label>
-      <div class="seg">${[['all','全部'],['original','原创'],['novel','改编'],['benchmark','转换']].map(([k,t])=>`<button class="${S.libFilter===k?'on':''}" data-lf="${k}">${t}</button>`).join('')}</div></div>
+      <div class="seg">${[['all','全部'],['original','原创'],['novel','改编'],['benchmark','转换'],['game','影游']].map(([k,t])=>`<button class="${S.libFilter===k?'on':''}" data-lf="${k}">${t}</button>`).join('')}</div></div>
     <div class="grid"><div class="newcard" data-nav2="home" role="button" tabindex="0">${ic('plus')}<span>新建剧本</span></div>${list.map(projCard).join('')}</div>
     ${!list.length&&q?`<div class="empty">没有找到「${esc(q)}」</div>`:''}</main>`;
 }
@@ -1334,7 +1411,7 @@ function navItem(k,label,a,right=''){return`<a class="${S.sel===k?'on':''} ${a&&
 function renderProject(){
   const P=S.project;if(!P){S.view='home';return renderHome()}
   let tree='<nav class="tree" aria-label="文档目录">';
-  if(P.mode!=='original')tree+=navItem('parse',P.mode==='novel'?'小说解析':'爆款转换',null);
+  if(P.mode!=='original'&&!(P.mode==='game'&&P.params.game?.src==='idea'))tree+=navItem('parse',P.mode==='novel'?'小说解析':P.mode==='game'?'剧本解析':'爆款转换',null);
   tree+=navItem('plan','策划案',P.arts.plan);
   if(P.outlineMode){tree+='<h4>集纲</h4>';outlineKeys(P).forEach(k=>{const r=rangeOf(P,k);tree+=navItem(k,k==='all'?'全部集纲':r.label,P.arts[k],`${r.from}–${r.to}`)})}
   const scs=Object.values(P.sc),ias=Object.values(P.ia),gms=Object.values(P.gm||{});
@@ -1355,7 +1432,7 @@ function autoBar(P){
   if(!P.autoRun)return'';const ks=outlineKeys(P);const done=ks.filter(k=>has(P.arts[k])).length;
   const plan=has(P.arts.plan),ol=ks.length&&done===ks.length,sc=has(P.sc.full);
   const st=(ok,cur,t)=>`<span class="ab ${ok?'ok':cur?'cur':''}">${ok?ic('check'):cur?'<span class="spin"></span>':'<i></i>'}${t}</span>`;
-  return`<div class="autobar"><b>${ic('spark')}一站直出中</b>${st(plan,!plan,'策划案')}<span class="dash"></span>${st(ol,plan&&!ol,`集纲${ks.length?` ${done}/${ks.length} 段`:''}`)}<span class="dash"></span>${st(sc,ol&&!sc,'全文剧本')}<span class="sp"></span><button class="btn sm ghost" data-do="stopAuto">改为逐步确认</button></div>`}
+  return`<div class="autobar"><b>${ic('spark')}一站直出中</b>${st(plan,!plan,'策划案')}<span class="dash"></span>${st(ol,plan&&!ol,`集纲${ks.length?` ${done}/${ks.length} 段`:''}`)}<span class="dash"></span>${P.mode==='game'&&P.params.game.src==='upload'?'':st(sc,ol&&!sc,'全文剧本')}${P.mode==='game'?(()=>{const o=P.params.game.out;const fin=o==='ia'?has(P.ia.full):has(P.gm.full);return`${P.params.game.src==='upload'?'':'<span class="dash"></span>'}${st(fin,(sc||P.params.game.src==='upload')&&!fin,o==='ia'?'互动剧本':'影游剧本')}`})():''}<span class="sp"></span><button class="btn sm ghost" data-do="stopAuto">改为逐步确认</button></div>`}
 function quickFor(a){if(!a)return[];if(a.kind==='game')return['第 1 章加一个 QTE','加一点好感互动','第 2 章加一个收集品'];if(a.kind==='plan')return['让反派更狠一点','节奏再快一点','加强卡点悬念'];if(a.kind==='script')return['台词更口语','加强卡点钩子','第 2 集加一场打脸戏'];if(a.kind==='interactive')return['让这个选择更难选','加一点感情线'];return['加强卡点钩子','节奏再快一点','第 4 集加一点甜']}
 function renderAsstMsgs(){
   const el=$('#msgs');const P=S.project;if(!el||!P)return;
@@ -1378,9 +1455,13 @@ function lockItem(a){return a.status==='locked'?['unlock:'+a.key,'解除定稿']
 function verItem(a){return['versions:'+a.key,'版本记录']}
 
 function renderParse(P){
-  if(P.parseState==='parsing')return`<div class="doc"><div class="gen"><div class="row"><span class="spin"></span><b>正在解析${P.mode==='novel'?'小说':'爆款剧本'}</b></div><div class="tank"><div class="fill" style="width:60%"></div></div><div class="line">识别章节 · 抽取人物 · 梳理主线 · 定位名场面</div></div></div>`;
+  if(P.parseState==='parsing')return`<div class="doc"><div class="gen"><div class="row"><span class="spin"></span><b>正在解析${P.mode==='novel'?'小说':P.mode==='game'?'剧本':'爆款剧本'}</b></div><div class="tank"><div class="fill" style="width:60%"></div></div><div class="line">识别章节 · 抽取人物 · 梳理主线 · 定位名场面</div></div></div>`;
   if(P.parseState==='parse_failed')return`<div class="doc"><div class="note red">${ic('warn')}解析失败：${esc(P.parseErr)}<span class="sp"></span><button class="btn" data-act="reparse">重新解析</button><button class="btn ghost" data-act="home">返回修改</button></div></div>`;
   const d=P.parsed;const pending=P.arts.plan.status==='empty';
+  if(P.mode==='game'){const eps=P.arts.all?.data?.eps||[];const outName=P.params.game?.out==='ia'?'互动剧本':'影游剧本';const done=P.params.game?.out==='ia'?P.ia.full:P.gm.full;
+    return`<div class="doc"><div class="dh"><div><h2>剧本解析</h2><div class="meta">${esc(P.title)} · ${d.epCount} 集 · 主要角色：${esc(d.names.join('、')||'未识别')}</div></div><div class="acts">${done?`<button class="btn" data-sel="${done.key}">查看${outName}</button>`:''}${S.inline?'':`<button class="btn pri" data-act="gameOpen">${done?'重新':''}转成${outName} ${ic('arrow')}</button>`}</div></div>
+    ${inlinePanel(P,'full')}
+    <section class="sec"><h3>分集</h3><div class="eps">${eps.slice(0,12).map(e=>`<div class="ep ${e.card?'card':''}"><div class="no">EP<b>${String(e.no).padStart(2,'0')}</b></div><div class="t">${esc(e.title)}${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}</div><div class="s">${esc(e.summary)}</div><div class="h">${esc(e.hook)}</div></div>`).join('')}</div>${eps.length>12?`<p class="sm">还有 ${eps.length-12} 集，可以在「全部集纲」里查看。</p>`:''}</section></div>`}
   if(P.mode==='novel')return`<div class="doc"><div class="dh"><div><h2>小说解析</h2><div class="meta">《${esc(P.params.novelName||'粘贴的小说')}》 · ${d.words} 字 · ${d.chapters.length} 章</div></div>${pending?`<div class="acts"><button class="btn pri" data-act="toPlan">确认，生成策划案 ${ic('arrow')}</button></div>`:''}</div>
     <section class="sec"><h3>主线</h3><p>${esc(d.mainline)}</p></section>
     <section class="sec"><h3>主要人物</h3><div class="titles">${d.chars.map(x=>`<span>${esc(x)}</span>`).join('')}</div></section>
@@ -1611,7 +1692,7 @@ function doAction(k){
   else if(cmd==='toPlan')startPlan(P);
   else if(cmd==='retry')regen(P,arg);
   else if(cmd==='undo')undo();
-  else if(cmd==='gamefrom'){S.sel='sc:'+arg;openInline('game',arg,'full');render()}
+  else if(cmd==='gamefrom'){S.sel='sc:'+arg;openInline('game',arg,'full');if(P.params.game)Object.assign(S.inline.cfg,P.params.game.cfg,{range:'full'});render()}
   else if(cmd==='iafrom'){S.sel='sc:'+arg;openInline('ia',arg,'full');render()}
   else if(cmd==='stopAuto'){P.autoRun=false;toast('已改为逐步确认，当前这一步写完后会停下来');render()}
 }
@@ -1845,10 +1926,11 @@ function bindHome(){
   A.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;render()});
   A.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{f.idea=IDEAS[+b.dataset.idea][1];render();const t=$('#mainInput');t.focus();t.setSelectionRange(t.value.length,t.value.length)});
   const t=$('#mainInput');
-  t.oninput=()=>{if(S.mode==='original')f.idea=t.value;else if(S.mode==='novel'){f.novelText=t.value;if(!f.novelName&&t.value.trim())f.novelName='粘贴的小说'}else f.benchText=t.value;
+  t.oninput=()=>{if(S.mode==='game'){if(f.gsrc==='upload')f.gameText=t.value;else f.idea=t.value}else if(S.mode==='original')f.idea=t.value;else if(S.mode==='novel'){f.novelText=t.value;if(!f.novelName&&t.value.trim())f.novelName='粘贴的小说'}else f.benchText=t.value;
     A.querySelector('[data-act=create]').disabled=!canSend();$('#hint').textContent=sendHint()};
   t.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&canSend())act('create')};
   const nf=$('#novelFile');if(nf)nf.onchange=()=>readFile(nf,(file,txt)=>{f.novelName=file.name.replace(/\.\w+$/,'');f.novelText=txt;render()});
+  const gf=$('#gameFile');if(gf)gf.onchange=()=>readFile(gf,(file,txt)=>{f.gameText=txt;render()});
   const bf=$('#benchFile');if(bf)bf.onchange=()=>readFile(bf,(file,txt)=>{f.benchText=txt;render()});
 }
 function bindMain(){
@@ -1926,6 +2008,8 @@ function act(x){
     case'fine':S.fine=!S.fine;render();break;
     case'sampleNovel':S.form.novelText=SAMPLE_NOVEL;S.form.novelName='重生之千金归来';render();break;
     case'sampleBench':S.form.benchText=SAMPLE_BENCH;render();break;
+    case'sampleGame':S.form.gameText=SAMPLE_GAME;render();break;
+    case'gameOpen':openGameInline(P,'full');render();break;
     case'clearNovel':S.form.novelText='';S.form.novelName='';render();break;
     case'create':if(!canSend())return;PL=null;VIEW.key=null;createProject();break;
     case'reparse':{const o={status:'parse_failed'};go('project',o,'parsing');P.stage='parsing';P.parseState='parsing';render();setTimeout(()=>doParse(P),900);break}
