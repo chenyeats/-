@@ -413,6 +413,8 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
 .acard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;align-content:start}
 .acard .av{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:900;font-family:var(--f-serif);font-size:18px;color:#fff}
+.map{width:100%;border-collapse:collapse;font-size:13px}.map th,.map td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}.map th{font-size:12px;color:var(--muted);font-weight:500}.map td:first-child{white-space:nowrap;color:var(--fg2)}
+.simrow{display:grid;grid-template-columns:80px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13px;color:var(--fg2)}.simbar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.simbar i{display:block;height:100%;background:var(--accent);border-radius:4px}
 .acard b{font-size:15px}.acard .pv{font-size:12px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.acard .aa{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.newcard .sm{font-size:12px}
 .jump{position:sticky;top:59px;z-index:5;display:flex;gap:4px;overflow-x:auto;padding:8px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);scrollbar-width:thin}
 .jump button{flex:none;min-width:34px;height:26px;padding:0 6px;border-radius:7px;font-family:var(--f-mono);font-size:11px;color:var(--fg2);border:1px solid var(--line);background:var(--surface)}
@@ -531,6 +533,24 @@ const SAMPLE_NOVEL=`第一章 退婚
 苏婉柔故技重施，却不知道林晚早已掌握了当年的全部证据。
 第五章 真相
 林父终于说出当年的隐情：退婚，是为了保护她。`;
+const EN_TITLES=['The Heiress Returns','My Secret Billionaire Husband','Too Late to Beg','The Alpha\'s Rejected Mate','Revenge in Red'];
+// 爆款转换：国内题材迭代的映射（原剧骨架 → 新题材）
+const GENRE_MAP={
+  战神:[['主角人设','被逼替嫁的落魄千金','隐姓埋名三年的北境战神'],['金手指','隐藏的豪门身份','十万旧部听令'],['名场面','婚礼上残疾大佬站起来','寿宴上万人跪迎'],['主要反派','恶毒继母','看不起赘婿的丈母娘一家']],
+  重生:[['主角人设','被逼替嫁的落魄千金','重生回到替嫁前一天的真千金'],['金手指','隐藏的豪门身份','前世的全部记忆'],['名场面','婚礼上残疾大佬站起来','婚礼前夜当众撕毁婚约'],['主要反派','恶毒继母','前世害死自己的白月光']],
+  萌宝:[['主角人设','被逼替嫁的落魄千金','独自带娃回国的天才设计师'],['金手指','隐藏的豪门身份','智商 200 的萌宝助攻'],['名场面','婚礼上残疾大佬站起来','萌宝当众认出亲爹'],['主要反派','恶毒继母','抢走设计稿的绿茶闺蜜']],
+  甜宠:[['主角人设','被逼替嫁的落魄千金','误闯总裁房间的实习生'],['金手指','隐藏的豪门身份','总裁的偏爱'],['名场面','婚礼上残疾大佬站起来','发布会上总裁当众官宣'],['主要反派','恶毒继母','想上位的女秘书']],
+  霸总:[['主角人设','被逼替嫁的落魄千金','签下契约婚姻的小透明'],['金手指','隐藏的豪门身份','霸总的白月光其实就是她'],['名场面','婚礼上残疾大佬站起来','雨夜霸总单膝跪地'],['主要反派','恶毒继母','霸总的未婚妻']],
+  复仇:[['主角人设','被逼替嫁的落魄千金','被家族抛弃后归来的复仇者'],['金手指','隐藏的豪门身份','掌握全部证据的黑客能力'],['名场面','婚礼上残疾大佬站起来','股东大会上当众夺权'],['主要反派','恶毒继母','害她家破人亡的养父']],
+  末世:[['主角人设','被逼替嫁的落魄千金','末世前七天觉醒囤货系统的普通人'],['金手指','隐藏的豪门身份','无限空间仓库'],['名场面','婚礼上残疾大佬站起来','丧尸潮里唯一亮灯的安全屋'],['主要反派','恶毒继母','前世抢走物资的队友']],
+  年代:[['主角人设','被逼替嫁的落魄千金','八零年代被换亲的知青'],['金手指','隐藏的豪门身份','超前的商业眼光'],['名场面','婚礼上残疾大佬站起来','全村看笑话时她的工厂开业'],['主要反派','恶毒继母','偏心的婆婆和小姑子']]};
+// 海外本土化的文化替换与注意事项
+const LOCALIZE={
+  na:{rows:[['订婚宴当众退婚','订婚派对上被当众甩掉，视频被传上社交媒体'],['豪门家族','东海岸老钱家族（Old Money）'],['彩礼 / 嫁妆','婚前协议（Prenup）'],['跪地求饶','慈善晚宴上公开道歉'],['隐藏身份的大佬','隐藏身份的亿万富豪 CEO']],note:'避免族裔刻板印象；台词口语化，节奏比国内再快 20%。'},
+  sea:{rows:[['订婚宴当众退婚','家族晚宴上被宣布取消婚约'],['豪门家族','华人商业家族'],['彩礼 / 嫁妆','家族联姻与生意合作'],['跪地求饶','在长辈面前低头认错'],['隐藏身份的大佬','隐藏身份的财团继承人']],note:'注意宗教与饮食禁忌；多语种字幕（英语 / 印尼语 / 泰语）。'},
+  jk:{rows:[['订婚宴当众退婚','相亲会上被当众拒婚'],['豪门家族','财阀家族'],['彩礼 / 嫁妆','家族之间的联姻契约'],['跪地求饶','深深鞠躬道歉'],['隐藏身份的大佬','财阀会长的隐藏继承人']],note:'敬语体系要准确；冲突表达比国内含蓄，情绪靠表演和镜头。'},
+  me:{rows:[['订婚宴当众退婚','两个家族的订婚仪式上被退婚'],['豪门家族','名门望族'],['彩礼 / 嫁妆','聘礼（Mahr）'],['跪地求饶','在族长面前公开认错'],['隐藏身份的大佬','隐藏身份的石油家族继承人']],note:'避免饮酒、暴露服装和亲密镜头；尊重家族与宗教礼仪。'},
+  la:{rows:[['订婚宴当众退婚','教堂婚礼上被当众悔婚'],['豪门家族','庄园主家族'],['彩礼 / 嫁妆','家族财产与继承权'],['跪地求饶','在全家族面前忏悔'],['隐藏身份的大佬','隐藏身份的跨国集团继承人']],note:'情绪表达可以更浓烈，偏 Telenovela 节奏；家族群像戏份更重。'}};
 const SAMPLE_BENCH=`第1集 女主被逼替嫁，新郎是传闻中的残疾大佬
 第2集 婚礼当天，大佬站了起来
 第8集【一卡】女主身世之谜初现
@@ -556,7 +576,7 @@ const SM={
 const STAGE_ORDER=['draft','parsing','planning','outlining','scripting','completed'];
 
 // ============ 全局状态 ============
-const defForm=()=>({idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[]});
+const defForm=()=>({conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[]});
 const S={view:'home',mode:'original',fine:false,credits:300,model:'auto',skin:'dark',auto:false,form:defForm(),
   userSkills:[],projects:[],curId:null,sel:'plan',iaTab:'canvas',selNode:null,debug:false,popKey:null,keepPop:false,
   history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:true,asstFloat:false,inline:null,failNext:false};
@@ -611,8 +631,8 @@ const T={
 };
 function genPlan(f,P){
   const c=cast(f);const m=MARKETS.find(x=>x.k===f.market);
-  const titles=[...new Set([...(T.titles[f.genres[0]]||[]),...(T.titles[f.genres[1]]||[]),...T.titles._])].slice(0,3);
-  const idea=P.mode==='novel'?`改编自《${f.novelName||'未命名小说'}》：${P.parsed?.mainline||'女主被退婚后归来复仇的故事。'}`:P.mode==='benchmark'?`对标爆款结构（${P.benchDir||'同构新创'}）：替嫁新娘与隐藏身份的大佬，在一次次掉马中反转命运。`:f.idea;
+  const titles=f.market!=='cn'&&f.market!=='jk'?EN_TITLES.slice(0,3):[...new Set([...(T.titles[f.genres[0]]||[]),...(T.titles[f.genres[1]]||[]),...T.titles._])].slice(0,3);
+  const idea=P.mode==='novel'?`改编自《${f.novelName||'未命名小说'}》：${P.parsed?.mainline||'女主被退婚后归来复仇的故事。'}`:P.mode==='benchmark'?(f.conv==='global'?`爆款转换 · ${m.name}本土化：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，人物、城市、文化细节和台词语言全部换成${m.name}观众熟悉的版本（${m.lang}）。`:`爆款转换 · 国内题材迭代：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，换成「${f.genres.join('、')}」题材，重写人设、金手指和名场面。`):f.idea;
   const cards=defaultCards(f.episodes);const set=f.setting||{};
   const local=f.market!=='cn'?`\n本土化：故事发生在 ${c.city}，人物使用当地常见名字，台词语言为 ${m.lang}。`:'';
   return{titles,title:titles[0],logline:idea,
@@ -674,12 +694,13 @@ function pushVer(P,art,label,model){(P.versions[art.key]=P.versions[art.key]||[]
 function addHist(P,what,key,v,c,kind='gen'){S.history.unshift({at:Date.now(),pid:P.id,title:P.title||'新项目',what,key,v,cost:c,model:modelOf(S.model).name,kind});S.history=S.history.slice(0,200)}
 
 function createProject(){
-  const f=eff(S.form);const P=newProject(f,S.mode,S.fine?'fine':'quick');
+  const f=eff(S.form);
+  if(S.mode==='benchmark'){f.conv=S.form.conv||'cn';if(f.conv==='global'){if(!S.form.market||S.form.market==='cn')f.market='na'}else{f.market='cn';if(!S.form.genres.length)f.genres=['重生','复仇']}}const P=newProject(f,S.mode,S.fine?'fine':'quick');
   S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;
-  P.chat.push({r:'me',t:S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:'对标这部爆款，写一部新的',at:Date.now()});
+  P.chat.push({r:'me',t:S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:(S.form.conv==='global'?`把这部爆款本土化成${MARKETS.find(m=>m.k===(S.form.market&&S.form.market!=='cn'?S.form.market:'na')).name}版`:'把这部爆款迭代成国内其他爆款题材'),at:Date.now()});
   if(S.mode==='original'){say(P,`收到。我会用${S.model==='auto'?'最合适的模型':' '+modelOf(S.model).name+' '}先写一份策划案，大约 10 秒。写好后你可以直接改，也可以在这里告诉我怎么改。`);startPlan(P);return}
   const o={status:'draft'};go('project',o,'parsing');P.stage='parsing';P.parseState='parsing';S.sel='parse';
-  say(P,P.mode==='novel'?'正在解析小说：识别章节、人物和主线。':'正在拆解这部爆款：节奏曲线、卡点位置和钩子手法。');render();
+  say(P,P.mode==='novel'?'正在解析小说：识别章节、人物和主线。':'正在拆解这部爆款：节奏曲线、卡点位置和钩子手法，然后给出转换方案。');render();
   setTimeout(()=>doParse(P),1200);
 }
 function doParse(P){
@@ -687,9 +708,10 @@ function doParse(P){
   if(S.failNext||text.trim().length<20){S.failNext=false;const o={status:'parsing'};go('project',o,'parse_failed');P.stage='parse_failed';P.parseState='parse_failed';P.parseErr=text.trim().length<20?'文本太短，识别不出章节或剧情':'文件编码无法识别';save();render();return}
   if(P.mode==='novel'){const chs=text.match(/第[一二三四五六七八九十百千0-9]+[章回节][^\n]*/g)||[];
     P.parsed={chapters:chs.length?chs:['全文（未识别到章节标记）'],words:text.replace(/\s/g,'').length,chars:Object.values(cast(P.params)).slice(0,4),mainline:'女主被退婚、三年后携新身份归来，揭开当年真相并完成复仇',range:[1,chs.length||1],strength:'适度改编'}}
-  else P.parsed={beats:[3,5,4,6,8,5,6,7,9,6,7,8,6,9,10,7,8,9,10,10],cards:[8,30,55],hooks:['身份反差：残疾大佬当场站起','双重身份层层掉马','契约婚姻转向真心','反派在三卡集现身']};
+  else{const eps=[...text.matchAll(/第\s*(\d+)\s*集/g)].map(x=>+x[1]);const cm=[...text.matchAll(/第\s*(\d+)\s*集[^\n]*【[一二三]卡】/g)].map(x=>+x[1]);
+    P.parsed={beats:[3,5,4,6,8,5,6,7,9,6,7,8,6,9,10,7,8,9,10,10],cards:cm.length===3?cm:[8,30,55],epCount:eps.length?Math.max(...eps):0,lines:text.split('\n').filter(l=>l.trim()).length,hooks:['身份反差：残疾大佬当场站起','双重身份层层掉马','契约婚姻转向真心','反派在三卡集现身']}}
   P.parseState='done';
-  if(P.gen==='quick')startPlan(P);else{say(P,'解析完成。确认一下改编范围和力度，没问题就生成策划案。',[['toPlan','生成策划案']]);save();render()}
+  if(P.gen==='quick')startPlan(P);else{say(P,P.mode==='novel'?'解析完成。确认一下改编范围和力度，没问题就生成策划案。':'拆解完成。看一下转换方案，可以改转换方向和目标，没问题就生成策划案。',[['toPlan',P.mode==='novel'?'生成策划案':'生成转换后的策划案']]);save();render()}
 }
 function startPlan(P){
   const c=costOf(10);if(!cost(c))return;advanceStage(P,'planning');if(S.curId===P.id)S.sel='plan';
@@ -999,9 +1021,10 @@ function chipVal(k){
   const f=S.form;
   switch(k){
     case'eps':return{v:`${f.episodes}集`,set:true,plain:true};
-    case'market':return f.market?{v:MARKETS.find(x=>x.k===f.market).name,set:true}:{v:'目标市场'};
+    case'conv':return{v:f.conv==='global'?'海外本土化':'国内爆款迭代',set:true,plain:true};
+    case'market':return f.market&&!(S.mode==='benchmark'&&f.market==='cn')?{v:MARKETS.find(x=>x.k===f.market).name,set:true}:{v:'目标市场'};
     case'audience':return f.audience?{v:f.audience,set:true}:{v:'目标受众'};
-    case'genre':return f.genres.length?{v:f.genres.join(' · '),set:true}:{v:'题材类型'};
+    case'genre':return f.genres.length?{v:f.genres.join(' · '),set:true}:{v:S.mode==='benchmark'?'目标题材':'题材类型'};
     case'style':return f.styles.length?{v:f.styles.join(' · '),set:true}:{v:'风格元素'};
     case'setting':{const s=f.setting;const n=[s.role,s.cheat,s.world].filter(Boolean).length;return n?{v:`核心设定 · ${n}`,set:true}:{v:'核心设定'}}
     case'skill':return f.skills.length?{v:`Skill · ${f.skills.length}`,set:true}:{v:'Skill'};
@@ -1013,7 +1036,7 @@ function canSend(){const f=S.form;if(S.mode==='original')return f.idea.trim().le
 function sendHint(){const f=S.form;if(S.mode==='original'){const n=f.idea.trim().length;return n&&n<15?`还差 ${15-n} 字`:''}return''}
 function renderHome(){
   const f=S.form,m=S.mode;
-  const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'粘贴小说正文，或点下方「上传小说」。上传即表示你拥有该作品的改编权。',benchmark:'粘贴爆款短剧的剧本或集纲，我们会拆解它的节奏和卡点，再帮你写一部新的。'}[m];
+  const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'粘贴小说正文，或点下方「上传小说」。上传即表示你拥有该作品的改编权。',benchmark:'上传或粘贴一部爆款短剧的剧本 / 集纲。可以把它迭代成国内另一个爆款题材，也可以本土化成海外版本。'}[m];
   const val=m==='original'?f.idea:m==='novel'?f.novelText:f.benchText;
   const file=m==='novel'&&f.novelName?`<div><span class="filecard">${ic('book')}《${esc(f.novelName)}》<span class="muted mono">${f.novelText.replace(/\s/g,'').length} 字</span><button data-act="clearNovel" aria-label="移除">${ic('x')}</button></span></div>`:'';
   const recent=S.projects.slice(0,3);
@@ -1024,7 +1047,7 @@ function renderHome(){
         <div class="modes" role="tablist">
           <button class="${m==='original'?'on':''}" data-mode="original" role="tab" aria-selected="${m==='original'}">${ic('doc')}原创剧本</button>
           <button class="${m==='novel'?'on':''}" data-mode="novel" role="tab" aria-selected="${m==='novel'}">${ic('book')}小说改编</button>
-          <button class="${m==='benchmark'?'on':''}" data-mode="benchmark" role="tab" aria-selected="${m==='benchmark'}">${ic('fire')}爆款对标<span class="badge">暂定</span></button>
+          <button class="${m==='benchmark'?'on':''}" data-mode="benchmark" role="tab" aria-selected="${m==='benchmark'}">${ic('fire')}爆款转换</button>
         </div><span class="sp"></span>
         <button class="switch ${S.fine?'on':''}" data-act="fine" role="switch" aria-checked="${S.fine}"><span>精细生成</span><span class="tr"></span></button>
       </div>
@@ -1032,7 +1055,7 @@ function renderHome(){
       <div class="cbar">
         ${m==='novel'?`<label class="chip" for="novelFile">${ic('clip')}上传小说</label><input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleNovel">示例小说</button>`:''}
         ${m==='benchmark'?`<label class="chip" for="benchFile">${ic('clip')}上传剧本</label><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleBench">示例爆款</button>`:''}
-        ${chip('eps')}${chip('market')}${chip('genre')}${chip('style')}
+        ${m==='benchmark'?chip('conv'):''}${chip('eps')}${m!=='benchmark'||f.conv==='global'?chip('market'):''}${m!=='benchmark'||f.conv!=='global'?chip('genre'):''}${chip('style')}
         ${S.fine?chip('audience')+chip('setting')+chip('skill'):''}
         <span class="sp"></span>${modelChip()}<span class="credits" title="本次约消耗 ${costOf(10)} 积分"><i></i>${S.credits}</span>
         <button class="send" data-act="create" ${canSend()?'':'disabled'} aria-label="开始生成">${ic('up')}</button>
@@ -1065,7 +1088,8 @@ function openChipPop(anchor){
   let h='';
   if(k==='model')h=`<h5>生成模型<span class="sp"></span>影响文风和积分消耗</h5><div class="opts">${MODELS.map(x=>`<button data-v="${x.k}" class="${S.model===x.k?'on':''}"><span class="ck">${S.model===x.k?'✓':''}</span><span class="two">${esc(x.name)}<small>${esc(x.desc)}</small></span><small>${x.m===1?'标准':'×'+x.m} 积分</small></button>`).join('')}</div><div class="pfoot" style="justify-content:flex-start"><span class="sm muted">演示数据，实际可用模型以接入为准</span></div>`;
   if(k==='eps')h=`<h5>总集数</h5><div class="opts">${EPS.map(n=>`<button data-v="${n}" class="${f.episodes===n?'on':''}"><span class="ck">${f.episodes===n?'✓':''}</span>${n} 集</button>`).join('')}</div><div class="pfield"><label for="epsCustom">自定义（10–150）</label><input type="number" id="epsCustom" min="10" max="150" value="${f.episodes}"></div>`;
-  if(k==='market')h=`<h5>目标市场<span class="sp"></span>影响人名、背景和语言</h5><div class="opts">${MARKETS.map(x=>`<button data-v="${x.k}" class="${f.market===x.k?'on':''}"><span class="ck">${f.market===x.k?'✓':''}</span>${x.name}<small>${x.sub}</small></button>`).join('')}</div>`;
+  if(k==='conv')h=`<h5>转换方向</h5><div class="opts">${[['cn','国内爆款迭代','保留节奏卡点，换成另一个国内爆款题材'],['global','海外本土化','人名、城市、文化和语言换成目标市场版本']].map(([v,t,d])=>`<button data-v="${v}" class="${f.conv===v?'on':''}"><span class="ck">${f.conv===v?'✓':''}</span><span class="two">${t}<small>${d}</small></span></button>`).join('')}</div>`;
+  if(k==='market')h=`<h5>目标市场<span class="sp"></span>影响人名、背景和语言</h5><div class="opts">${MARKETS.filter(x=>!(S.mode==='benchmark'&&x.k==='cn')).map(x=>`<button data-v="${x.k}" class="${f.market===x.k?'on':''}"><span class="ck">${f.market===x.k?'✓':''}</span>${x.name}<small>${x.sub}</small></button>`).join('')}</div>`;
   if(k==='audience')h=`<h5>目标受众</h5><div class="opts">${AUDIENCE.map(x=>`<button data-v="${x}" class="${f.audience===x?'on':''}"><span class="ck">${f.audience===x?'✓':''}</span>${x}</button>`).join('')}</div>`;
   if(k==='genre')h=`<h5>题材类型<span class="sp"></span>最多 3 个</h5><div class="tags">${GENRES.map(g=>`<button data-v="${g}" class="${f.genres.includes(g)?'on':''}">${g}</button>`).join('')}</div>`;
   if(k==='style')h=`<h5>风格元素</h5><div class="tags">${STYLES.map(g=>`<button data-v="${g}" class="${f.styles.includes(g)?'on':''}">${g}</button>`).join('')}</div>`;
@@ -1081,6 +1105,7 @@ function openChipPop(anchor){
   p.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const v=b.dataset.v;
     if(k==='model'){S.model=v;save();toast(`已切换到 ${modelOf(v).name}`);render()}
     if(k==='eps'){f.episodes=+v;render()}
+    if(k==='conv'){f.conv=v;if(v==='global'&&(!f.market||f.market==='cn')){f.market='na';f.episodes=60}if(v==='cn')f.market=null;render()}
     if(k==='market'){f.market=f.market===v?null:v;if(f.market)f.episodes=MARKETS.find(x=>x.k===v).eps;render()}
     if(k==='audience'){f.audience=f.audience===v?null:v;render()}
     if(k==='genre'){if(f.genres.includes(v))f.genres=f.genres.filter(x=>x!==v);else if(f.genres.length<3)f.genres.push(v);else{toast('题材最多选 3 个');return}keep()}
@@ -1109,7 +1134,7 @@ addEventListener('resize',()=>closePop());
 // ---------- 剧本库 / 素材库 / 历史 ----------
 function progOf(P){const n=['plan','outline','script','done'];const st={planning:1,outlining:2,scripting:3,completed:4}[P.stage]||0;const done=[has(P.arts.plan),outlineKeys(P).some(k=>has(P.arts[k])),Object.values(P.sc).some(has)||Object.values(P.ia).some(has),P.stage==='completed'];return`<div class="prog" title="策划案 / 集纲 / 剧本 / 导出">${n.map((_,i)=>`<i class="${done[i]?'on':''}"></i>`).join('')}</div>`}
 function projCard(P){
-  const tags=[{original:'原创',novel:'小说改编',benchmark:'爆款对标'}[P.mode],`${P.params.episodes} 集`,MARKETS.find(m=>m.k===P.params.market)?.name,...(P.sample?['示例']:[])];
+  const tags=[{original:'原创',novel:'小说改编',benchmark:'爆款转换'}[P.mode],`${P.params.episodes} 集`,MARKETS.find(m=>m.k===P.params.market)?.name,...(P.sample?['示例']:[])];
   const kinds=[Object.keys(P.sc).length?'短剧剧本':'',Object.keys(P.ia).length?'互动剧本':''].filter(Boolean).join(' · ')||'进行到'+ST_LABEL(P.stage);
   return`<div class="pcard" data-open="${P.id}" role="button" tabindex="0"><div class="cov" style="background:${P.cover}"><svg viewBox="0 0 2400 120" preserveAspectRatio="none" aria-hidden="true"><path d="${WAVE_D}"/></svg><b>${esc(P.title||'未命名项目')}</b></div>
     <div class="bd"><div class="tg">${tags.filter(Boolean).map(t=>`<span>${esc(t)}</span>`).join('')}</div>${progOf(P)}<div class="ft">${esc(kinds)}<span class="sp"></span>${fmtTime(P.updated)}</div></div></div>`;
@@ -1119,7 +1144,7 @@ function renderLibrary(){
   return`<header class="topbar"><span class="sp"></span></header><main class="page">
     <div class="ph"><h2>剧本库</h2><span class="muted sm">${S.projects.length} 部</span><span class="sp"></span>
       <label class="search">${ic('search')}<input id="libQ" placeholder="搜索剧名" value="${esc(S.libQ)}" aria-label="搜索剧名"></label>
-      <div class="seg">${[['all','全部'],['original','原创'],['novel','改编'],['benchmark','对标']].map(([k,t])=>`<button class="${S.libFilter===k?'on':''}" data-lf="${k}">${t}</button>`).join('')}</div></div>
+      <div class="seg">${[['all','全部'],['original','原创'],['novel','改编'],['benchmark','转换']].map(([k,t])=>`<button class="${S.libFilter===k?'on':''}" data-lf="${k}">${t}</button>`).join('')}</div></div>
     <div class="grid"><div class="newcard" data-nav2="home" role="button" tabindex="0">${ic('plus')}<span>新建剧本</span></div>${list.map(projCard).join('')}</div>
     ${!list.length&&q?`<div class="empty">没有找到「${esc(q)}」</div>`:''}</main>`;
 }
@@ -1182,7 +1207,7 @@ function navItem(k,label,a,right=''){return`<a class="${S.sel===k?'on':''} ${a&&
 function renderProject(){
   const P=S.project;if(!P){S.view='home';return renderHome()}
   let tree='<nav class="tree" aria-label="文档目录">';
-  if(P.mode!=='original')tree+=navItem('parse',P.mode==='novel'?'小说解析':'爆款拆解',null);
+  if(P.mode!=='original')tree+=navItem('parse',P.mode==='novel'?'小说解析':'爆款转换',null);
   tree+=navItem('plan','策划案',P.arts.plan);
   if(P.outlineMode){tree+='<h4>集纲</h4>';outlineKeys(P).forEach(k=>{const r=rangeOf(P,k);tree+=navItem(k,k==='all'?'全部集纲':r.label,P.arts[k],`${r.from}–${r.to}`)})}
   const scs=Object.values(P.sc),ias=Object.values(P.ia);
@@ -1230,12 +1255,30 @@ function renderParse(P){
     <section class="sec"><h3>改编范围</h3><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--fg2)">第 <span class="stepper"><input type="number" id="rFrom" min="1" max="${d.chapters.length}" value="${d.range[0]}" aria-label="起始章"></span> 章到第 <span class="stepper"><input type="number" id="rTo" min="1" max="${d.chapters.length}" value="${d.range[1]}" aria-label="结束章"></span> 章</div>
       <ol style="margin:4px 0 0;padding-left:20px;color:var(--fg2)">${d.chapters.map(c=>`<li>${esc(c)}</li>`).join('')}</ol></section>
     <section class="sec"><h3>改编力度</h3><div><div class="seg">${['忠于原著','适度改编','大幅重构'].map(x=>`<button class="${d.strength===x?'on':''}" data-strength="${x}">${x}</button>`).join('')}</div></div></section></div>`;
-  const max=Math.max(...d.beats);
-  return`<div class="doc"><div class="dh"><div><h2>爆款拆解</h2><div class="meta">识别出 3 个付费卡点和 4 种钩子手法</div></div>${pending?`<div class="acts"><button class="btn pri" data-act="toPlan">生成对标策划案 ${ic('arrow')}</button></div>`:''}</div>
-    <section class="sec"><h3>爽点强度曲线</h3><svg viewBox="0 0 400 130" style="width:100%;height:auto;max-height:200px" role="img" aria-label="每 5 集的爽点强度">${d.beats.map((b,i)=>{const ci=[1,5,10].includes(i);return`<rect x="${i*20+2}" y="${110-b/max*100}" width="16" height="${b/max*100}" rx="2" style="fill:${ci?'var(--coral)':'var(--accent)'};opacity:${ci?1:.45}"></rect>`}).join('')}<line x1="0" y1="110" x2="400" y2="110" style="stroke:var(--line2)"></line><text x="0" y="126" font-size="10" style="fill:var(--muted)">第 1 集</text><text x="400" y="126" font-size="10" style="fill:var(--muted)" text-anchor="end">第 100 集</text></svg>
-      <p class="sm">珊瑚色是卡点所在区间：第 ${d.cards.join(' / ')} 集</p></section>
-    <section class="sec"><h3>钩子手法</h3><p>${d.hooks.map(esc).join('\n')}</p></section>
-    <section class="sec"><h3>改写方向</h3><div><div class="seg">${['本土化','出海','同构新创'].map(x=>`<button class="${(P.benchDir||'同构新创')===x?'on':''}" data-bdir="${x}">${x}</button>`).join('')}</div></div><p class="sm">只借鉴节奏结构，人物和情节重新创作。</p></section></div>`;
+  const max=Math.max(...d.beats);const f=P.params;const conv=f.conv||'cn';const mk=MARKETS.find(x=>x.k===f.market);
+  const mg=f.genres.find(g=>GENRE_MAP[g])||f.genres[0];
+  const rows=conv==='cn'?(GENRE_MAP[mg]||[['主角人设','被逼替嫁的落魄千金',`「${mg}」题材的主角（AI 重写）`],['金手指','隐藏的豪门身份',`「${mg}」题材的核心爽点`],['名场面','婚礼上残疾大佬站起来','同等量级的反转名场面'],['主要反派','恶毒继母','对应题材的反派']]).map(r=>[r[0],r[1],r[2]])
+    :[['人名','林晚 / 顾承砚 / 苏婉柔',Object.values(cast(f)).slice(0,3).join(' / ')],['城市','江城',cast(f).city],...LOCALIZE[f.market].rows.map(r=>['文化细节',r[0],r[1]]),['台词语言','中文',mk.lang]];
+  const sim=conv==='cn'?[72,18]:[86,42];
+  const seg=(attr,list,cur)=>`<div class="seg">${list.map(([v,t])=>`<button class="${cur===v?'on':''}" ${attr}="${v}" ${pending?'':'disabled'}>${t}</button>`).join('')}</div>`;
+  return`<div class="doc"><div class="dh"><div><h2>爆款转换</h2><div class="meta">原剧${d.epCount?'约 '+d.epCount+' 集 · ':''}识别出 3 个付费卡点（第 ${d.cards.join(' / ')} 集） · 4 种钩子手法</div></div>${pending?`<div class="acts"><button class="btn pri" data-act="toPlan">生成转换后的策划案 ${ic('arrow')}</button></div>`:''}</div>
+    <section class="sec"><h3>转换方向</h3>
+      <div>${seg('data-conv',[['cn','国内爆款迭代'],['global','海外本土化']],conv)}</div>
+      <p class="sm">${conv==='cn'?'保留原剧的节奏骨架和卡点位置，换成另一个国内爆款题材重写人设和名场面。':'保留原剧的故事和节奏，把人名、城市、文化细节和台词语言换成目标市场的版本。'}</p>
+      ${conv==='cn'?`<div><span class="lbl">目标题材（最多 3 个）</span><div class="tags">${GENRES.filter(g=>g!=='狼人').map(g=>`<button class="${f.genres.includes(g)?'on':''}" data-cg="${g}" ${pending?'':'disabled'}>${g}</button>`).join('')}</div></div>`
+        :`<div><span class="lbl">目标市场</span>${seg('data-cm',MARKETS.filter(x=>x.k!=='cn').map(x=>[x.k,x.name]),f.market)}</div>`}
+    </section>
+    <section class="sec"><h3>转换方案</h3>
+      <div style="overflow-x:auto"><table class="map"><thead><tr><th>项目</th><th>原剧</th><th>${conv==='cn'?'转换后（'+esc(f.genres.join('、'))+'）':'转换后（'+mk.name+'）'}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r[0])}</td><td class="muted">${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}
+        <tr><td>节奏与卡点</td><td class="muted">第 ${d.cards.join(' / ')} 集卡点</td><td>按比例保留，生成集纲时可以再调</td></tr></tbody></table></div>
+      ${conv==='global'?`<div class="note info">${ic('warn')}${esc(LOCALIZE[f.market].note)}</div>`:''}
+    </section>
+    <section class="sec"><h3>与原剧的相似度（预估）</h3>
+      <div class="simrow"><span>结构相似度</span><div class="simbar"><i style="width:${sim[0]}%"></i></div><b class="mono">${sim[0]}%</b></div>
+      <div class="simrow"><span>情节相似度</span><div class="simbar"><i style="width:${sim[1]}%;background:${sim[1]>30?'var(--amber)':'var(--green)'}"></i></div><b class="mono">${sim[1]}%</b></div>
+      <p class="sm">${conv==='cn'?'借鉴的是节奏结构，人物和情节重新创作，情节相似度控制在 30% 以内。':'海外本土化是同一个故事的另一个版本，需要持有原剧版权或拿到改编授权。'}</p></section>
+    <section class="sec"><h3>原剧拆解</h3><svg viewBox="0 0 400 130" style="width:100%;height:auto;max-height:180px" role="img" aria-label="每 5 集的爽点强度">${d.beats.map((b,i)=>{const ci=[1,5,10].includes(i);return`<rect x="${i*20+2}" y="${110-b/max*100}" width="16" height="${b/max*100}" rx="2" style="fill:${ci?'var(--coral)':'var(--accent)'};opacity:${ci?1:.45}"></rect>`}).join('')}<line x1="0" y1="110" x2="400" y2="110" style="stroke:var(--line2)"></line><text x="0" y="126" font-size="10" style="fill:var(--muted)">第 1 集</text><text x="400" y="126" font-size="10" style="fill:var(--muted)" text-anchor="end">结尾</text></svg>
+      <p class="sm">爽点强度曲线，珊瑚色是卡点所在区间。钩子手法：${d.hooks.map(esc).join('；')}。</p></section></div>`;
 }
 function renderPlan(P){
   const a=P.arts.plan;
@@ -1306,7 +1349,7 @@ function renderScript(P,a){
   const words=a.data?a.data.eps.reduce((s,e)=>s+e.scenes.reduce((t,sc)=>t+sc.lines.reduce((u,l)=>u+l.x.length,0),0),0):0;
   const mins=a.data?Math.round(a.data.eps.length*(a.cfg?.dur==='long'?2.5:1.5)):0;
   const head=`<div class="dh"><div><h2>${esc(a.label)}${stBadge(a)}</h2><div class="meta">${a.data?`第 ${a.data.eps[0]?.no}–${a.data.eps[a.data.eps.length-1]?.no} 集 · ${a.data.eps.reduce((s,e)=>s+e.scenes.length,0)} 场 · 约 ${words} 字 · 成片约 ${mins} 分钟`:''}${a.cfg?.shots?' · 带镜头提示':''}</div></div>
-    <div class="acts">${moreBtn([lockItem(a),verItem(a),['retry:'+a.key,'重新生成'],['extend:'+a.src,'在结尾加更几集']])}${a.data?`<button class="btn" data-act="export">${ic('export')}导出</button><button class="btn" data-act="${hasIa?'scGoIA':'scToIA'}">${ic('branch')}${hasIa?'查看互动剧本':'转互动剧本'}</button><button class="btn pri" data-do="cont:${a.src}">${ic('pen')}${nx?'续写'+nx.label:'续写 · 加更'}</button>`:''}</div></div>`;
+    <div class="acts">${moreBtn([lockItem(a),verItem(a),['retry:'+a.key,'重新生成'],['extend:'+a.src,'在结尾加更几集'],['convCn','爆款转换：换个国内题材'],['convGlobal','爆款转换：本土化成海外版']])}${a.data?`<button class="btn" data-act="export">${ic('export')}导出</button><button class="btn" data-act="${hasIa?'scGoIA':'scToIA'}">${ic('branch')}${hasIa?'查看互动剧本':'转互动剧本'}</button><button class="btn pri" data-do="cont:${a.src}">${ic('pen')}${nx?'续写'+nx.label:'续写 · 加更'}</button>`:''}</div></div>`;
   if(a.status==='generating'&&!a.data)return`<div class="doc">${head}${genHTML(a,'正在写分场剧本')}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   const ce=a.status==='locked'?'':'contenteditable="true"';
@@ -1454,6 +1497,7 @@ function menuAct(k){
   if(cmd==='iacont')continueIA(P,arg);
   if(cmd==='extend')openExtend(P,arg);
   if(cmd==='versions')openVersions(P,arg);
+  if(cmd==='convCn'||cmd==='convGlobal'){const a=getArt(S.sel);if(a&&a.data)convertFromScript(P,a,cmd==='convCn'?'cn':'global')}
 }
 function unlock(k){const a=getArt(k);const back=a.notice?'outdated':(a.prevLock==='ready'?'ready':'edited');go('artifact',a,back);if(back==='outdated')a.notice=a.notice+'，可能需要更新';else a.notice='';save();render()}
 function closeModal(){$('#modal').innerHTML=''}
@@ -1556,6 +1600,17 @@ function mergeToAll(P){
   a.data={from:1,to:P.params.episodes,eps};a.versions=1;if(a.status==='outdated')a.notice='还有几段没生成，先用占位补齐了';
   segs.forEach(r=>delete P.arts[r.k]);P.arts.all=a;P.outlineMode='all';S.sel='all';
   save();render();toast('已合并为全部集纲，剧本不受影响');
+}
+function scriptText(P,a){return`《${P.title}》${a.label}\n\n`+a.data.eps.map(e=>`第${e.no}集 ${e.title}${e.card?'（'+e.card+'）':''}\n\n`+e.scenes.map(s=>`${s.head}\n人物：${s.cast}\n`+s.lines.map(l=>l.t==='dlg'?`${l.w}：（${l.p}）${l.x}`:l.t==='act'?`△ ${l.x}`:l.x).join('\n')).join('\n\n')).join('\n\n\n')}
+function convertFromScript(P,a,dir){
+  const cards=P.cards||defaultCards(P.params.episodes);
+  const all=epsInRange(P,'full');const marks=(all.length?all:a.data.eps).map(e=>`第${e.no}集 ${e.title}${e.no===cards.c1?'【一卡】':e.no===cards.c2?'【二卡】':e.no===cards.c3?'【三卡】':''}`).join('\n');
+  const f=eff({...defForm(),conv:dir,benchText:marks+'\n\n'+scriptText(P,a),market:dir==='global'?'na':'cn',genres:dir==='global'?P.params.genres:['重生','复仇'],episodes:dir==='global'?60:P.params.episodes});
+  const Q=newProject(f,'benchmark','fine');Q.title=`${P.title}（${dir==='global'?'海外版':'题材迭代'}）`;
+  S.projects.unshift(Q);S.curId=Q.id;S.view='project';S.sel='parse';S.nudge=null;
+  Q.chat.push({r:'me',t:`把《${P.title}》${dir==='global'?'本土化成海外版本':'迭代成国内其他爆款题材'}`,at:Date.now()});
+  const o={status:'draft'};go('project',o,'parsing');Q.stage='parsing';Q.parseState='parsing';
+  say(Q,'正在拆解原剧，然后给出转换方案。');addHist(Q,`从《${P.title}》发起爆款转换`,'',0,0,'ai');save();render();setTimeout(()=>doParse(Q),900);
 }
 function openExport(P,a){
   let txt='',json='',tab='txt';
@@ -1675,7 +1730,9 @@ function bindMain(){
     M.querySelectorAll('[data-epai]').forEach(b=>b.onclick=()=>{if(!S.asstOpen){S.asstOpen=true;if(innerWidth<=1240)S.asstFloat=true;render()}const t=$('#askInput');if(t){t.value=`第 ${b.dataset.epai} 集：`;t.focus()}});
     M.querySelectorAll('[data-eprw]').forEach(b=>b.onclick=()=>rewriteEp(P,a,+b.dataset.eprw));M.querySelectorAll('[data-sl]').forEach(el=>el.onblur=()=>{const[ei,si,li]=el.dataset.sl.split('|').map(Number);const l=a.data.eps[ei].scenes[si].lines[li];const v=el.innerText.trim();if(v!==l.x){l.x=v;if(['ready','outdated'].includes(a.status))go('artifact',a,'edited');save();const b=M.querySelector('.stbadge');if(b)b.outerHTML=stBadge(a)}})}
   M.querySelectorAll('[data-strength]').forEach(b=>b.onclick=()=>{P.parsed.strength=b.dataset.strength;render()});
-  M.querySelectorAll('[data-bdir]').forEach(b=>b.onclick=()=>{P.benchDir=b.dataset.bdir;render()});
+  M.querySelectorAll('[data-conv]').forEach(b=>b.onclick=()=>{const v=b.dataset.conv;P.params.conv=v;if(v==='global'){if(P.params.market==='cn')P.params.market='na'}else{P.params.market='cn';if(!P.params.genres.length||P.params.genres.join()==='豪门,复仇')P.params.genres=['重生','复仇']}P.params.episodes=MARKETS.find(x=>x.k===P.params.market).eps;save();render()});
+  M.querySelectorAll('[data-cg]').forEach(b=>b.onclick=()=>{const g=b.dataset.cg;const gs=P.params.genres;if(gs.includes(g)){if(gs.length>1)P.params.genres=gs.filter(x=>x!==g)}else P.params.genres=[g,...gs].slice(0,3);save();render()});
+  M.querySelectorAll('[data-cm]').forEach(b=>b.onclick=()=>{P.params.market=b.dataset.cm;P.params.episodes=MARKETS.find(x=>x.k===P.params.market).eps;save();render()});
   ['rFrom','rTo'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.onchange=()=>{P.parsed.range[i]=+el.value}});
   if(S.sel.startsWith('ia:')){const a=getArt(S.sel);
     M.querySelectorAll('[data-iatab]').forEach(b=>b.onclick=()=>{S.iaTab=b.dataset.iatab;renderMain()});
