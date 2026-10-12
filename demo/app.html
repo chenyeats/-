@@ -279,12 +279,12 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .ln.hook{color:var(--coral);font-weight:600}
 .cont{display:flex;gap:10px;align-items:center;justify-content:center;padding:18px;border:1px dashed var(--line2);border-radius:14px;flex-wrap:wrap}
 
-/* 互动剧本 */
+/* 互动影游剧本 */
 .iabar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .check{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13px;border:1px solid var(--line)}
 .check.ok{color:var(--green)}.check.warn{color:var(--amber)}.check.bad{color:var(--red);border-color:var(--red)}
 .iawrap{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:12px}
-.canvas{position:relative;height:580px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);overflow:hidden;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:22px 22px}
+.canvas{position:relative;height:640px;border:1px solid var(--line);border-radius:16px;background:var(--bg2);overflow:hidden;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:22px 22px}
 .canvas #cv{width:100%;height:100%;cursor:grab;display:block}
 .canvas #cv.drag{cursor:grabbing}
 .cvtools{position:absolute;right:10px;top:10px;display:flex;gap:4px}
@@ -603,7 +603,7 @@ const SM={
 const STAGE_ORDER=['draft','parsing','planning','outlining','scripting','completed'];
 
 // ============ 全局状态 ============
-const defForm=()=>({gsrc:'idea',gout:'game',gtype:'love',gpov:'first',gsys:{aff:true,qte:true,col:true,ach:true,pay:true},gameText:'',conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[]});
+const defForm=()=>({gform:'value',gend:'3',gsrc:'idea',gout:'game',gtype:'love',gpov:'first',gsys:{aff:true,qte:true,col:true,ach:true,pay:true},gameText:'',conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[]});
 const S={view:'home',mode:'original',fine:false,credits:300,model:'auto',skin:'dark',auto:false,form:defForm(),
   userSkills:[],projects:[],curId:null,sel:'plan',iaTab:'canvas',selNode:null,debug:false,popKey:null,keepPop:false,
   history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:true,asstFloat:false,inline:null,failNext:false};
@@ -755,10 +755,10 @@ function addHist(P,what,key,v,c,kind='gen'){S.history.unshift({at:Date.now(),pid
 
 function createProject(){
   const f=eff(S.form);
-  if(S.mode==='game'){const g=S.form;f.game={src:g.gsrc,out:g.gout,cfg:{...DEF_GM,type:g.gtype,pov:g.gpov,...g.gsys}}}
+  if(S.mode==='game'){const g=S.form;f.game={src:g.gsrc,cfg:{form:g.gform||'value',pov:g.gpov||'first',converge:g.gend==='1'?'merge':'multi',endings:+(g.gend||3)>1?+(g.gend||3):3}}}
   if(S.mode==='benchmark'){f.conv=S.form.conv||'cn';if(f.conv==='global'){if(!S.form.market||S.form.market==='cn')f.market='na'}else{f.market='cn';if(!S.form.genres.length)f.genres=['重生','复仇']}}const P=newProject(f,S.mode,S.fine?'fine':'quick');
   S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;P.autoRun=!S.fine;
-  const outName=f.game?.out==='ia'?'互动剧本':'影游剧本';
+  const outName='互动影游剧本';
   P.chat.push({r:'me',t:S.mode==='game'?(f.game.src==='idea'?f.idea:`把这份剧本转成${outName}`):S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:(S.form.conv==='global'?`把这部爆款本土化成${MARKETS.find(m=>m.k===(S.form.market&&S.form.market!=='cn'?S.form.market:'na')).name}版`:'把这部爆款迭代成国内其他爆款题材'),at:Date.now()});
   if(S.mode==='game'&&f.game.src==='idea'){say(P,P.autoRun?`收到。一句话模式会一站直出：策划案 → 集纲 → 短剧剧本 → ${outName}，中间不用你操作。`:`收到。精细模式下每一步写完都会停下来，最后再按你选的玩法转成${outName}。`);startPlan(P);return}
   if(S.mode==='original'){say(P,P.autoRun?`收到。一句话模式会一站直出：策划案 → 全部 ${f.episodes} 集集纲 → 全文短剧剧本，中间不用你操作。想改哪里，写完后随时改。`:`收到。我会用${S.model==='auto'?'最合适的模型':' '+modelOf(S.model).name+' '}先写一份策划案。精细模式下每一步写完都会停下来，等你确认或调整。`);startPlan(P);return}
@@ -794,19 +794,17 @@ function parseGameScript(P,text){
     scm[no]={no,title:e.title,scenes:[{head:'',cast:'',lines}]};
     const card=no===P.cards.c1?'一卡':no===P.cards.c2?'二卡':no===P.cards.c3?'三卡':'';
     return{no,title:e.title,summary:act.replace(/^△\s*/,''),hook:e.body[e.body.length-1]||'',card}});
-  const pl=genPlan(P.params,P);pl.cast=c;pl.title=tline||'上传的剧本';pl.titles=[pl.title];pl.logline=`上传剧本，共 ${N} 集，转成${P.params.game.out==='ia'?'互动剧本':'影游剧本'}。`;
+  const pl=genPlan(P.params,P);pl.cast=c;pl.title=tline||'上传的剧本';pl.titles=[pl.title];pl.logline=`上传剧本，共 ${N} 集，转成互动影游剧本。`;
   pl.chars=[{n:c.L,r:'主要角色',d:'剧本中台词最多的角色。'},{n:c.X,r:'主要角色',d:'剧本中的重要配角。'},{n:c.A,r:'对立角色',d:'和主角站在对立面的人。'}];
   P.arts.plan.data=pl;P.arts.plan.status='ready';P.arts.plan.versions=1;P.title=pl.title;
   P.outlineMode='all';P.arts.all=Object.assign(newArt('all','全部集纲','outline','ready'),{data:{from:1,to:N,eps:oeps},versions:1});
   P.parsed={epCount:N,names:top.slice(0,4),scm,words:text.replace(/\s/g,'').length};P.parseState='done';
   const o={status:P.stage};if(go('project',o,'planning'))P.stage='planning';advanceStage(P,'outlining');
-  const out=P.params.game.out;
-  if(P.gen==='quick'){say(P,`识别出 ${N} 集、${top.length} 个主要角色，直接转成${out==='ia'?'互动剧本':'影游剧本'}。`);
-    if(out==='ia')convertToInteractive(P,'full',{...DEF_IA});else startGame(P,'full',{...P.params.game.cfg});return}
+  if(P.gen==='quick'){say(P,`识别出 ${N} 集、${top.length} 个主要角色，直接转成互动影游剧本。`);convertToInteractive(P,'full',{...DEF_IA,...P.params.game.cfg});return}
   S.sel='parse';openGameInline(P,'full');
   say(P,`识别出 ${N} 集、主要角色：${top.slice(0,4).join('、')||'未识别'}。确认玩法和游戏系统后就可以转换。`);save();render();
 }
-function openGameInline(P,src){const out=P.params.game?.out||'game';openInline(out==='ia'?'ia':'game',src,'full');if(out!=='ia'&&P.params.game)Object.assign(S.inline.cfg,P.params.game.cfg,{range:'full'})}
+function openGameInline(P,src){openInline('ia',src,'full');if(P.params.game)Object.assign(S.inline.cfg,P.params.game.cfg,{range:'full'})}
 function startPlan(P){
   const c=costOf(10);if(!cost(c))return;advanceStage(P,'planning');if(S.curId===P.id)S.sel='plan';
   runTask(P,P.arts.plan,{steps:8,cost:c,label:'策划案',lines:['理解创意…','确定题材与卖点…','设计主角与反派…','搭建人物关系…','规划主线冲突…','设计名场面…','规划付费节奏…','整理策划案…'],
@@ -880,9 +878,9 @@ function outlineDone(P,k){
   if(nx){const acts=[['outline:'+nx.k,`继续写${nx.label}集纲`],['scriptcur:'+k,`先写${r.label}剧本`],['view:'+k,'我先看看']];
     say(P,`${r.label}集纲写好了（第 ${r.from}–${r.to} 集）。卡点落在第 ${r.to} 集「${last?.title||''}」。`,acts);
     showNudge(P,`${r.label}集纲写好了`,`第 ${r.from}–${r.to} 集，第 ${r.to} 集「${last?.title||''}」是付费卡点。接下来写${nx.label}（第 ${nx.from}–${nx.to} 集）？`,acts,true)}
-  else{const acts=[['script:'+k,'生成全文短剧剧本'],['ia:'+k,'转互动剧本'],['view:'+k,'我先看看']];
-    say(P,P.outlineMode==='all'?'全部集纲写好了。接下来可以写成短剧剧本，也可以转成互动剧本。':'所有段的集纲都写好了。接下来可以写成短剧剧本，也可以转成互动剧本。',acts);
-    showNudge(P,'集纲全部写好了','可以直接写成分场剧本，也可以转成带选项和多结局的互动剧本。',acts)}
+  else{const acts=[['script:'+k,'生成全文短剧剧本'],['ia:'+k,'转互动影游剧本'],['view:'+k,'我先看看']];
+    say(P,P.outlineMode==='all'?'全部集纲写好了。接下来可以写成短剧剧本，也可以转成互动影游剧本。':'所有段的集纲都写好了。接下来可以写成短剧剧本，也可以转成互动影游剧本。',acts);
+    showNudge(P,'集纲全部写好了','可以直接写成分场剧本，也可以转成带选项和多结局的互动影游剧本。',acts)}
 }
 
 // ============ 短剧剧本 ============
@@ -915,14 +913,13 @@ function startScript(P,key,cfg,chain){
 }
 function scriptDone(P,k,chain){
   const r=rangeOf(P,k);const nx=nextSeg(P,k);
-  if(P.autoRun&&P.mode==='game'){const out=P.params.game.out;say(P,`短剧剧本写好了，接着转成${out==='ia'?'互动剧本':'影游剧本'}。`);
-    setTimeout(()=>{if(out==='ia')convertToInteractive(P,k,{...DEF_IA});else startGame(P,k,{...P.params.game.cfg})},400);return}
-  if(P.autoRun){P.autoRun=false;const n=P.sc[k].data.eps.length;const acts=[['view:sc:'+k,'查看剧本'],['iafrom:'+k,'转互动剧本'],['gamefrom:'+k,'转影游剧本'],['export:sc:'+k,'导出']];
+  if(P.autoRun&&P.mode==='game'){say(P,'短剧剧本写好了，接着转成互动影游剧本。');setTimeout(()=>convertToInteractive(P,k,{...DEF_IA,...P.params.game.cfg}),400);return}
+  if(P.autoRun){P.autoRun=false;const n=P.sc[k].data.eps.length;const acts=[['view:sc:'+k,'查看剧本'],['iafrom:'+k,'转互动影游剧本'],['extend:'+k,'加更几集'],['export:sc:'+k,'导出']];
     say(P,`一站直出完成：策划案、${P.params.episodes} 集集纲和 ${n} 集短剧剧本都写好了。哪里不满意，直接在页面上改，或者告诉我怎么改。`,acts);
-    showNudge(P,'剧本写好了',`《${P.title}》共 ${n} 集、${P.sc[k].data.eps.reduce((t,e)=>t+e.scenes.length,0)} 场。可以直接导出，也可以转成互动剧本或加更。`,acts);save();render();return}
+    showNudge(P,'剧本写好了',`《${P.title}》共 ${n} 集、${P.sc[k].data.eps.reduce((t,e)=>t+e.scenes.length,0)} 场。可以直接导出，也可以转成互动影游剧本或加更。`,acts);save();render();return}
   if(nx&&(chain||S.auto)&&has(P.arts[nx.k])){say(P,`${r.label}剧本写好了，接着续写${nx.label}剧本。`);setTimeout(()=>startScript(P,nx.k,P.sc[k].cfg,chain),400);return}
   let acts=nx?[['cont:'+k,`续写${nx.label}剧本`],['view:sc:'+k,'我先看看']]:[['extend:'+k,'加更几集'],['export:sc:'+k,'导出剧本']];
-  if(P.mode==='game'&&!nx)acts=[[P.params.game.out==='ia'?'iafrom:'+k:'gamefrom:'+k,P.params.game.out==='ia'?'转互动剧本':'转影游剧本'],...acts];
+  if(P.mode==='game'&&!nx)acts=[['iafrom:'+k,'转互动影游剧本'],...acts];
   say(P,`${r.label}剧本写好了，共 ${P.sc[k].data.eps.length} 集。${nx?`要接着续写${nx.label}吗？${has(P.arts[nx.k])?'':'（会先补上'+nx.label+'集纲）'}`:'故事已经写到结尾，还可以在后面加更。'}`,acts);
   showNudge(P,`${r.label}剧本写好了`,nx?`第 ${r.from}–${r.to} 集分场剧本已完成。续写${nx.label}（第 ${nx.from}–${nx.to} 集）？`:'全部剧本写到结尾了。可以加更几集，也可以导出。',acts,!!nx);
 }
@@ -956,7 +953,7 @@ function extendStory(P,k,n){
       else setTimeout(()=>startScript(P,rangeKey(P,oldN+1,oldN+n),P.sc[k]?.cfg),300)}});
 }
 
-// ============ 互动剧本 ============
+// ============ 互动影游剧本 ============
 function buildInteractive(eps,cfg,P,scMap){
   const c=P.arts.plan.data.cast;const nodes=[];let nid=0;const id=()=>'n'+(++nid);
   const cardEps=[P.cards.c1,P.cards.c2,P.cards.c3];const pov=cfg.pov==='first';
@@ -1073,18 +1070,18 @@ function convertToInteractive(P,srcKey,cfg){
   const rr=rangeOf(P,srcKey);if(!rr)return;
   if(missingSegs(P,rr.from,rr.to).length){ensureOutlines(P,rr.from,rr.to,()=>convertToInteractive(P,srcKey,cfg));return}
   const c=costOf(20);if(!cost(c))return;advanceStage(P,'scripting');
-  const label=P.ia[srcKey]?.extra?.length?P.ia[srcKey].label:`互动剧本 · ${rr.label}`;
+  const label=P.ia[srcKey]?.extra?.length?P.ia[srcKey].label:`互动影游剧本 · ${rr.label}`;
   if(!P.ia[srcKey])P.ia[srcKey]=Object.assign(newArt('ia:'+srcKey,label,'interactive'),{src:srcKey,validate:{status:'unchecked'},extra:[]});
   const a=P.ia[srcKey];a.cfg=cfg||a.cfg||{...DEF_IA};S.sel='ia:'+srcKey;S.selNode=null;S.iaTab='canvas';S.inline=null;VIEW.key=null;PL=null;
   runTask(P,a,{steps:10,speed:160,cost:c,label,lines:['读取集纲…','找出关键冲突点…','设计选择点…','分配数值…','写分支剧情…','收束支线…','写结局…','排布节点…','打磨台词…','完成'],
-    produce:()=>buildInteractive(iaEps(P,a),a.cfg,P,scMapOf(P,[srcKey,...a.extra])),onDone:()=>{validateIA(a,true);if(P.autoRun){P.autoRun=false;say(P,'一站直出完成。')}
+    produce:()=>buildInteractive(iaEps(P,a),a.cfg,P,{...(P.parsed?.scm||{}),...scMapOf(P,[srcKey,...a.extra])}),onDone:()=>{validateIA(a,true);if(P.autoRun){P.autoRun=false;say(P,'一站直出完成。')}
       const nx=nextSeg(P,[srcKey,...a.extra].pop());const acts=[['play:'+srcKey,'试玩一下'],...(nx?[['iacont:'+srcKey,`续写${nx.label}`]]:[]),['export:ia:'+srcKey,'导出']];
-      say(P,`互动剧本写好了：${a.data.nodes.filter(n=>n.type==='choice').length} 个选择、${a.data.nodes.filter(n=>n.type==='ending').length} 个结局，结构检查${a.validate.status==='valid'?'通过':'发现问题'}。`,acts);
-      showNudge(P,'互动剧本写好了','可以先在手机预览里试玩，看看选择和结局是否顺。',acts)}});
+      say(P,`互动影游剧本写好了：${a.data.nodes.filter(n=>n.type==='choice').length} 个选择、${a.data.nodes.filter(n=>n.type==='ending').length} 个结局，结构检查${a.validate.status==='valid'?'通过':'发现问题'}。`,acts);
+      showNudge(P,'互动影游剧本写好了','可以先在手机预览里试玩，看看选择和结局是否顺。',acts)}});
 }
 function continueIA(P,k){
   const a=P.ia[k];const nx=nextSeg(P,[k,...a.extra].pop());if(!nx){toast('已经写到最后一段了');return}
-  ensureOutlines(P,nx.from,nx.to,()=>{a.extra.push(nx.k);a.label=`互动剧本 · ${rangeOf(P,k).label}–${nx.label}`;convertToInteractive(P,k,a.cfg)});
+  ensureOutlines(P,nx.from,nx.to,()=>{a.extra.push(nx.k);a.label=`互动影游剧本 · ${rangeOf(P,k).label}–${nx.label}`;convertToInteractive(P,k,a.cfg)});
 }
 function edgesOf(n){if(n.type==='choice')return n.options.map(o=>o.to);if(n.type==='condition')return[...n.rules.map(r=>r.to),n.else];if(n.type==='ending')return[];return[n.to]}
 function validateIA(a,silent){
@@ -1149,7 +1146,7 @@ function aiEdit(text){
       if(want==='hook'){const h=s.lines.find(l=>l.t==='hook');if(h)h.x=(e.card?`【${e.card}】`:'【钩子】')+fill(T.strongHooks[e.no%T.strongHooks.length],c)}
       else if(want==='oral')e.scenes.forEach(sc=>sc.lines.forEach(l=>{if(l.t==='dlg')l.x=l.x.replace(/，/g,'。').replace(/吧？/,'？')}));
       else s.lines.splice(s.lines.length-1,0,{t:'act',x:add})});changed=tg.map(e=>e.no)}
-  else if(a.kind==='interactive'){const n=a.data.nodes.find(x=>x.id===S.selNode);if(!n){reply('在分支图里先点选一个节点，我再改它。');return}n.text+='\n△ '+add;n.status='edited';changed=[n.id];validateIA(a,true)}
+  else if(a.kind==='interactive'){const n=a.data.nodes.find(x=>x.id===S.selNode);if(!n){reply('在剧本树里先点选一个节点，我再改它。');return}n.text+='\n△ '+add;n.status='edited';changed=[n.id];validateIA(a,true)}
   S.credits-=costOf(2);a.versions++;if(['ready','outdated'].includes(a.status))go('artifact',a,'edited');
   if(a.kind!=='interactive')propagate(P,a.key);
   pushVer(P,a,'AI 修改：'+text.slice(0,20),modelOf(S.model).name);addHist(P,`AI 修改${a.label}：${text.slice(0,24)}`,a.key,a.versions,costOf(2),'ai');
@@ -1205,8 +1202,10 @@ function chipVal(k){
   switch(k){
     case'eps':return{v:`${f.episodes}集`,set:true,plain:true};
     case'conv':return{v:f.conv==='global'?'海外本土化':'国内爆款迭代',set:true,plain:true};
+    case'gform':return{v:{branch:'选项分支',value:'数值养成',qte:'限时选择',mix:'混合'}[f.gform||'value'],set:true};
+    case'gend':return{v:f.gend==='1'?'单结局':`${f.gend||3} 个结局`,set:true};
     case'gsrc':return{v:f.gsrc==='upload'?'上传剧本转换':'一句话创作',set:true,plain:true};
-    case'gout':return{v:f.gout==='ia'?'生成互动剧本':'生成影游剧本',set:true,plain:true};
+    case'gout':return{v:f.gout==='ia'?'生成互动影游剧本':'生成影游剧本',set:true,plain:true};
     case'gtype':return{v:{love:'恋爱养成',mystery:'悬疑推理',power:'爽文成长'}[f.gtype],set:true};
     case'gpov':return{v:f.gpov==='first'?'第一人称主视角':'第三人称',set:true};
     case'gsys':{const n=Object.values(f.gsys).filter(Boolean).length;return{v:`游戏系统 · ${n}`,set:true}}
@@ -1220,8 +1219,8 @@ function chipVal(k){
 }
 function chip(k){const c=chipVal(k);return`<button class="chip ${c.set&&!c.plain?'set':''}" data-pop="${k}" aria-haspopup="true">${c.plain?'':'<span class="star">✦</span>'}<span class="v">${esc(c.v)}</span>${c.plain?ic('down','i caret'):''}</button>`}
 function modelChip(){return`<button class="chip model" data-pop="model" aria-haspopup="true" title="生成模型"><span class="mdot"></span><span class="v">${esc(modelOf(S.model).name)}</span>${ic('down','i caret')}</button>`}
-function gameHint(){const f=S.form;const o=f.gout==='ia'?'互动剧本':'影游剧本';
-  if(S.fine)return`精细生成：每一步都会停下来，可以调整玩法、视角、游戏系统和生成范围，最后再转成${o}。`;
+function gameHint(){const f=S.form;const o='互动影游剧本';
+  if(S.fine)return`精细生成：每一步都会停下来，可以调整互动形式、视角、结局数和生成范围，最后再转成${o}。`;
   return f.gsrc==='upload'?`一句话生成：上传剧本后直接转成${o}，中间不用操作。`:`一句话生成：一站直出策划案、集纲、短剧剧本和${o}，中间不用操作，约 ${quickCost()+costOf(20)} 积分。`}
 function quickCost(){const N=S.form.episodes;return costOf(10)+costOf(Math.ceil(N/4)+8)+costOf(Math.max(6,Math.ceil(N/2)))}
 function canSend(){const f=S.form;if(S.mode==='game')return f.gsrc==='upload'?f.gameText.trim().length>=20:f.idea.trim().length>=15;if(S.mode==='original')return f.idea.trim().length>=15;if(S.mode==='novel')return f.novelText.trim().length>=20;return f.benchText.trim().length>=20}
@@ -1229,12 +1228,12 @@ function sendHint(){const f=S.form;if(S.mode==='original'||(S.mode==='game'&&f.g
 function renderHome(){
   const f=S.form,m=S.mode;
   const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'粘贴小说正文，或点下方「上传小说」。上传即表示你拥有该作品的改编权。',benchmark:'上传或粘贴一部爆款短剧的剧本 / 集纲。可以把它迭代成国内另一个爆款题材，也可以本土化成海外版本。',
-    game:f.gsrc==='upload'?'粘贴剧本（需要有「第 N 集」标题），或点下方「上传剧本」，会把它转成影游剧本或互动剧本。':'描述你想做的互动影游，比如：恋爱养成，玩家搬进合租屋，被三个性格不同的室友同时追求。至少 15 字。'}[m];
+    game:f.gsrc==='upload'?'粘贴剧本（需要有「第 N 集」标题），或点下方「上传剧本」，会把它转成互动影游剧本。':'描述你想做的互动影游，比如：玩家搬进合租屋，被三个性格不同的室友同时追求，选择决定最后和谁在一起。至少 15 字。'}[m];
   const val=m==='game'?(f.gsrc==='upload'?f.gameText:f.idea):m==='original'?f.idea:m==='novel'?f.novelText:f.benchText;
   const file=m==='novel'&&f.novelName?`<div><span class="filecard">${ic('book')}《${esc(f.novelName)}》<span class="muted mono">${f.novelText.replace(/\s/g,'').length} 字</span><button data-act="clearNovel" aria-label="移除">${ic('x')}</button></span></div>`:'';
   const recent=S.projects.slice(0,3);
   return`<main class="home">
-    <section class="intro"><span class="eyebrow">JINGMU · AI SCRIPT STUDIO</span><h1>让故事像<em>浪潮</em>一样推进</h1><p>懂短剧节奏，懂付费卡点，懂互动分支<br>从一个想法，写到可以开拍的短剧剧本、互动剧本和影游剧本</p></section>
+    <section class="intro"><span class="eyebrow">JINGMU · AI SCRIPT STUDIO</span><h1>让故事像<em>浪潮</em>一样推进</h1><p>懂短剧节奏，懂付费卡点，懂互动影游<br>从一个想法，写到可以开拍的短剧剧本和互动影游剧本</p></section>
     <section class="composer">
       <div class="ctop">
         <div class="modes" role="tablist">
@@ -1250,7 +1249,7 @@ function renderHome(){
       <div class="cbar">
         ${m==='novel'?`<label class="chip" for="novelFile">${ic('clip')}上传小说</label><input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleNovel">示例小说</button>`:''}
         ${m==='benchmark'?`<label class="chip" for="benchFile">${ic('clip')}上传剧本</label><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleBench">示例爆款</button>`:''}
-        ${m==='game'?chip('gsrc')+(f.gsrc==='upload'?`<label class="chip" for="gameFile">${ic('clip')}上传剧本</label><input type="file" id="gameFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleGame">示例剧本</button>`:'')+chip('gout')+(f.gout==='game'?chip('gtype'):'')+(S.fine&&f.gout==='game'?chip('gpov')+chip('gsys'):''):''}
+        ${m==='game'?chip('gsrc')+(f.gsrc==='upload'?`<label class="chip" for="gameFile">${ic('clip')}上传剧本</label><input type="file" id="gameFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleGame">示例剧本</button>`:'')+chip('gform')+(S.fine?chip('gpov')+chip('gend'):''):''}
         ${m==='game'&&f.gsrc==='upload'?'':`${m==='benchmark'?chip('conv'):''}${chip('eps')}`}${m==='game'&&f.gsrc==='upload'?'':`${m!=='benchmark'||f.conv==='global'?chip('market'):''}${m!=='benchmark'||f.conv!=='global'?chip('genre'):''}${chip('style')}
         ${S.fine?chip('audience')+chip('setting')+chip('skill'):''}`}
         <span class="sp"></span>${modelChip()}<span class="credits" title="${S.fine?'策划案约消耗 '+costOf(10):'一站直出约消耗 '+quickCost()} 积分"><i></i>${S.credits}</span>
@@ -1285,8 +1284,10 @@ function openChipPop(anchor){
   if(k==='model')h=`<h5>生成模型<span class="sp"></span>影响文风和积分消耗</h5><div class="opts">${MODELS.map(x=>`<button data-v="${x.k}" class="${S.model===x.k?'on':''}"><span class="ck">${S.model===x.k?'✓':''}</span><span class="two">${esc(x.name)}<small>${esc(x.desc)}</small></span><small>${x.m===1?'标准':'×'+x.m} 积分</small></button>`).join('')}</div><div class="pfoot" style="justify-content:flex-start"><span class="sm muted">演示数据，实际可用模型以接入为准</span></div>`;
   if(k==='eps')h=`<h5>总集数</h5><div class="opts">${EPS.map(n=>`<button data-v="${n}" class="${f.episodes===n?'on':''}"><span class="ck">${f.episodes===n?'✓':''}</span>${n} 集</button>`).join('')}</div><div class="pfield"><label for="epsCustom">自定义（10–150）</label><input type="number" id="epsCustom" min="10" max="150" value="${f.episodes}"></div>`;
   const one=(title,key,list)=>`<h5>${title}</h5><div class="opts">${list.map(([v,t,d])=>`<button data-v="${v}" class="${f[key]===v?'on':''}"><span class="ck">${f[key]===v?'✓':''}</span><span class="two">${t}${d?`<small>${d}</small>`:''}</span></button>`).join('')}</div>`;
-  if(k==='gsrc')h=one('从哪里开始','gsrc',[['idea','一句话创作','从一个想法写起，先出短剧剧本再转换'],['upload','上传剧本转换','已有剧本，直接转成影游或互动剧本']]);
-  if(k==='gout')h=one('生成什么','gout',[['game','影游剧本','第一人称主视角 + 好感、QTE、收集、成就等游戏系统'],['ia','互动剧本','选项分支 + 数值 + 多结局，可在线试玩']]);
+  if(k==='gsrc')h=one('从哪里开始','gsrc',[['idea','一句话创作','从一个想法写起，先出短剧剧本再转换'],['upload','上传剧本转换','已有剧本，直接转成互动影游剧本']]);
+  if(k==='gform')h=one('互动形式','gform',[['branch','选项分支','每个选择走向不同剧情'],['value','数值养成','选择会改变好感、实力等数值，数值决定结局'],['qte','限时选择','关键时刻限时做决定'],['mix','混合','分支、数值和限时选择都有']]);
+  if(k==='gend')h=one('结局','gend',[['1','单结局','支线最后都回到主线'],['3','3 个结局','好结局、坏结局、隐藏结局'],['5','5 个结局','再加事业结局和真结局']]);
+  if(k==='gout')h=one('生成什么','gout',[['game','影游剧本','第一人称主视角 + 好感、QTE、收集、成就等游戏系统'],['ia','互动影游剧本','选项分支 + 数值 + 多结局，可在线试玩']]);
   if(k==='gtype')h=one('玩法类型','gtype',[['love','恋爱养成','多位可攻略角色，好感度决定结局'],['mystery','悬疑推理','收集线索，指认真相'],['power','爽文成长','实力与声望成长，逆袭打脸']]);
   if(k==='gpov')h=one('视角','gpov',[['first','第一人称主视角','演员对镜表演，玩家就是主角'],['third','第三人称','和普通短剧拍法一致']]);
   if(k==='gsys')h=`<h5>游戏系统<span class="sp"></span>可多选</h5><div class="opts">${[['aff','好感度 / 角色关系'],['qte','QTE 快速反应'],['col','收集品'],['ach','成就'],['pay','付费章节']].map(([v,t])=>`<button data-v="${v}" class="${f.gsys[v]?'on':''}"><span class="ck">${f.gsys[v]?'✓':''}</span>${t}</button>`).join('')}</div>`;
@@ -1307,7 +1308,7 @@ function openChipPop(anchor){
   p.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const v=b.dataset.v;
     if(k==='model'){S.model=v;save();toast(`已切换到 ${modelOf(v).name}`);render()}
     if(k==='eps'){f.episodes=+v;render()}
-    if(['gsrc','gout','gtype','gpov'].includes(k)){f[k]=v;render()}
+    if(['gsrc','gout','gtype','gpov','gform','gend'].includes(k)){f[k]=v;render()}
     if(k==='gsys'){f.gsys[v]=!f.gsys[v];keep()}
     if(k==='conv'){f.conv=v;if(v==='global'&&(!f.market||f.market==='cn')){f.market='na';f.episodes=60}if(v==='cn')f.market=null;render()}
     if(k==='market'){f.market=f.market===v?null:v;if(f.market)f.episodes=MARKETS.find(x=>x.k===v).eps;render()}
@@ -1339,7 +1340,7 @@ addEventListener('resize',()=>closePop());
 function progOf(P){const n=['plan','outline','script','done'];const st={planning:1,outlining:2,scripting:3,completed:4}[P.stage]||0;const done=[has(P.arts.plan),outlineKeys(P).some(k=>has(P.arts[k])),Object.values(P.sc).some(has)||Object.values(P.ia).some(has),P.stage==='completed'];return`<div class="prog" title="策划案 / 集纲 / 剧本 / 导出">${n.map((_,i)=>`<i class="${done[i]?'on':''}"></i>`).join('')}</div>`}
 function projCard(P){
   const tags=[{original:'原创',novel:'小说改编',benchmark:'爆款转换',game:'互动影游'}[P.mode],`${P.params.episodes} 集`,MARKETS.find(m=>m.k===P.params.market)?.name,...(P.sample?['示例']:[])];
-  const kinds=[Object.keys(P.sc).length?'短剧剧本':'',Object.keys(P.ia).length?'互动剧本':''].filter(Boolean).join(' · ')||'进行到'+ST_LABEL(P.stage);
+  const kinds=[Object.keys(P.sc).length?'短剧剧本':'',Object.keys(P.ia).length?'互动影游剧本':''].filter(Boolean).join(' · ')||'进行到'+ST_LABEL(P.stage);
   return`<div class="pcard" data-open="${P.id}" role="button" tabindex="0"><div class="cov" style="background:${P.cover}"><svg viewBox="0 0 2400 120" preserveAspectRatio="none" aria-hidden="true"><path d="${WAVE_D}"/></svg><b>${esc(P.title||'未命名项目')}</b></div>
     <div class="bd"><div class="tg">${tags.filter(Boolean).map(t=>`<span>${esc(t)}</span>`).join('')}</div>${progOf(P)}<div class="ft">${esc(kinds)}<span class="sp"></span>${fmtTime(P.updated)}</div></div></div>`;
 }
@@ -1348,7 +1349,7 @@ function renderLibrary(){
   return`<header class="topbar"><span class="sp"></span></header><main class="page">
     <div class="ph"><h2>剧本库</h2><span class="muted sm">${S.projects.length} 部</span><span class="sp"></span>
       <label class="search">${ic('search')}<input id="libQ" placeholder="搜索剧名" value="${esc(S.libQ)}" aria-label="搜索剧名"></label>
-      <div class="seg">${[['all','全部'],['original','原创'],['novel','改编'],['benchmark','转换'],['game','影游']].map(([k,t])=>`<button class="${S.libFilter===k?'on':''}" data-lf="${k}">${t}</button>`).join('')}</div></div>
+      <div class="seg">${[['all','全部'],['original','原创'],['novel','改编'],['benchmark','转换'],['game','互动影游']].map(([k,t])=>`<button class="${S.libFilter===k?'on':''}" data-lf="${k}">${t}</button>`).join('')}</div></div>
     <div class="grid"><div class="newcard" data-nav2="home" role="button" tabindex="0">${ic('plus')}<span>新建剧本</span></div>${list.map(projCard).join('')}</div>
     ${!list.length&&q?`<div class="empty">没有找到「${esc(q)}」</div>`:''}</main>`;
 }
@@ -1415,7 +1416,7 @@ function renderProject(){
   tree+=navItem('plan','策划案',P.arts.plan);
   if(P.outlineMode){tree+='<h4>集纲</h4>';outlineKeys(P).forEach(k=>{const r=rangeOf(P,k);tree+=navItem(k,k==='all'?'全部集纲':r.label,P.arts[k],`${r.from}–${r.to}`)})}
   const scs=Object.values(P.sc),ias=Object.values(P.ia),gms=Object.values(P.gm||{});
-  if(scs.length||ias.length||gms.length){tree+='<h4>剧本</h4>';scs.forEach(a=>tree+=navItem(a.key,`<span class="kind">短剧</span>${esc(a.label.replace('短剧剧本 · ',''))}`,a));ias.forEach(a=>tree+=navItem(a.key,`<span class="kind">互动</span>${esc(a.label.replace('互动剧本 · ',''))}`,a));gms.forEach(a=>tree+=navItem(a.key,`<span class="kind">影游</span>${esc(a.label.replace('影游剧本 · ',''))}`,a))}
+  if(scs.length||ias.length||gms.length){tree+='<h4>剧本</h4>';scs.forEach(a=>tree+=navItem(a.key,`<span class="kind">短剧</span>${esc(a.label.replace('短剧剧本 · ',''))}`,a));ias.forEach(a=>tree+=navItem(a.key,`<span class="kind">互动</span>${esc(a.label.replace('互动影游剧本 · ',''))}`,a));gms.forEach(a=>tree+=navItem(a.key,`<span class="kind">影游</span>${esc(a.label.replace('影游剧本 · ',''))}`,a))}
   tree+='</nav>';
   const s=S.sel;
   const main=s==='parse'?renderParse(P):s==='plan'?renderPlan(P):s.startsWith('ia:')?renderIA(P,getArt(s)):s.startsWith('sc:')?renderScript(P,getArt(s)):s.startsWith('gm:')?renderGame(P,getArt(s)):renderOutline(P,P.arts[s]);
@@ -1432,7 +1433,7 @@ function autoBar(P){
   if(!P.autoRun)return'';const ks=outlineKeys(P);const done=ks.filter(k=>has(P.arts[k])).length;
   const plan=has(P.arts.plan),ol=ks.length&&done===ks.length,sc=has(P.sc.full);
   const st=(ok,cur,t)=>`<span class="ab ${ok?'ok':cur?'cur':''}">${ok?ic('check'):cur?'<span class="spin"></span>':'<i></i>'}${t}</span>`;
-  return`<div class="autobar"><b>${ic('spark')}一站直出中</b>${st(plan,!plan,'策划案')}<span class="dash"></span>${st(ol,plan&&!ol,`集纲${ks.length?` ${done}/${ks.length} 段`:''}`)}<span class="dash"></span>${P.mode==='game'&&P.params.game.src==='upload'?'':st(sc,ol&&!sc,'全文剧本')}${P.mode==='game'?(()=>{const o=P.params.game.out;const fin=o==='ia'?has(P.ia.full):has(P.gm.full);return`${P.params.game.src==='upload'?'':'<span class="dash"></span>'}${st(fin,(sc||P.params.game.src==='upload')&&!fin,o==='ia'?'互动剧本':'影游剧本')}`})():''}<span class="sp"></span><button class="btn sm ghost" data-do="stopAuto">改为逐步确认</button></div>`}
+  return`<div class="autobar"><b>${ic('spark')}一站直出中</b>${st(plan,!plan,'策划案')}<span class="dash"></span>${st(ol,plan&&!ol,`集纲${ks.length?` ${done}/${ks.length} 段`:''}`)}<span class="dash"></span>${P.mode==='game'&&P.params.game.src==='upload'?'':st(sc,ol&&!sc,'全文剧本')}${P.mode==='game'?(()=>{const fin=has(P.ia.full);return`${P.params.game.src==='upload'?'':'<span class="dash"></span>'}${st(fin,(sc||P.params.game.src==='upload')&&!fin,'互动影游剧本')}`})():''}<span class="sp"></span><button class="btn sm ghost" data-do="stopAuto">改为逐步确认</button></div>`}
 function quickFor(a){if(!a)return[];if(a.kind==='game')return['第 1 章加一个 QTE','加一点好感互动','第 2 章加一个收集品'];if(a.kind==='plan')return['让反派更狠一点','节奏再快一点','加强卡点悬念'];if(a.kind==='script')return['台词更口语','加强卡点钩子','第 2 集加一场打脸戏'];if(a.kind==='interactive')return['让这个选择更难选','加一点感情线'];return['加强卡点钩子','节奏再快一点','第 4 集加一点甜']}
 function renderAsstMsgs(){
   const el=$('#msgs');const P=S.project;if(!el||!P)return;
@@ -1458,7 +1459,7 @@ function renderParse(P){
   if(P.parseState==='parsing')return`<div class="doc"><div class="gen"><div class="row"><span class="spin"></span><b>正在解析${P.mode==='novel'?'小说':P.mode==='game'?'剧本':'爆款剧本'}</b></div><div class="tank"><div class="fill" style="width:60%"></div></div><div class="line">识别章节 · 抽取人物 · 梳理主线 · 定位名场面</div></div></div>`;
   if(P.parseState==='parse_failed')return`<div class="doc"><div class="note red">${ic('warn')}解析失败：${esc(P.parseErr)}<span class="sp"></span><button class="btn" data-act="reparse">重新解析</button><button class="btn ghost" data-act="home">返回修改</button></div></div>`;
   const d=P.parsed;const pending=P.arts.plan.status==='empty';
-  if(P.mode==='game'){const eps=P.arts.all?.data?.eps||[];const outName=P.params.game?.out==='ia'?'互动剧本':'影游剧本';const done=P.params.game?.out==='ia'?P.ia.full:P.gm.full;
+  if(P.mode==='game'){const eps=P.arts.all?.data?.eps||[];const outName='互动影游剧本';const done=P.ia.full;
     return`<div class="doc"><div class="dh"><div><h2>剧本解析</h2><div class="meta">${esc(P.title)} · ${d.epCount} 集 · 主要角色：${esc(d.names.join('、')||'未识别')}</div></div><div class="acts">${done?`<button class="btn" data-sel="${done.key}">查看${outName}</button>`:''}${S.inline?'':`<button class="btn pri" data-act="gameOpen">${done?'重新':''}转成${outName} ${ic('arrow')}</button>`}</div></div>
     ${inlinePanel(P,'full')}
     <section class="sec"><h3>分集</h3><div class="eps">${eps.slice(0,12).map(e=>`<div class="ep ${e.card?'card':''}"><div class="no">EP<b>${String(e.no).padStart(2,'0')}</b></div><div class="t">${esc(e.title)}${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}</div><div class="s">${esc(e.summary)}</div><div class="h">${esc(e.hook)}</div></div>`).join('')}</div>${eps.length>12?`<p class="sm">还有 ${eps.length-12} 集，可以在「全部集纲」里查看。</p>`:''}</section></div>`}
@@ -1526,7 +1527,7 @@ function inlinePanel(P,k){
   const opt=(lb,key,arr)=>`<div><span class="lbl">${lb}</span><div class="seg">${arr.map(([v,l])=>`<button class="${String(c[key])===String(v)?'on':''}" data-io="${key}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   const rangeRow=`<div class="row"><div><span class="lbl">生成范围</span><div class="seg"><button class="${c.range==='full'?'on':''}" data-io="range" data-v="full">全文 · 第 1–${N} 集</button>${showCur?`<button class="${c.range==='cur'?'on':''}" data-io="range" data-v="cur">只写${esc(cur.label)} · 第 ${cur.from}–${cur.to} 集</button>`:''}<button class="${c.range==='custom'?'on':''}" data-io="range" data-v="custom">自定义</button></div></div>
     ${c.range==='custom'?`<div><span class="lbl">从第几集到第几集</span><span style="display:flex;gap:6px;align-items:center"><span class="stepper"><input type="number" id="rgFrom" value="${f}" min="1" max="${N}" aria-label="起始集"></span><span class="muted">至</span><span class="stepper"><input type="number" id="rgTo" value="${to}" min="1" max="${N}" aria-label="结束集"></span></span></div>`:''}</div>
-    ${miss.length?`<div class="note info">${ic('warn')}${esc(miss.join('、'))}还没有集纲，会先补写集纲，再接着写${t==='script'?'剧本':'互动剧本'}。</div>`:''}`;
+    ${miss.length?`<div class="note info">${ic('warn')}${esc(miss.join('、'))}还没有集纲，会先补写集纲，再接着写${t==='script'?'剧本':'互动影游剧本'}。</div>`:''}`;
   if(t==='game'){const tg=(k,l)=>`<button class="${c[k]?'on':''}" data-gsys="${k}">${c[k]?'✓ ':''}${l}</button>`;
     return`<div class="inline"><h4>${ic('spark')}转成影游剧本<span class="sm muted">第 ${f}–${to} 集 · 共 ${n} 集 · 主视角剧情 + 游戏系统 + 拍摄清单</span></h4>${rangeRow}
     <div class="row">${opt('玩法类型','type',[['love','恋爱养成'],['mystery','悬疑推理'],['power','爽文成长']])}${opt('视角','pov',[['first','第一人称主视角'],['third','第三人称']])}${opt('章节粒度','chap',[['3','每章 3 集'],['5','每章 5 集']])}</div>
@@ -1535,7 +1536,7 @@ function inlinePanel(P,k){
   if(t==='script')return`<div class="inline"><h4>${ic('film')}写成短剧剧本<span class="sm muted">第 ${f}–${to} 集 · 共 ${n} 集 · 分场 + 台词</span></h4>${rangeRow}
     <div class="row">${opt('单集时长','dur',[['short','1–2 分钟（2 场）'],['long','2–3 分钟（3 场）']])}${opt('镜头提示','shots',[[true,'带镜头提示'],[false,'只写台词动作']])}${opt('台词风格','tone',[['口语','口语爽快'],['文艺','克制文艺']])}</div>
     <div class="foot"><span class="credits" style="margin-right:auto"><i></i>约 ${costOf(Math.max(6,Math.ceil(n/2)))} 积分 · ${esc(modelOf(S.model).name)}</span><button class="btn ghost" data-act="inlineClose">取消</button><button class="btn pri" data-act="inlineGo">开始写剧本</button></div></div>`;
-  return`<div class="inline"><h4>${ic('branch')}转成互动剧本<span class="sm muted">第 ${f}–${to} 集 · 共 ${n} 集${P.ia[rangeKey(P,f,to)]?' · 会覆盖这个范围已有的互动版本':''}</span></h4>${rangeRow}
+  return`<div class="inline"><h4>${ic('branch')}转成互动影游剧本<span class="sm muted">第 ${f}–${to} 集 · 共 ${n} 集${P.ia[rangeKey(P,f,to)]?' · 会覆盖这个范围已有的互动版本':''}</span></h4>${rangeRow}
     <div class="row">${opt('互动形式','form',[['branch','选项分支'],['value','数值养成'],['qte','限时选择'],['mix','混合']])}${opt('选择密度','density',[['low','每 3 集一次'],['mid','每集一次'],['high','每集三选一']])}</div>
     <div class="row">${opt('结局','converge',[['merge','单结局'],['multi','多结局']])}${c.converge==='multi'?`<div><span class="lbl">结局数</span><span class="stepper"><button data-ien="-1" aria-label="减少">−</button><input type="number" id="iEnds" value="${c.endings}" aria-label="结局数"><button data-ien="1" aria-label="增加">+</button></span></div>`:''}${opt('视角','pov',[['first','第一人称'],['third','第三人称']])}${opt('付费','paywall',[[true,'卡点设付费'],[false,'不设付费']])}</div>
     <div class="foot"><span class="credits" style="margin-right:auto"><i></i>约 ${costOf(20)} 积分 · ${esc(modelOf(S.model).name)}</span><button class="btn ghost" data-act="inlineClose">取消</button><button class="btn pri" data-act="inlineGo">开始转换</button></div></div>`;
@@ -1547,11 +1548,11 @@ function renderOutline(P,a){
   if(P.outlineMode==='cards')items.push(['adjustCards','调整卡点位置']);
   const scHit=Object.values(P.sc).find(x=>x.src==='full')||Object.values(P.sc).find(x=>overlaps(P,x,r));
   const iaHit=Object.values(P.ia).find(x=>x.src==='full')||Object.values(P.ia).find(x=>overlaps(P,x,r));
-  if(has(a)){if(scHit)items.push(['newSC','按其他范围写剧本']);if(iaHit)items.push(['newIA','按其他范围转互动剧本']);items.push(lockItem(a),verItem(a));if(a.status!=='locked')items.push(['retry:'+a.key,'重新生成本页'])}
+  if(has(a)){if(scHit)items.push(['newSC','按其他范围写剧本']);if(iaHit)items.push(['newIA','按其他范围转互动影游剧本']);items.push(lockItem(a),verItem(a));if(a.status!=='locked')items.push(['retry:'+a.key,'重新生成本页'])}
   const hasSc=!!scHit,hasIa=!!iaHit;
   const viewSeg=`<div class="seg" role="group" aria-label="集纲视图"><button class="${P.outlineMode==='cards'?'on':''}" data-act="viewCards">按卡点分段</button><button class="${P.outlineMode==='all'?'on':''}" data-act="viewAll">合并为全部集纲</button></div>`;
   const head=`<div class="dh"><div><h2>${isSeg?r.label+'集纲':'全部集纲'}${stBadge(a)}</h2><div class="meta mono">第 ${r.from}–${r.to} 集 · ${r.to-r.from+1} 集${isSeg&&a.key!=='end'?` · 第 ${r.to} 集是付费卡点`:''}</div></div>
-    <div class="acts">${viewSeg}${moreBtn(items)}<button class="btn" data-act="${hasIa?'goIA':'openIA'}" ${has(a)?'':'disabled'}>${ic('branch')}${hasIa?'查看互动剧本':'转互动剧本'}</button><button class="btn pri" data-act="${hasSc?'goSC':'openSC'}" ${has(a)?'':'disabled'}>${ic('film')}${hasSc?'查看短剧剧本':'生成短剧剧本'}</button></div></div>`;
+    <div class="acts">${viewSeg}${moreBtn(items)}<button class="btn" data-act="${hasIa?'goIA':'openIA'}" ${has(a)?'':'disabled'}>${ic('branch')}${hasIa?'查看互动影游剧本':'转互动影游剧本'}</button><button class="btn pri" data-act="${hasSc?'goSC':'openSC'}" ${has(a)?'':'disabled'}>${ic('film')}${hasSc?'查看短剧剧本':'生成短剧剧本'}</button></div></div>`;
   if(a.status==='blocked'){const pv=segRanges(P)[segRanges(P).findIndex(x=>x.k===a.key)-1];return`<div class="doc">${head}<div class="empty">${ic('lock')}<div>「${pv.label}」写完后，这一段会接着往下写</div><button class="btn" data-sel="${pv.k}">去${pv.label}</button></div></div>`}
   if(a.status==='generating')return`<div class="doc">${head}${genHTML(a)}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
@@ -1567,7 +1568,7 @@ function renderScript(P,a){
   const words=a.data?a.data.eps.reduce((s,e)=>s+e.scenes.reduce((t,sc)=>t+sc.lines.reduce((u,l)=>u+l.x.length,0),0),0):0;
   const mins=a.data?Math.round(a.data.eps.length*(a.cfg?.dur==='long'?2.5:1.5)):0;
   const head=`<div class="dh"><div><h2>${esc(a.label)}${stBadge(a)}</h2><div class="meta">${a.data?`第 ${a.data.eps[0]?.no}–${a.data.eps[a.data.eps.length-1]?.no} 集 · ${a.data.eps.reduce((s,e)=>s+e.scenes.length,0)} 场 · 约 ${words} 字 · 成片约 ${mins} 分钟`:''}${a.cfg?.shots?' · 带镜头提示':''}</div></div>
-    <div class="acts">${moreBtn([lockItem(a),verItem(a),['retry:'+a.key,'重新生成'],['extend:'+a.src,'在结尾加更几集']])}${a.data?`<button class="btn" data-act="export">${ic('export')}导出</button><button class="btn" data-menu="${esc(JSON.stringify([[hasIa?'goIAfromSc':'toIAfromSc',hasIa?'查看互动剧本':'转互动剧本'],[P.gm&&P.gm[a.src]?'goGame':'toGame',P.gm&&P.gm[a.src]?'查看影游剧本':'转影游剧本'],['convCn','爆款转换：换个国内题材'],['convGlobal','爆款转换：本土化成海外版']]))}" aria-label="转换">${ic('branch')}转换${ic('down','i caret')}</button><button class="btn pri" data-do="cont:${a.src}">${ic('pen')}${nx?'续写'+nx.label:'续写 · 加更'}</button>`:''}</div></div>`;
+    <div class="acts">${moreBtn([lockItem(a),verItem(a),['retry:'+a.key,'重新生成'],['extend:'+a.src,'在结尾加更几集']])}${a.data?`<button class="btn" data-act="export">${ic('export')}导出</button><button class="btn" data-menu="${esc(JSON.stringify([[hasIa?'goIAfromSc':'toIAfromSc',hasIa?'查看互动影游剧本':'转互动影游剧本'],['convCn','爆款转换：换个国内题材'],['convGlobal','爆款转换：本土化成海外版']]))}" aria-label="转换">${ic('branch')}转换${ic('down','i caret')}</button><button class="btn pri" data-do="cont:${a.src}">${ic('pen')}${nx?'续写'+nx.label:'续写 · 加更'}</button>`:''}</div></div>`;
   if(a.status==='generating'&&!a.data)return`<div class="doc">${head}${genHTML(a,'正在写分场剧本')}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   const ce=a.status==='locked'?'':'contenteditable="true"';
@@ -1585,13 +1586,13 @@ function renderIA(P,a){
   if(!a)return'';const nx=nextSeg(P,[a.src,...(a.extra||[])].pop());
   const head=`<div class="dh"><div><h2>${esc(a.label)}${stBadge(a)}</h2><div class="meta">${a.cfg?esc(cfgText(a.cfg)):''}</div></div>
     <div class="acts">${moreBtn([lockItem(a),['reconf','修改设置并重新生成'],...(nx?[['iacont:'+a.src,'续写'+nx.label]]:[])])}${a.data?`<button class="btn pri" data-act="export">${ic('export')}导出</button>`:''}</div></div>`;
-  if(a.status==='generating')return`<div class="doc">${head}${genHTML(a,'正在转成互动剧本')}</div>`;
+  if(a.status==='generating')return`<div class="doc">${head}${genHTML(a,'正在转成互动影游剧本')}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   const d=a.data;
-  const tabs=`<div class="iabar"><div class="seg">${[['canvas','分支图'],['script','剧本'],['play','试玩']].map(([k,t])=>`<button class="${S.iaTab===k?'on':''}" data-iatab="${k}">${t}</button>`).join('')}</div>
+  const tabs=`<div class="iabar"><div class="seg">${[['canvas','剧本树'],['script','剧本'],['play','试玩']].map(([k,t])=>`<button class="${S.iaTab===k?'on':''}" data-iatab="${k}">${t}</button>`).join('')}</div>
     <span class="sm muted">${d.nodes.filter(n=>n.type==='choice').length} 个选择 · ${d.nodes.filter(n=>n.type==='ending').length} 个结局</span><span class="sp"></span>${checkChip(a)}</div>`;
   let body='';
-  if(S.iaTab==='canvas')body=`<div class="iawrap"><div class="canvas"><svg id="cv" aria-label="互动剧本分支图"></svg><div class="cvtools"><button class="btn sq" data-zoom="1.2" aria-label="放大">${ic('plus')}</button><button class="btn sq" data-zoom="0.8" aria-label="缩小">${ic('minus')}</button><button class="btn sq" data-act="fit" aria-label="适配画布">${ic('fit')}</button></div>
+  if(S.iaTab==='canvas')body=`<div class="iawrap"><div class="canvas"><svg id="cv" aria-label="互动影游剧本剧本树"></svg><div class="cvtools"><button class="btn sq" data-zoom="1.2" aria-label="放大">${ic('plus')}</button><button class="btn sq" data-zoom="0.8" aria-label="缩小">${ic('minus')}</button><button class="btn sq" data-act="fit" aria-label="适配画布">${ic('fit')}</button></div>
     <div class="legend">${[['scene','剧情'],['choice','选择'],['condition','判定'],['paywall','付费'],['ending','结局']].map(x=>`<span><i class="sw" style="background:${nodeColor(x[0])}"></i>${x[1]}</span>`).join('')}</div></div>${inspector(a)}</div>`;
   else if(S.iaTab==='script')body=iaScriptView(a);else body=playView(a);
   return`<div class="doc full">${head}${notes(a)}${tabs}${body}</div>`;
@@ -1601,7 +1602,7 @@ function nodeColor(t){return{scene:'var(--muted)',choice:'var(--accent)',conditi
 const TYPE_CN={scene:'剧情',choice:'选择',condition:'判定',paywall:'付费',ending:'结局'};
 function inspector(a){
   const d=a.data;const n=d.nodes.find(x=>x.id===S.selNode);const ro=a.status==='locked';const dis=ro?'disabled':'';
-  if(!n){const is=a.issues||[];return`<aside class="insp"><h4>节点</h4><div class="sm muted">点击分支图里的节点，就能编辑剧情、选项和数值；也可以让右侧 AI 助手帮你改。</div>${is.length?`<h4 style="margin-top:6px">需要处理</h4><div class="issues">${is.map(i=>`<button class="issue ${i.l}" data-goto="${i.id}">${esc(i.m)}</button>`).join('')}</div>`:''}</aside>`}
+  if(!n){const is=a.issues||[];return`<aside class="insp"><h4>节点</h4><div class="sm muted">点击剧本树里的节点，就能编辑剧情、选项和数值；也可以让右侧 AI 助手帮你改。</div>${is.length?`<h4 style="margin-top:6px">需要处理</h4><div class="issues">${is.map(i=>`<button class="issue ${i.l}" data-goto="${i.id}">${esc(i.m)}</button>`).join('')}</div>`:''}</aside>`}
   const opts=d.nodes.map(x=>`<option value="${x.id}">${esc(x.title.slice(0,20))}</option>`).join('');
   const sel=(v,attr)=>`<select ${attr} ${dis}><option value="">选择下一步…</option>${opts.replace(`value="${v}"`,`value="${v}" selected`)}</select>`;
   let ex='';
@@ -1628,7 +1629,7 @@ function playView(a){
   const d=a.data;if(!PL||PL.key!==a.key)PL={key:a.key,cur:d.start,vars:Object.fromEntries(d.vars.map(v=>[v,0])),flags:[]};
   const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));let n=by[PL.cur];let g=0;
   while(n&&n.type==='condition'&&g++<10){const r=n.rules.find(r=>r.flag?PL.flags.includes(r.flag):PL.vars[r.var]>=r.val);PL.cur=r?r.to:n.else;n=by[PL.cur]}
-  if(!n)return`<div class="play"><div class="phone"><div class="story">剧情在这里断了，先去分支图修一下。</div><div class="chs"><button data-play="restart">重新开始</button></div></div></div>`;
+  if(!n)return`<div class="play"><div class="phone"><div class="story">剧情在这里断了，先去剧本树修一下。</div><div class="chs"><button data-play="restart">重新开始</button></div></div></div>`;
   let ch='';
   if(n.type==='scene')ch=n.to?`<button data-play="${n.to}">继续 ▸</button>`:'<div class="sm">（这里没有下一步）</div>';
   if(n.type==='paywall')ch=`<button data-play="${n.to}" style="border-color:#FF8E6E;color:#FF8E6E">解锁后续剧情（演示，不扣费）</button>`;
@@ -1639,15 +1640,25 @@ function playView(a){
     ${n.type==='choice'&&n.timed?'<div class="timer"><i></i></div>':''}<div class="chs">${ch}</div></div></div>`;
 }
 let VIEW={x:24,y:24,k:0.85,key:null};
+// 剧本树布局：主线自上而下，同一层的分支左右并排
+function layoutTree(d){
+  const idx=Object.fromEntries(d.nodes.map((n,i)=>[n.id,i]));const rank={};
+  d.nodes.forEach(n=>{if(rank[n.id]==null)rank[n.id]=n.id===d.start?0:null});
+  d.nodes.forEach((n,i)=>{if(rank[n.id]==null)return;edgesOf(n).forEach(t=>{if(t==null||idx[t]==null||idx[t]<=i)return;rank[t]=Math.max(rank[t]??0,rank[n.id]+1)})});
+  let max=Math.max(0,...Object.values(rank).filter(v=>v!=null));
+  d.nodes.forEach(n=>{if(rank[n.id]==null)rank[n.id]=++max});
+  const rows={};d.nodes.forEach(n=>(rows[rank[n.id]]=rows[rank[n.id]]||[]).push(n));
+  Object.entries(rows).forEach(([r,list])=>list.forEach((n,i)=>{n.x=(i-(list.length-1)/2)*190;n.y=+r*100}));
+}
 function drawCanvas(){
-  const a=getArt(S.sel);const svg=$('#cv');if(!svg||!a||!a.data)return;const d=a.data;
-  if(VIEW.key!==a.key)VIEW={x:24,y:24,k:0.85,key:a.key};
+  const a=getArt(S.sel);const svg=$('#cv');if(!svg||!a||!a.data)return;const d=a.data;layoutTree(d);
+  if(VIEW.key!==a.key){VIEW={x:svg.clientWidth/2-75*0.85,y:28,k:0.85,key:a.key}}
   const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));const W=150,H=56;let edges='';
   d.nodes.forEach(n=>{const outs=n.type==='choice'?n.options.map(o=>[o.to,o.label]):n.type==='condition'?[...n.rules.map(r=>[r.to,r.flag?'隐藏':r.var+'≥'+r.val]),[n.else,'否则']]:n.type==='ending'?[]:[[n.to,'']];
-    outs.forEach(([t,l])=>{const m=by[t];if(!m)return;const x1=n.x+W,y1=n.y+H/2,x2=m.x,y2=m.y+H/2;const back=x2<=x1;
-      const p=back?`M${x1},${y1} C${x1+50},${y1} ${x2-50},${y2} ${x2},${y2}`:`M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}`;
+    outs.forEach(([t,l])=>{const m=by[t];if(!m)return;const x1=n.x+W/2,y1=n.y+H,x2=m.x+W/2,y2=m.y;const back=y2<=y1;
+      const p=back?`M${n.x+W},${n.y+H/2} C${n.x+W+80},${n.y+H/2} ${m.x+W+80},${m.y+H/2} ${m.x+W},${m.y+H/2}`:`M${x1},${y1} C${x1},${(y1+y2)/2} ${x2},${(y1+y2)/2} ${x2},${y2}`;
       edges+=`<path d="${p}" style="fill:none;stroke:var(--line2)" stroke-width="1.4" marker-end="url(#ar)"></path>`;
-      if(l&&!back)edges+=`<text x="${(x1+x2)/2}" y="${(y1+y2)/2-5}" font-size="10" text-anchor="middle" style="fill:var(--muted)">${esc(l.slice(0,9))}</text>`})});
+      if(l&&!back)edges+=`<text x="${x2}" y="${y2-8}" font-size="10" text-anchor="middle" style="fill:var(--accent)">${esc(l.slice(0,9))}</text>`})});
   const nodes=d.nodes.map(n=>{const s=S.selNode===n.id;const st=n.flag==='error'?'var(--red)':n.flag==='warning'?'var(--amber)':s?'var(--fg)':'var(--line2)';
     return`<g data-node="${n.id}" style="cursor:pointer"><rect x="${n.x}" y="${n.y}" width="${W}" height="${H}" rx="${n.type==='choice'||n.type==='condition'?16:8}" style="fill:var(--surface);stroke:${st}" stroke-width="${s||n.flag?2:1}" ${n.flag==='orphan'?'stroke-dasharray="5 4"':''}></rect>
       <circle cx="${n.x+14}" cy="${n.y+18}" r="4" style="fill:${nodeColor(n.type)}"></circle>
@@ -1661,8 +1672,7 @@ function drawCanvas(){
   svg.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.1:0.9,e.offsetX,e.offsetY)};
 }
 function zoom(f,cx,cy){const svg=$('#cv');if(!svg)return;if(cx==null){cx=svg.clientWidth/2;cy=svg.clientHeight/2}const k=clamp(VIEW.k*f,0.15,2.5);VIEW.x=cx-(cx-VIEW.x)*k/VIEW.k;VIEW.y=cy-(cy-VIEW.y)*k/VIEW.k;VIEW.k=k;$('#vp').setAttribute('transform',`translate(${VIEW.x},${VIEW.y}) scale(${VIEW.k})`)}
-function fit(){const a=getArt(S.sel);const svg=$('#cv');if(!a||!svg)return;const xs=a.data.nodes.map(n=>n.x),ys=a.data.nodes.map(n=>n.y);const w=Math.max(...xs)-Math.min(...xs)+190,h=Math.max(...ys)-Math.min(...ys)+90;
-  VIEW.k=clamp(Math.min(svg.clientWidth/w,svg.clientHeight/h),0.15,1.2);VIEW.x=20-Math.min(...xs)*VIEW.k;VIEW.y=20-Math.min(...ys)*VIEW.k;drawCanvas()}
+function fit(){const a=getArt(S.sel);const svg=$('#cv');if(!a||!svg)return;layoutTree(a.data);const xs=a.data.nodes.map(n=>n.x),ys=a.data.nodes.map(n=>n.y);const minX=Math.min(...xs),minY=Math.min(...ys);const w=Math.max(...xs)-minX+150,h=Math.max(...ys)-minY+56;VIEW.k=clamp(Math.min((svg.clientWidth-40)/w,(svg.clientHeight-40)/h),0.15,1.2);VIEW.x=(svg.clientWidth-w*VIEW.k)/2-minX*VIEW.k;VIEW.y=20-minY*VIEW.k;drawCanvas()}
 function renderMain(){const m=$('#main');const P=S.project;if(!m||!P)return render();const s=S.sel;m.innerHTML=s.startsWith('ia:')?renderIA(P,getArt(s)):s.startsWith('sc:')?renderScript(P,getArt(s)):s.startsWith('gm:')?renderGame(P,getArt(s)):s==='plan'?renderPlan(P):s==='parse'?renderParse(P):renderOutline(P,P.arts[s]);bindMain();if(s.startsWith('ia:')&&S.iaTab==='canvas')drawCanvas()}
 
 // ============ 下一步卡片（人机协同） ============
@@ -1693,7 +1703,7 @@ function doAction(k){
   else if(cmd==='retry')regen(P,arg);
   else if(cmd==='undo')undo();
   else if(cmd==='gamefrom'){S.sel='sc:'+arg;openInline('game',arg,'full');if(P.params.game)Object.assign(S.inline.cfg,P.params.game.cfg,{range:'full'});render()}
-  else if(cmd==='iafrom'){S.sel='sc:'+arg;openInline('ia',arg,'full');render()}
+  else if(cmd==='iafrom'){S.sel='sc:'+arg;openInline('ia',arg,'full');if(P.params.game)Object.assign(S.inline.cfg,P.params.game.cfg,{range:'full'});render()}
   else if(cmd==='stopAuto'){P.autoRun=false;toast('已改为逐步确认，当前这一步写完后会停下来');render()}
 }
 
@@ -1857,10 +1867,10 @@ function openExport(P,a){
   const csv=['节点ID,类型,集,标题,下一步'].concat(a.data.nodes.map(n=>[n.id,TYPE_CN[n.type],n.ep,`"${n.title}"`,`"${edgesOf(n).join('|')}"`].join(','))).join('\n');
   tab='json';
   const draw=ok=>{const bad=vs==='invalid',warn=vs==='warning'&&!ok;
-    $('#modal').innerHTML=`<div class="mask"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="et"><div class="mh"><div><h3 id="et">导出互动剧本</h3><p>JSON 给播放器或引擎用，分支表方便编剧和制片核对。</p></div><span class="sp"></span><button class="iconbtn" data-x aria-label="关闭">${ic('x')}</button></div>
+    $('#modal').innerHTML=`<div class="mask"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="et"><div class="mh"><div><h3 id="et">导出互动影游剧本</h3><p>JSON 给播放器或引擎用，分支表方便编剧和制片核对。</p></div><span class="sp"></span><button class="iconbtn" data-x aria-label="关闭">${ic('x')}</button></div>
       <div class="mb">${bad?`<div class="note red">${ic('warn')}还有 ${a.issues.filter(i=>i.l==='e').length} 处结构问题，修好后才能导出。<span class="sp"></span><button class="btn" data-fix>去修复</button></div>`:
       warn?`<div class="note amber">${ic('warn')}有 ${a.issues.length} 条提醒，不影响导出。<span class="sp"></span><button class="btn" data-ok>仍然导出</button></div>`:
-      `<div><div class="seg"><button class="${tab==='json'?'on':''}" data-t="json">互动剧本 JSON</button><button class="${tab==='csv'?'on':''}" data-t="csv">分支表 CSV</button></div></div>
+      `<div><div class="seg"><button class="${tab==='json'?'on':''}" data-t="json">互动影游剧本 JSON</button><button class="${tab==='csv'?'on':''}" data-t="csv">分支表 CSV</button></div></div>
       <textarea id="exportText" readonly aria-label="导出内容" style="width:100%;min-height:320px;font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg2);color:var(--fg2)">${esc(tab==='json'?json:csv)}</textarea>`}</div>
       <div class="mf"><span class="sm muted" style="margin-right:auto">演示环境不能直接下载，请复制内容</span><button class="btn ghost" data-x>关闭</button>${!bad&&!warn?'<button class="btn pri" data-copy>复制</button>':''}</div></div></div>`;
     const M=$('#modal');const o=M.querySelector('[data-ok]');if(o)o.onclick=()=>draw(true);
@@ -1917,7 +1927,7 @@ function stepGo(k){
   const P=S.project;S.inline=null;
   if(k==='plan')S.sel=P.arts.plan.status==='empty'&&P.mode!=='original'?'parse':'plan';
   if(k==='outline'){const o=outlineKeys(P).find(x=>P.arts[x]);if(o)S.sel=o;else if(has(P.arts.plan)){openOutlineModal(false);return}else{toast('先完成策划案');return}}
-  if(k==='script'){const i=Object.values(P.sc)[0]||Object.values(P.ia)[0];if(i)S.sel=i.key;else{toast('在集纲页点「生成短剧剧本」或「转互动剧本」');return}}
+  if(k==='script'){const i=Object.values(P.sc)[0]||Object.values(P.ia)[0];if(i)S.sel=i.key;else{toast('在集纲页点「生成短剧剧本」或「转互动影游剧本」');return}}
   if(k==='done'){const i=Object.values(P.sc).find(has)||Object.values(P.ia).find(has);if(i){S.sel=i.key;render();openExport(P,i);return}toast('先生成剧本');return}
   S.selNode=null;render();
 }
@@ -2046,9 +2056,9 @@ function seed(){
   const ctx=outlineCtx(P);
   segRanges(P).forEach(r=>{const a=newArt(r.k,r.label+'集纲','segment','ready');const eps=[];for(let x=r.from;x<=r.to;x++)eps.push(genEpisode(x,ctx));a.data={from:r.from,to:r.to,eps};a.versions=1;P.arts[r.k]=a});
   const sc=Object.assign(newArt('sc:c1','短剧剧本 · 一卡','script','ready'),{src:'c1',cfg:{...DEF_SC}});sc.data={eps:P.arts.c1.data.eps.map(e=>genScriptEp(e,pl.data.cast,sc.cfg))};sc.versions=1;P.sc.c1=sc;
-  const ia=Object.assign(newArt('ia:c1','互动剧本 · 一卡','interactive','ready'),{src:'c1',validate:{status:'unchecked'},extra:[],cfg:{...DEF_IA}});ia.data=buildInteractive(P.arts.c1.data.eps,ia.cfg,P);ia.versions=1;P.ia.c1=ia;validateIA(ia,true);
+  const ia=Object.assign(newArt('ia:c1','互动影游剧本 · 一卡','interactive','ready'),{src:'c1',validate:{status:'unchecked'},extra:[],cfg:{...DEF_IA}});ia.data=buildInteractive(P.arts.c1.data.eps,ia.cfg,P);ia.versions=1;P.ia.c1=ia;validateIA(ia,true);
   ['plan','c1','c2','c3','end'].forEach(k=>P.arts[k]&&pushVer(P,P.arts[k],'AI 生成','GLM-5.2'));pushVer(P,sc,'AI 生成','Gemini 3.1 Pro');
-  P.chat=[{r:'me',t:f.idea,at:Date.now()-36e5},{r:'ai',t:'这是一个示例项目：策划案、全部集纲、一卡的短剧剧本和互动剧本都已经写好。你可以在任何一页直接修改，或者在这里告诉我怎么改。',acts:[['cont:c1','续写二卡剧本'],['play:c1','试玩互动剧本']],at:Date.now()-36e5}];
+  P.chat=[{r:'me',t:f.idea,at:Date.now()-36e5},{r:'ai',t:'这是一个示例项目：策划案、全部集纲、一卡的短剧剧本和互动影游剧本都已经写好。你可以在任何一页直接修改，或者在这里告诉我怎么改。',acts:[['cont:c1','续写二卡剧本'],['play:c1','试玩互动影游剧本']],at:Date.now()-36e5}];
   P.updated=Date.now()-36e5;P.created=Date.now()-72e5;
   const f2=eff({...defForm(),novelName:'重生之千金归来',novelText:SAMPLE_NOVEL,genres:['重生','复仇'],market:'na',episodes:60});
   const Q=newProject(f2,'novel','quick');Q.sample=true;Q.cover=COVERS[2];Q.parseState='done';Q.parsed={chapters:SAMPLE_NOVEL.match(/第.章[^\n]*/g),words:200,chars:Object.values(cast(f2)).slice(0,4),mainline:'女主被退婚、三年后携新身份归来，揭开当年真相并完成复仇',range:[1,5],strength:'适度改编'};
