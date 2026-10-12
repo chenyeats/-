@@ -2,293 +2,355 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
 <title>互动短剧剧本工作台</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;800&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* 布局：首页=居中创作台；项目=左侧导航 + 中间文档区 + 右侧状态机抽屉。场记板式的冷灰底 + 墨绿主色 + 琥珀色标付费卡点 */
+/* 布局：首页=顶部步骤条 + 居中嵌入式输入框（参数是可下拉的胶囊）；项目页=步骤条 + 左侧目录 + 文档区。单一深色主题，青色做主色，琥珀色只用于付费卡点 */
 :root{
-  --bg:#F3F5F4; --surface:#FFFFFF; --sunk:#E8ECEA; --line:#D3DAD7; --fg:#18201E; --muted:#5D6A66;
-  --accent:#0E6B5C; --accent-soft:#D7EDE8; --on-accent:#FFFFFF;
-  --amber:#B8730A; --amber-soft:#FBEBD0; --red:#B3372F; --red-soft:#F8DEDB; --blue:#2C5FA8; --blue-soft:#DCE6F5;
-  --violet:#5B4B9A; --violet-soft:#E6E1F5; --green:#2F7D3A; --green-soft:#DDF0DF;
-  --f-display:"Noto Serif SC","Songti SC","STSong",serif;
+  color-scheme:dark;
+  --bg:#0F1012; --bg2:#16171A; --surface:#1A1B1F; --surface2:#222328; --hover:#2A2C31; --line:#2C2E34; --line2:#3A3D44;
+  --fg:#ECEDEF; --fg2:#B9BCC3; --muted:#7E828C;
+  --accent:#4FD8C8; --accent-dim:rgba(79,216,200,.14); --on-accent:#06201D;
+  --amber:#F2B550; --amber-dim:rgba(242,181,80,.14); --red:#F07167; --red-dim:rgba(240,113,103,.14);
+  --violet:#A99BFF; --blue:#7FB2FF; --green:#7DD892;
   --f-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
-  --r:8px; --shadow:0 1px 2px rgba(20,30,28,.06),0 6px 20px rgba(20,30,28,.06);
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#111715; --surface:#19211F; --sunk:#0D1311; --line:#2C3835; --fg:#E4ECE9; --muted:#93A39E;
-  --accent:#4FC1A9; --accent-soft:#163B33; --on-accent:#08201B;
-  --amber:#E6A740; --amber-soft:#3A2B10; --red:#EE7A70; --red-soft:#3D1D1A; --blue:#82AEEA; --blue-soft:#1A2A42;
-  --violet:#B3A5EC; --violet-soft:#2A2445; --green:#7CCB86; --green-soft:#1B3320;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#111715; --surface:#19211F; --sunk:#0D1311; --line:#2C3835; --fg:#E4ECE9; --muted:#93A39E;
-  --accent:#4FC1A9; --accent-soft:#163B33; --on-accent:#08201B;
-  --amber:#E6A740; --amber-soft:#3A2B10; --red:#EE7A70; --red-soft:#3D1D1A; --blue:#82AEEA; --blue-soft:#1A2A42;
-  --violet:#B3A5EC; --violet-soft:#2A2445; --green:#7CCB86; --green-soft:#1B3320;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.6}
+body{background:radial-gradient(1200px 600px at 15% -10%,#24211d 0%,transparent 60%),radial-gradient(900px 500px at 100% 0%,#1a2120 0%,transparent 55%),var(--bg);background-attachment:fixed;color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.6}
 button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+h1,h2,h3{margin:0;line-height:1.3;text-wrap:balance}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
-.small{font-size:12px}
+.sm{font-size:12px}
+.sp{flex:1}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* 顶栏 */
-.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
-.brand{font-family:var(--f-display);font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;white-space:nowrap}
-.brand .slate{width:22px;height:18px;border-radius:3px;background:var(--fg);position:relative;overflow:hidden}
-.brand .slate::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:repeating-linear-gradient(-45deg,var(--fg) 0 4px,var(--surface) 4px 8px)}
-.top .crumb{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.top .sp{flex:1}
-.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 12px;font-size:13px;white-space:nowrap}
-.btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
-.btn.primary:hover{filter:brightness(1.07)}
-.btn.ghost{border-color:transparent;background:transparent}
-.btn.danger{color:var(--red)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.lg{padding:10px 20px;font-size:15px}
-
-/* 状态药丸 */
-.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em;background:var(--sunk);color:var(--muted)}
-.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.st-empty{background:var(--sunk);color:var(--muted)}
-.st-blocked{background:var(--sunk);color:var(--muted)}
-.st-generating,.st-running,.st-queued,.st-parsing,.st-checking,.st-uploading,.st-validating{background:var(--blue-soft);color:var(--blue)}
-.st-generating::before,.st-running::before,.st-parsing::before,.st-checking::before{animation:blink 1s infinite}
-.st-ready,.st-succeeded,.st-valid,.st-active{background:var(--green-soft);color:var(--green)}
-.st-edited{background:var(--accent-soft);color:var(--accent)}
-.st-outdated,.st-warning,.st-partial{background:var(--amber-soft);color:var(--amber)}
-.st-locked{background:var(--fg);color:var(--bg)}
-.st-error,.st-failed,.st-invalid,.st-parse_failed{background:var(--red-soft);color:var(--red)}
-.st-cancelled,.st-unchecked,.st-draft,.st-disabled{background:var(--sunk);color:var(--muted)}
-.st-planning,.st-outlining,.st-interactive,.st-completed{background:var(--accent-soft);color:var(--accent)}
-@keyframes blink{50%{opacity:.25}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* 顶部步骤条 */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.iconbtn{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--fg2);flex:none}
+.iconbtn:hover{background:var(--hover);color:var(--fg)}
+.steps{display:flex;align-items:center;gap:4px;background:rgba(40,42,47,.7);backdrop-filter:blur(8px);border-radius:12px;padding:6px 10px;overflow-x:auto;scrollbar-width:none;max-width:100%;min-width:0}
+.steps::-webkit-scrollbar{display:none}
+.step{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;color:var(--muted);font-weight:500;white-space:nowrap}
+.step .n{width:20px;height:20px;border-radius:50%;background:var(--line2);color:var(--fg2);display:grid;place-items:center;font-size:11px;font-family:var(--f-mono)}
+.step .n svg.i{width:12px;height:12px}
+.step.cur{color:var(--accent)}
+.step.cur .n{background:var(--accent);color:var(--on-accent)}
+.step.done{color:var(--fg2)}
+.step.done .n{background:var(--accent-dim);color:var(--accent)}
+.step[data-step]:hover{background:var(--hover)}
+.steps .dash{width:22px;height:1px;background:var(--line2);flex:none}
+.credits{display:flex;align-items:center;gap:6px;color:var(--fg2);font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+.credits i{width:14px;height:14px;border-radius:50%;background:var(--fg2);display:inline-block;box-shadow:inset 0 0 0 3px var(--bg2)}
 
 /* 首页 */
-.home{max-width:920px;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:grid;gap:20px}
-.hero h1{font-size:clamp(24px,4vw,34px);font-weight:800}
-.hero p{margin:6px 0 0;color:var(--muted);max-width:60ch}
-.composer{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
-.modetabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto}
-.modetabs button{flex:1;min-width:120px;border:0;background:transparent;padding:14px 12px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:2px}
-.modetabs button small{font-weight:400;font-size:11px}
-.modetabs button.on{color:var(--fg);border-bottom-color:var(--accent);background:var(--bg)}
-.tag{font-size:10px;padding:0 6px;border-radius:4px;background:var(--amber-soft);color:var(--amber);font-weight:600;margin-left:4px}
-.cbody{padding:18px;display:grid;gap:16px}
-.seg{display:inline-flex;background:var(--sunk);border-radius:8px;padding:3px;gap:2px}
-.seg button{border:0;background:transparent;padding:6px 14px;border-radius:6px;font-size:13px;color:var(--muted)}
-.seg button.on{background:var(--surface);color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.lbl{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;margin-bottom:6px;display:block}
-textarea.idea{width:100%;min-height:96px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--bg);font-size:15px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 12px;font-size:13px}
-.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-select,input[type=number],input[type=text]{border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:var(--surface);min-width:0}
-.fine{border-top:1px dashed var(--line);padding-top:16px;display:grid;gap:16px}
-.skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-.skill{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;background:var(--surface);text-align:left}
-.skill.on{border-color:var(--accent);background:var(--accent-soft)}
-.skill b{font-size:13px;display:block}
-.skill span{font-size:11px;color:var(--muted)}
-.skill .box{width:16px;height:16px;border:1.5px solid var(--line);border-radius:4px;flex:none;margin-top:2px;display:grid;place-items:center;font-size:11px}
-.skill.on .box{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.cfoot{display:flex;align-items:center;gap:12px;padding:14px 18px;border-top:1px solid var(--line);background:var(--bg);flex-wrap:wrap}
-.pipeline{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
-.pipeline b{color:var(--fg);font-weight:600}
-.pipeline .hl{color:var(--accent)}
-.recent{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.drop{border:1.5px dashed var(--line);border-radius:8px;padding:14px;display:grid;gap:8px;background:var(--bg)}
+.home{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:7vh 64px;display:grid;gap:28px}
+.intro{text-align:center;display:grid;gap:12px}
+.intro h1{font-size:clamp(28px,4.4vw,40px);font-weight:900;letter-spacing:.02em}
+.intro p{margin:0;color:var(--fg2);font-size:clamp(14px,1.8vw,17px);line-height:1.8}
+.composer{background:rgba(20,21,24,.92);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.ctop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.modes{display:inline-flex;background:var(--surface2);border-radius:12px;padding:4px;gap:2px;flex-wrap:wrap}
+.modes button{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;color:var(--fg2);font-weight:500}
+.modes button.on{background:#34363C;color:var(--fg)}
+.modes button:not(.on):hover{color:var(--fg)}
+.badge{font-size:10px;padding:0 5px;border-radius:4px;background:var(--amber-dim);color:var(--amber);font-weight:600}
+.switch{display:flex;align-items:center;gap:8px;color:var(--fg2);font-size:13px;cursor:pointer;user-select:none}
+.switch .tr{width:32px;height:18px;border-radius:9px;background:var(--line2);position:relative;transition:background .15s}
+.switch .tr::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--fg);transition:transform .15s}
+.switch.on .tr{background:var(--accent)}
+.switch.on .tr::after{transform:translateX(14px);background:var(--on-accent)}
+.cinput textarea{width:100%;min-height:150px;resize:none;border:0;background:transparent;padding:8px 2px;font-size:15px;line-height:1.7;outline:none;color:var(--fg)}
+.cinput textarea::placeholder{color:var(--muted)}
+.cinput textarea.tall{min-height:200px}
+.filecard{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;margin-top:4px}
+.filecard button{color:var(--muted);display:grid}
+.cbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:9px;background:var(--surface2);border:1px solid var(--line);color:var(--fg2);font-size:13px;white-space:nowrap;max-width:220px;cursor:pointer}
+.chip span.v{overflow:hidden;text-overflow:ellipsis}
+.chip:hover{border-color:var(--line2);color:var(--fg)}
+.chip.set{color:var(--fg);border-color:#3f4249;background:#2a2c31}
+.chip.set .star{color:var(--accent)}
+.chip.open{border-color:var(--accent)}
+.chip .caret{opacity:.6}
+.send{width:40px;height:40px;border-radius:50%;background:var(--fg);color:var(--bg);display:grid;place-items:center;flex:none}
+.send:disabled{background:var(--line2);color:var(--muted);cursor:not-allowed}
+.hint{font-size:12px;color:var(--muted);text-align:right;min-height:18px;margin-top:-4px}
+.inspire{display:grid;gap:12px}
+.inspire h3{font-size:14px;color:var(--fg2);font-weight:500;text-align:center}
+.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.ideas button{text-align:left;padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--fg2);display:flex;gap:10px}
+.ideas button:hover{background:var(--surface2);color:var(--fg)}
+.ideas .k{font-family:var(--f-mono);color:var(--muted)}
+.recent{display:grid;gap:10px}
+.recent h3{font-size:15px}
+.projcard{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);text-align:left;width:100%}
+.projcard:hover{border-color:var(--line2)}
+.projcard .cov{width:40px;height:52px;border-radius:6px;background:linear-gradient(160deg,#3a3f3d,#1b1f1e);display:grid;place-items:center;font-weight:900;color:var(--accent);flex:none}
+
+/* 下拉面板 */
+.pop{position:fixed;z-index:70;background:#1E1F23;border:1px solid var(--line2);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.5);padding:10px;min-width:220px;max-width:min(420px,calc(100vw - 24px));max-height:min(440px,calc(100vh - 24px));overflow:auto}
+.pop h5{margin:2px 6px 8px;font-size:12px;color:var(--muted);font-weight:500;display:flex;gap:8px}
+.opts{display:grid;gap:2px}
+.opts button{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-align:left;color:var(--fg2)}
+.opts button:hover{background:var(--hover);color:var(--fg)}
+.opts button.on{color:var(--fg)}
+.opts button:disabled{opacity:.45;cursor:not-allowed}
+.opts button .ck{width:16px;color:var(--accent);flex:none}
+.opts button small{margin-left:auto;padding-left:12px;color:var(--muted);font-size:11px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;padding:2px}
+.tags button{padding:5px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);color:var(--fg2);font-size:13px}
+.tags button.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.pfield{display:grid;gap:4px;padding:4px 6px}
+.pfield label{font-size:12px;color:var(--muted)}
+.pfield input,.pfield select{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:7px 10px;outline:none}
+.pfield input:focus{border-color:var(--accent)}
+.pfoot{display:flex;gap:8px;justify-content:flex-end;padding:8px 6px 2px;border-top:1px solid var(--line);margin-top:8px}
+
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:9px;background:var(--surface2);border:1px solid var(--line);color:var(--fg);font-size:13px;white-space:nowrap;cursor:pointer}
+.btn:hover{border-color:var(--line2);background:var(--hover)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--fg2)}
+.btn.ghost:hover{background:var(--hover);color:var(--fg)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sq{width:34px;padding:0;justify-content:center}
 
 /* 项目工作台 */
-.ws{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100% - 53px)}
-.ws.withsm{grid-template-columns:232px minmax(0,1fr) 320px}
-.nav{border-right:1px solid var(--line);background:var(--surface);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
-.nav h4{font-size:11px;color:var(--muted);letter-spacing:.08em;margin:12px 8px 4px;font-weight:600}
-.nav a{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;color:var(--fg);text-decoration:none;font-size:13px}
-.nav a:hover{background:var(--bg)}
-.nav a.on{background:var(--accent-soft);font-weight:600}
-.nav a .pill{margin-left:auto}
-.nav a .ep{font-size:11px;color:var(--muted)}
-.nav a.sub{padding-left:22px}
-.main{padding:20px 24px 64px;min-width:0}
-.doc{max-width:900px;display:grid;gap:16px}
-.dochead{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.dochead h2{font-size:22px;font-weight:800}
-.dochead .sp{flex:1}
-.banner{border-radius:8px;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
-.banner.warn{background:var(--amber-soft);color:var(--amber)}
-.banner.info{background:var(--blue-soft);color:var(--blue)}
-.banner.err{background:var(--red-soft);color:var(--red)}
-.banner .sp{flex:1}
-.banner .btn{background:var(--surface);color:var(--fg)}
-.block{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-.block h3{font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.block h3 .sp{flex:1}
-.block h3 .btn{font-family:var(--f-body);font-weight:400}
-[contenteditable]{outline:none;border-radius:4px}
-[contenteditable]:hover{background:var(--bg)}
-[contenteditable]:focus{background:var(--bg);box-shadow:0 0 0 1px var(--accent)}
-.chars{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.char{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg)}
-.char b{font-family:var(--f-display);font-size:15px}
-.progress{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
-.progress i{display:block;height:100%;background:var(--blue);transition:width .2s}
-.genbox{display:grid;gap:10px;padding:18px;border:1px solid var(--blue-soft);background:var(--surface);border-radius:10px}
-.stream{font-family:var(--f-mono);font-size:12px;color:var(--muted);max-height:120px;overflow:hidden;white-space:pre-wrap}
-.empty{padding:40px 20px;text-align:center;border:1.5px dashed var(--line);border-radius:10px;color:var(--muted);display:grid;gap:12px;justify-items:center}
+.ws{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:calc(100% - 58px)}
+.side{padding:8px 10px 40px;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line)}
+.side h4{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.08em;margin:14px 10px 4px}
+.side a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--fg2);font-size:13px}
+.side a:hover{background:var(--hover);color:var(--fg)}
+.side a.on{background:var(--surface2);color:var(--fg);font-weight:500}
+.side a.dim{opacity:.45}
+.side a .r{margin-left:auto;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.dot{width:7px;height:7px;border-radius:50%;flex:none}
+.dot.amber{background:var(--amber)}.dot.red{background:var(--red)}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--accent);animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.main{padding:16px 32px 80px;min-width:0}
+.doc{max-width:860px;margin:0 auto;display:grid;gap:20px}
+.doc.full{max-width:none}
+.dh{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.dh h2{font-size:24px;font-weight:900}
+.dh .meta{color:var(--muted);font-size:12px;margin-top:4px}
+.dh .acts{display:flex;gap:8px;align-items:center;margin-left:auto}
+.lockmark{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--fg2);background:var(--surface2);padding:2px 8px;border-radius:6px;vertical-align:middle;margin-left:8px;font-weight:400}
+.note{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:13px;flex-wrap:wrap}
+.note.amber{background:var(--amber-dim);color:var(--amber)}
+.note.red{background:var(--red-dim);color:var(--red)}
+.note.info{background:var(--accent-dim);color:var(--accent)}
+.note .btn{height:28px;padding:0 10px}
+
+.sec{display:grid;gap:8px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec h3{font-size:16px;display:flex;align-items:center;gap:8px}
+.sec h3 .regen{opacity:0;transition:opacity .15s}
+.sec:hover h3 .regen,.sec h3 .regen:focus-visible{opacity:1}
+.sec p{margin:0;color:var(--fg2);white-space:pre-wrap}
+[contenteditable]{outline:none;border-radius:6px;padding:2px 4px;margin:-2px -4px}
+[contenteditable]:hover{background:rgba(255,255,255,.03)}
+[contenteditable]:focus{background:var(--surface);box-shadow:0 0 0 1px var(--line2)}
+.titles{display:flex;gap:8px;flex-wrap:wrap}
+.titles button,.titles span{padding:6px 14px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--fg2)}
+.titles button.on{border-color:var(--accent);color:var(--fg);background:var(--accent-dim)}
+.chars{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.char{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px;align-content:start}
+.char b{font-size:16px}
+.char .role{font-size:11px;color:var(--accent)}
+.char div{font-size:13px;color:var(--fg2)}
+
+.gen{display:grid;gap:14px;padding:28px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.gen .row{display:flex;align-items:center;gap:10px}
+.bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.skel{display:grid;gap:8px}
+.skel i{display:block;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--surface2),var(--hover),var(--surface2));background-size:200% 100%;animation:sh 1.4s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.gen .line{font-size:13px;color:var(--muted);font-family:var(--f-mono);min-height:20px}
+.empty{padding:56px 20px;text-align:center;border:1px dashed var(--line2);border-radius:14px;color:var(--muted);display:grid;gap:14px;justify-items:center}
 
 /* 集纲 */
-.eps{display:grid;gap:8px}
-.epcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:grid;grid-template-columns:56px minmax(0,1fr);gap:4px 12px}
-.epcard.card{border-color:var(--amber);background:linear-gradient(90deg,var(--amber-soft),var(--surface) 30%)}
-.epcard .no{font-family:var(--f-mono);font-weight:600;font-size:13px;color:var(--muted);grid-row:span 3}
-.epcard .no b{display:block;font-size:20px;color:var(--fg)}
-.epcard .t{font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.epcard .hook{font-size:12px;color:var(--muted)}
-.epcard .hook::before{content:"钩子 ";font-weight:700;color:var(--accent)}
-.epcard.card .hook::before{content:"卡点钩子 ";color:var(--amber)}
-.epcard.ph{opacity:.6;border-style:dashed}
-.cardmark{font-size:10px;font-weight:700;background:var(--amber);color:var(--surface);padding:0 6px;border-radius:4px}
+.eps{display:grid}
+.ep{display:grid;grid-template-columns:52px minmax(0,1fr);gap:2px 14px;padding:14px 8px;border-bottom:1px solid var(--line)}
+.ep .no{font-family:var(--f-mono);color:var(--muted);font-size:12px;padding-top:2px;grid-row:span 3}
+.ep .no b{display:block;font-size:20px;color:var(--fg);font-weight:600}
+.ep .t{font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ep .s{color:var(--fg2);font-size:13px}
+.ep .h{color:var(--muted);font-size:12px}
+.ep.card{background:linear-gradient(90deg,var(--amber-dim),transparent 60%);border-radius:10px;border-bottom-color:transparent;margin:2px 0}
+.ep.card .no b{color:var(--amber)}
+.ep.ph{opacity:.55}
+.cardtag{font-size:11px;font-weight:700;color:var(--amber);border:1px solid var(--amber);padding:0 6px;border-radius:5px}
 
 /* 弹窗 */
-.mask{position:fixed;inset:0;background:rgba(10,16,14,.45);z-index:50;display:grid;place-items:center;padding:16px}
-.modal{background:var(--surface);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:min(640px,100%);max-height:calc(100% - 32px);overflow:auto;display:grid}
-.modal.wide{width:min(880px,100%)}
-.mhead{padding:16px 20px 0;display:flex;align-items:center;gap:8px}
-.mhead h3{font-size:18px}
-.mhead .sp{flex:1}
-.mbody{padding:16px 20px;display:grid;gap:14px}
-.mfoot{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
-.opt{border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:12px;cursor:pointer;text-align:left;background:var(--surface);width:100%}
-.opt.on{border-color:var(--accent);background:var(--accent-soft)}
-.opt .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none;margin-top:2px}
-.opt.on .radio{border:5px solid var(--accent)}
-.opt b{display:block}
-.opt span{font-size:12px;color:var(--muted)}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:50;display:grid;place-items:center;padding:16px}
+.modal{background:#18191C;border:1px solid var(--line2);border-radius:18px;width:min(640px,100%);max-height:calc(100% - 32px);overflow:auto;display:grid;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal.wide{width:min(860px,100%)}
+.mh{padding:20px 22px 4px;display:flex;align-items:flex-start;gap:8px}
+.mh h3{font-size:18px}
+.mh p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.mb{padding:16px 22px;display:grid;gap:18px}
+.mf{padding:14px 22px 20px;display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.choose{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choose button{text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);display:grid;gap:4px}
+.choose button b{font-size:15px;display:flex;gap:6px;align-items:center}
+.choose button span{font-size:12px;color:var(--muted)}
+.choose button.on{border-color:var(--accent);background:var(--accent-dim)}
+.lbl{font-size:12px;color:var(--muted);margin-bottom:8px;display:block}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--surface2);border-radius:10px;padding:3px;gap:2px}
+.seg button{padding:6px 12px;border-radius:8px;color:var(--fg2);font-size:13px}
+.seg button.on{background:#3A3C42;color:var(--fg)}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface2)}
+.stepper button{width:28px;height:30px;color:var(--fg2)}
+.stepper button:hover{background:var(--hover)}
+.stepper input{width:44px;height:30px;text-align:center;border:0;background:transparent;outline:none;font-family:var(--f-mono);-moz-appearance:textfield}
+.stepper input::-webkit-inner-spin-button{-webkit-appearance:none}
 
 /* 卡点滑轨 */
-.slider{padding:28px 14px 34px;user-select:none;touch-action:none}
-.track{position:relative;height:10px;border-radius:5px;background:var(--sunk)}
-.track .segc{position:absolute;top:0;bottom:0}
-.handle{position:absolute;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--surface);border:3px solid var(--amber);box-shadow:0 2px 6px rgba(0,0,0,.2);cursor:grab;touch-action:none}
+.slider{padding:34px 12px 8px;user-select:none;touch-action:none}
+.track{position:relative;height:8px;border-radius:4px;background:var(--line)}
+.track .seg-c{position:absolute;top:0;bottom:0}
+.handle{position:absolute;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:var(--bg);border:3px solid var(--amber);cursor:grab;touch-action:none;box-shadow:0 0 0 4px rgba(242,181,80,.15)}
 .handle:active{cursor:grabbing}
+.handle .hl{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;white-space:nowrap;color:var(--amber);font-family:var(--f-mono)}
 .handle.shake{animation:shake .25s}
 @keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
-.handle .hl{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;white-space:nowrap;background:var(--amber);color:var(--surface);padding:1px 6px;border-radius:4px}
 .ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:10px;font-family:var(--f-mono)}
-.cardctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.cardctl>div{border:1px solid var(--line);border-radius:8px;padding:8px;display:grid;gap:4px;justify-items:center}
-.cardctl .stp{display:flex;gap:4px;align-items:center}
-.cardctl .stp button{width:28px;height:28px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
-.cardctl input{width:56px;text-align:center}
-.segtable{width:100%;border-collapse:collapse;font-size:13px}
-.segtable td,.segtable th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
-.segtable th{font-size:11px;color:var(--muted);font-weight:600}
-.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
-.errline{color:var(--red);font-size:12px;min-height:18px}
+.cardrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.cardrow>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.cardrow .t{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.cardrow .r{font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+.sw{width:8px;height:8px;border-radius:2px;display:inline-block;flex:none}
+.err{color:var(--red);font-size:12px;min-height:18px}
 
 /* 互动剧本 */
-.iabar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.iabar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.check{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:9px;font-size:13px;border:1px solid var(--line)}
+.check.ok{color:var(--green)}.check.warn{color:var(--amber);border-color:rgba(242,181,80,.4)}.check.bad{color:var(--red);border-color:rgba(240,113,103,.45)}
 .iawrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px}
-.canvas{position:relative;height:560px;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;
-  background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:20px 20px}
-.canvas svg{width:100%;height:100%;cursor:grab;display:block}
-.canvas svg.drag{cursor:grabbing}
-.cvtools{position:absolute;right:8px;top:8px;display:flex;gap:4px}
-.legend{position:absolute;left:8px;bottom:8px;display:flex;gap:10px;flex-wrap:wrap;font-size:11px;background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
-.side{display:grid;gap:12px;align-content:start}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px}
-.panel h4{margin:0;font-size:13px;display:flex;align-items:center;gap:8px}
-.panel h4 .sp{flex:1}
-.issue{font-size:12px;padding:6px 8px;border-radius:6px;cursor:pointer;display:flex;gap:6px}
-.issue.e{background:var(--red-soft);color:var(--red)}
-.issue.w{background:var(--amber-soft);color:var(--amber)}
-.field{display:grid;gap:4px}
-.field label{font-size:11px;color:var(--muted);font-weight:600}
-.field textarea{border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:80px;resize:vertical;background:var(--bg)}
-.optrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px;padding:6px;border:1px solid var(--line);border-radius:6px}
-.optrow .r2{display:flex;gap:4px;flex-wrap:wrap;align-items:center;font-size:12px}
-.optrow input[type=number]{width:56px;padding:2px 4px}
-.optrow select{max-width:140px;padding:2px 4px;font-size:12px}
-.script{display:grid;gap:10px}
-.sc{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
-.sc .h{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
-.sc .choice{margin-top:8px;border-left:3px solid var(--accent);padding-left:10px;display:grid;gap:4px;font-size:13px}
-.play{max-width:560px;margin:0 auto;background:var(--fg);color:var(--bg);border-radius:14px;padding:20px;display:grid;gap:14px;min-height:420px;align-content:start}
-.play .screen{aspect-ratio:9/12;max-width:100%;border-radius:10px;background:linear-gradient(160deg,#2a3431,#0d1312);color:#E8EFEC;padding:18px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;font-size:15px;line-height:1.7}
-.play .screen .ep{font-family:var(--f-mono);font-size:11px;opacity:.7}
-.play .vars{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--f-mono);font-size:12px}
-.play .vars span{background:rgba(255,255,255,.12);padding:2px 8px;border-radius:4px}
-.play .chs{display:grid;gap:8px}
-.play .chs button{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#E8EFEC;padding:10px;border-radius:8px;text-align:left}
-.play .chs button:hover{background:rgba(255,255,255,.18)}
-.play .timer{height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
-.play .timer i{display:block;height:100%;background:#E6A740}
+.canvas{position:relative;height:600px;border:1px solid var(--line);border-radius:14px;background:var(--bg2);overflow:hidden;background-image:radial-gradient(#2a2c31 1px,transparent 1px);background-size:22px 22px}
+.canvas #cv{width:100%;height:100%;cursor:grab;display:block}
+.canvas #cv.drag{cursor:grabbing}
+.cvtools{position:absolute;right:10px;top:10px;display:flex;gap:4px}
+.legend{position:absolute;left:10px;bottom:10px;display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--fg2);background:rgba(22,23,26,.9);padding:5px 10px;border-radius:8px;border:1px solid var(--line)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.insp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;align-content:start}
+.insp h4{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
+.f{display:grid;gap:4px}
+.f label{font-size:11px;color:var(--muted)}
+.f input,.f textarea,.f select{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;outline:none;min-width:0}
+.f textarea{min-height:110px;resize:vertical}
+.optrow{display:grid;gap:6px;padding:8px;border:1px solid var(--line);border-radius:8px}
+.optrow .r1{display:flex;gap:4px}
+.optrow .r1 input{flex:1;min-width:0}
+.optrow .r2{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+.optrow input[type=number]{width:52px;padding:2px 4px}
+.optrow select{max-width:100%;font-size:12px;padding:3px 4px}
+.issues{display:grid;gap:6px}
+.issue{font-size:12px;padding:8px 10px;border-radius:8px;cursor:pointer;text-align:left}
+.issue.e{background:var(--red-dim);color:var(--red)}
+.issue.w{background:var(--amber-dim);color:var(--amber)}
+.script{display:grid;gap:10px;max-width:760px}
+.sc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;display:grid;gap:4px}
+.sc.b{margin-left:28px}
+.sc .k{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.sc .x{white-space:pre-wrap;font-size:13px;color:var(--fg2)}
+.sc .ch{border-left:2px solid var(--accent);padding-left:10px;display:grid;gap:3px;font-size:13px;margin-top:4px}
+.play{max-width:400px;margin:0 auto;width:100%}
+.phone{aspect-ratio:9/16;max-height:640px;max-width:100%;border-radius:24px;border:1px solid var(--line2);background:linear-gradient(170deg,#2b3331 0%,#121615 70%);padding:20px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.phone .vars{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--f-mono);font-size:11px}
+.phone .vars span{background:rgba(255,255,255,.1);padding:2px 8px;border-radius:5px}
+.phone .story{margin-top:auto;display:grid;gap:8px;font-size:15px;line-height:1.75}
+.phone .ep{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.phone .chs{display:grid;gap:8px}
+.phone .chs button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);padding:11px 14px;border-radius:12px;text-align:left}
+.phone .chs button:hover{background:rgba(255,255,255,.15)}
+.phone .end{font-size:22px;font-weight:900;text-align:center;color:var(--accent)}
+.timer{height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.timer i{display:block;height:100%;background:var(--amber);animation:tm 8s linear forwards}
+@keyframes tm{from{width:100%}to{width:0}}
 
-/* 状态机抽屉 */
-.sm{border-left:1px solid var(--line);background:var(--surface);padding:14px;display:grid;gap:14px;align-content:start;font-size:12px;max-height:calc(100vh - 53px);overflow:auto;position:sticky;top:53px}
-.sm h4{margin:0;font-size:12px;letter-spacing:.06em;color:var(--muted)}
-.smtable{width:100%;border-collapse:collapse}
-.smtable td{padding:4px 2px;border-bottom:1px solid var(--line);vertical-align:top}
-.log{display:grid;gap:4px;font-family:var(--f-mono);font-size:11px}
-.log div{padding:3px 6px;border-radius:4px;background:var(--bg);overflow-wrap:anywhere}
-.log div.bad{background:var(--red-soft);color:var(--red)}
-.smgraph{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
-.smgraph .pill{opacity:.45}
-.smgraph .pill.cur{opacity:1;outline:2px solid currentColor}
-.toggle{display:flex;align-items:center;gap:6px;cursor:pointer}
+/* 调试面板（仅内部评审） */
+.dbg{position:fixed;right:12px;top:64px;bottom:12px;width:min(340px,calc(100% - 24px));z-index:60;background:#121315;border:1px solid var(--line2);border-radius:14px;padding:14px;overflow:auto;display:grid;gap:12px;align-content:start;font-size:12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.dbg h4{margin:0;font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.dbg table{width:100%;border-collapse:collapse}
+.dbg td{padding:4px 2px;border-bottom:1px solid var(--line)}
+.st{font-family:var(--f-mono);font-size:11px;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--fg2);white-space:nowrap}
+.st.cur{background:var(--accent);color:var(--on-accent)}
+.stl{display:flex;flex-wrap:wrap;gap:4px}
+.log{display:grid;gap:3px;font-family:var(--f-mono);font-size:11px}
+.log div{padding:3px 6px;border-radius:4px;background:var(--surface);overflow-wrap:anywhere;color:var(--fg2)}
+.log div.bad{background:var(--red-dim);color:var(--red)}
 
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:8px;z-index:60;font-size:13px;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#ECEDEF;color:#111;padding:9px 18px;border-radius:10px;z-index:90;font-size:13px;max-width:calc(100% - 32px)}
 
-@media (max-width:1100px){.ws.withsm{grid-template-columns:232px minmax(0,1fr)}.sm{position:fixed;right:0;top:53px;bottom:0;width:min(340px,100%);z-index:30;box-shadow:var(--shadow);max-height:none}.iawrap{grid-template-columns:1fr}}
+@media (max-width:1000px){.iawrap{grid-template-columns:1fr}}
 @media (max-width:760px){
-  .ws,.ws.withsm{grid-template-columns:1fr}
-  .nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px}
-  .nav h4{display:none}.nav a{white-space:nowrap}.nav a.sub{padding-left:10px}
-  .main{padding:16px 16px 64px}
-  .canvas{height:420px}
-  .top .crumb{display:none}
+  .ws{grid-template-columns:1fr}
+  .side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px 10px}
+  .side h4{display:none}.side a{white-space:nowrap}
+  .main{padding:16px 16px 80px}
+  .choose{grid-template-columns:1fr}
+  .canvas{height:440px}
+  .topbar .credits{display:none}
+  .dh .acts{margin-left:0}
 }
 </style>
 
 <div id="app"></div>
 <div id="modal"></div>
+<div class="pop" id="pop" hidden></div>
+<div id="dbg"></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
 (function(){
 'use strict';
+// ============ 图标 ============
+const IC={
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',up:'<path d="M12 19V5M5 12l7-7 7 7"/>',down:'<path d="M6 9l6 6 6-6"/>',
+  doc:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',book:'<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 19V5"/>',
+  fire:'<path d="M12 3c1 4 5 5 5 10a5 5 0 01-10 0c0-3 2-4 2-6 2 1 3 2 3-4z"/>',clip:'<path d="M20 11l-8 8a5 5 0 01-7-7l9-9a3 3 0 014 4l-9 9a1 1 0 01-2-2l8-8"/>',
+  check:'<path d="M5 12l5 5 9-10"/>',lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+  more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  refresh:'<path d="M20 11a8 8 0 10-2 6M20 4v7h-7"/>',arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',fit:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
+  export:'<path d="M12 3v12M7 8l5-5 5 5M5 21h14"/>'};
+const ic=(k,cls='i')=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+
 // ============ 基础数据 ============
 const MARKETS=[
-  {k:'cn',name:'国内 · 抖音/红果/小程序',eps:80,lang:'中文'},
-  {k:'na',name:'北美',eps:60,lang:'English'},
-  {k:'sea',name:'东南亚',eps:60,lang:'English / Bahasa'},
-  {k:'jk',name:'日韩',eps:60,lang:'日本語 / 한국어'},
-  {k:'me',name:'中东',eps:50,lang:'العربية'},
-  {k:'la',name:'拉美',eps:60,lang:'Español / Português'}];
-const GENRES=['豪门','复仇','甜宠','重生','战神','赘婿','霸总','萌宝','穿越','悬疑','玄幻','年代','狼人'];
-const STYLES=['爽感','反转密集','虐恋','轻喜','热血','暗黑','治愈'];
+  {k:'cn',name:'国内',sub:'抖音 / 红果 / 小程序',eps:80,lang:'中文'},
+  {k:'na',name:'北美',sub:'英语',eps:60,lang:'English'},
+  {k:'sea',name:'东南亚',sub:'英语 / 印尼语',eps:60,lang:'English / Bahasa'},
+  {k:'jk',name:'日韩',sub:'日语 / 韩语',eps:60,lang:'日本語 / 한국어'},
+  {k:'me',name:'中东',sub:'阿拉伯语',eps:50,lang:'العربية'},
+  {k:'la',name:'拉美',sub:'西语 / 葡语',eps:60,lang:'Español / Português'}];
+const GENRES=['豪门','复仇','甜宠','重生','战神','赘婿','霸总','萌宝','穿越','悬疑','玄幻','年代','末世','狼人'];
+const STYLES=['爽感','反转密集','虐恋','轻喜','热血','暗黑','治愈','悬疑感'];
+const AUDIENCE=['女频','男频','全年龄'];
+const EPS=[20,30,40,60,80,100];
 const BUILTIN_SKILLS=[
-  {id:'sk1',name:'黄金三秒开篇',desc:'第 1 集前 3 秒必须出冲突',scope:'全部'},
-  {id:'sk2',name:'爽点密度控制',desc:'每 90 秒一个爽点，每集一个反转',scope:'集纲'},
-  {id:'sk3',name:'付费卡点钩子',desc:'卡点集结尾强化悬念与情绪峰值',scope:'集纲'},
-  {id:'sk4',name:'反转设计',desc:'身份、关系、真相三类反转模板',scope:'集纲'},
-  {id:'sk5',name:'人物弧光',desc:'主角从被压制到反杀的成长曲线',scope:'策划案'},
-  {id:'sk6',name:'海外本土化',desc:'文化、禁忌、人名与价值观替换',scope:'策划案'},
-  {id:'sk7',name:'互动分支设计',desc:'有效选择、分支收束、数值平衡',scope:'互动剧本'},
-  {id:'sk8',name:'台词口语化',desc:'短句、强情绪、去书面腔',scope:'互动剧本'}];
-const SAMPLE_IDEA='被豪门退婚的女主，三年后带着神秘身份回归，让所有看不起她的人追悔莫及。';
-const SAMPLE_NOVEL=`《重生之千金归来》
-第一章 退婚
+  {id:'sk1',name:'黄金三秒开篇',desc:'第 1 集前 3 秒出冲突'},
+  {id:'sk2',name:'爽点密度控制',desc:'每 90 秒一个爽点'},
+  {id:'sk3',name:'付费卡点钩子',desc:'卡点集强化悬念'},
+  {id:'sk4',name:'反转设计',desc:'身份 / 关系 / 真相反转'},
+  {id:'sk5',name:'人物弧光',desc:'从被压制到反杀'},
+  {id:'sk6',name:'海外本土化',desc:'文化、禁忌、人名'},
+  {id:'sk7',name:'互动分支设计',desc:'有效选择与收束'},
+  {id:'sk8',name:'台词口语化',desc:'短句、强情绪'}];
+const IDEAS=[['重生复仇','重生回到订婚宴前一天，这一次我要让害我的人亲手揭开自己的伪装。'],['豪门逆袭','被豪门退婚的女主，三年后带着神秘身份回归，让所有看不起她的人追悔莫及。'],
+  ['赘婿翻身','入赘三年受尽白眼，丈母娘寿宴上，全城首富跪在我面前喊少主。'],['狼人出海','落魄女孩被误认成 Alpha 的命定伴侣，她却发现自己才是失落的狼族公主。'],
+  ['末世基建','末世降临前七天我觉醒了囤货系统，这一次我要建一座谁也攻不破的城。'],['规则怪谈','入职第一天我收到一份员工守则，第七条写着：不要相信你的主管。']];
+const SAMPLE_NOVEL=`第一章 退婚
 订婚宴上，苏婉柔挽着顾承砚的手臂，笑着把一纸退婚书推到林晚面前。满堂宾客窃窃私语，林父沉默不语。
 第二章 三年
 三年后，一架私人飞机降落在江城。走下舷梯的女人，正是当年被赶出家门的林晚。
@@ -298,19 +360,18 @@ const SAMPLE_NOVEL=`《重生之千金归来》
 苏婉柔故技重施，却不知道林晚早已掌握了当年的全部证据。
 第五章 真相
 林父终于说出当年的隐情：退婚，是为了保护她。`;
-const SAMPLE_BENCH=`爆款对标：《闪婚后，豪门老公每天都在掉马》（示例）
-第1集 女主被逼替嫁，新郎是传闻中的残疾大佬
+const SAMPLE_BENCH=`第1集 女主被逼替嫁，新郎是传闻中的残疾大佬
 第2集 婚礼当天，大佬站了起来
 第8集【一卡】女主身世之谜初现
 第30集【二卡】双重身份曝光
 第55集【三卡】幕后反派现身`;
 
-// ============ 状态机定义 ============
+// ============ 状态机定义（对用户隐藏，只在调试面板可见） ============
 const SM={
   project:{label:'项目',states:{draft:'草稿',parsing:'解析中',parse_failed:'解析失败',planning:'策划阶段',outlining:'集纲阶段',interactive:'互动剧本阶段',completed:'已完成'},
     tr:{draft:['parsing','planning'],parsing:['planning','parse_failed'],parse_failed:['parsing'],planning:['outlining'],outlining:['interactive'],interactive:['completed'],completed:[]}},
   artifact:{label:'产物',states:{empty:'未生成',blocked:'等待前置',generating:'生成中',ready:'已生成',edited:'已编辑',outdated:'待更新',locked:'已定稿',error:'生成失败'},
-    tr:{empty:['generating','blocked'],blocked:['empty'],generating:['ready','error','empty','edited','outdated','locked'],ready:['edited','outdated','locked','generating'],
+    tr:{empty:['generating','blocked'],blocked:['empty'],generating:['ready','error','empty'],ready:['edited','outdated','locked','generating'],
         edited:['outdated','locked','generating','edited'],outdated:['generating','edited','locked'],locked:['ready','edited','outdated'],error:['generating']}},
   task:{label:'生成任务',states:{queued:'排队中',running:'生成中',succeeded:'成功',partial:'部分成功',failed:'失败',cancelled:'已取消'},
     tr:{queued:['running','cancelled'],running:['succeeded','failed','cancelled','partial'],partial:['queued'],failed:['queued'],succeeded:[],cancelled:[]}},
@@ -322,40 +383,38 @@ const SM={
 const STAGE_ORDER=['draft','parsing','planning','outlining','interactive','completed'];
 
 // ============ 全局状态 ============
-const S={view:'home',mode:'original',gen:'quick',
-  form:{idea:SAMPLE_IDEA,novelText:'',novelName:'',benchText:'',genres:['豪门','复仇'],styles:['爽感','反转密集'],market:'cn',episodes:80,audience:'女频',skills:['sk1','sk3']},
-  userSkills:[],project:null,sel:'plan',smOpen:window.innerWidth>1100,failNext:false,iaTab:'canvas',selNode:null,log:[]};
+const S={view:'home',mode:'original',fine:false,credits:120,
+  form:{idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[]},
+  userSkills:[],project:null,sel:'plan',failNext:false,iaTab:'canvas',selNode:null,log:[],debug:false,popKey:null};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const now=()=>new Date().toTimeString().slice(0,8);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2200)}
-function log(msg,bad){S.log.unshift({t:now(),msg,bad});S.log=S.log.slice(0,80)}
-function save(){try{localStorage.setItem('drama-demo',JSON.stringify({project:S.project,userSkills:S.userSkills,form:S.form,mode:S.mode,gen:S.gen,log:S.log}))}catch(e){}}
-function load(){try{const d=JSON.parse(localStorage.getItem('drama-demo')||'null');if(d){Object.assign(S,{project:d.project,userSkills:d.userSkills||[],log:d.log||[]});if(d.form)S.form=d.form;if(d.mode)S.mode=d.mode;if(d.gen)S.gen=d.gen}}catch(e){}}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2400)}
+function log(msg,bad){S.log.unshift({t:now(),msg,bad});S.log=S.log.slice(0,100);if(S.debug)renderDbg()}
+function save(){try{localStorage.setItem('drama-demo-v2',JSON.stringify({project:S.project,userSkills:S.userSkills,form:S.form,mode:S.mode,fine:S.fine,log:S.log,credits:S.credits}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem('drama-demo-v2')||'null');if(d){S.project=d.project;S.userSkills=d.userSkills||[];S.log=d.log||[];if(d.form)S.form=Object.assign(S.form,d.form);S.mode=d.mode||'original';S.fine=!!d.fine;S.credits=d.credits??120}}catch(e){}}
 
-// 统一状态迁移：非法迁移会被拒绝并记入日志
 function go(kind,obj,to,who){
-  const from=obj.status; const def=SM[kind];
+  const from=obj.status;const def=SM[kind];
   if(from===to)return true;
   if(!def.tr[from]||!def.tr[from].includes(to)){log(`✗ 非法迁移 [${def.label}] ${who}: ${from} → ${to}`,true);return false}
-  obj.status=to; log(`[${def.label}] ${who}: ${def.states[from]} → ${def.states[to]}`); return true;
+  obj.status=to;log(`[${def.label}] ${who}: ${def.states[from]} → ${def.states[to]}`);return true;
 }
 function advanceStage(to){const P=S.project;if(STAGE_ORDER.indexOf(to)>STAGE_ORDER.indexOf(P.stage)){const o={status:P.stage};if(go('project',o,to,'项目'))P.stage=o.status}}
 const ST_LABEL=k=>{for(const d of Object.values(SM))if(d.states[k])return d.states[k];return k};
-const pill=(st,extra='')=>`<span class="pill st-${st}">${extra}${ST_LABEL(st)}</span>`;
+const has=a=>!!(a&&['ready','edited','locked','outdated'].includes(a.status)&&a.data);
 
 // ============ 内容模板（模拟 AI） ============
+function eff(f){const m=f.market||'cn';return{...JSON.parse(JSON.stringify(f)),market:m,genres:f.genres.length?f.genres:['豪门','复仇'],styles:f.styles.length?f.styles:['爽感','反转密集'],audience:f.audience||'女频'}}
 function cast(f){
-  const male=f.genres.some(g=>['战神','赘婿'].includes(g))||f.audience==='男频';
-  const m=f.market;
-  if(m==='cn'){return male?{P:'叶辰',L:'秦雪',A:'王浩',X:'福伯',city:'江城'}:{P:'林晚',L:'顾承砚',A:'苏婉柔',X:'林父',city:'江城'}}
+  const male=f.genres.some(g=>['战神','赘婿'].includes(g))||f.audience==='男频';const m=f.market;
+  const city={na:'New York',la:'Ciudad de México',me:'Dubai',sea:'Singapore'}[m];
+  if(m==='cn')return male?{P:'叶辰',L:'秦雪',A:'王浩',X:'福伯',city:'江城'}:{P:'林晚',L:'顾承砚',A:'苏婉柔',X:'林父',city:'江城'};
   if(m==='jk')return male?{P:'真司',L:'美咲',A:'黑泽',X:'老管家',city:'东京'}:{P:'美咲',L:'神宫寺凛',A:'绫子',X:'父亲',city:'东京'};
-  return male?{P:'Leo',L:'Mia',A:'Derek',X:'Old Sam',city:m==='na'?'New York':m==='la'?'Ciudad de México':m==='me'?'Dubai':'Singapore'}:{P:'Ava',L:'Ethan Blake',A:'Chloe',X:'Mr. Hayes',city:m==='na'?'New York':m==='la'?'Ciudad de México':m==='me'?'Dubai':'Singapore'};
+  return male?{P:'Leo',L:'Mia',A:'Derek',X:'Old Sam',city}:{P:'Ava',L:'Ethan Blake',A:'Chloe',X:'Mr. Hayes',city};
 }
 const fill=(s,c)=>s.replace(/\{(\w+)\}/g,(_,k)=>c[k]||k);
-let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646};
-const pick=a=>a[Math.floor(rnd()*a.length)];
 const T={
   open:[['当众退婚','{P}在订婚宴上被{A}设计陷害，当众被退婚，满堂宾客都在看笑话。'],['绝境偶遇','走投无路的{P}与{L}意外相遇，对方一句话让全场安静。'],['第一次反击','{A}步步紧逼，{P}第一次出手反击，让{A}当众出丑。']],
   rise:[['暗查旧案','{P}暗中调查当年真相，发现{X}藏起了一份关键文件。'],['挡下危机','{L}替{P}挡下一场危机，两人关系第一次升温。'],['设局','{A}联合外部势力设局，{P}的身份险些暴露。'],['一鸣惊人','{P}在{city}商业晚宴上一鸣惊人，众人开始重新审视这个人。'],['无心之言','{X}的一句无心之言，让{P}意识到幕后另有其人。'],['误会冷战','{P}与{L}产生误会，冷战开始，{A}趁虚而入。'],['当众打脸','{P}拿出证据当众打脸，{A}的伪装被撕开一角。'],['家族阻挠','{L}的家族出面阻挠，{P}被迫做出取舍。'],['身份线索','{P}真实身份的线索浮出水面，{A}开始慌了。'],['反将一军','{A}的陷阱被{P}提前识破，反被将了一军。'],['旧人归来','一个本该死去的旧人出现在{city}，局势再次反转。'],['以退为进','{P}故意示弱，引蛇出洞。']],
@@ -369,788 +428,797 @@ const T={
     {q:'{L}伸出手要带{P}离开',o:[['握住{L}的手',{好感:15}],['拒绝，独自面对',{实力:10}],['反问：你凭什么帮我？',{好感:5,实力:5}]]},
     {q:'拿到关键证据后',o:[['立刻公开',{实力:10}],['先交给{X}确认',{好感:5},'trust'],['留作底牌',{实力:5}]]},
     {q:'{A}深夜约见{P}',o:[['赴约，看看对方要耍什么花样',{实力:10}],['带上{L}一起去',{好感:10}],['不理会',{}]]}],
-  titles:{豪门:['豪门千金归来','退婚后，我成了顶级大佬','她的马甲藏不住了'],复仇:['三年后，前夫跪求复婚','复仇千金','血色订婚宴'],甜宠:['闪婚后被大佬宠上天','顾总的心尖宠','偏偏是你'],重生:['重生后我手撕白月光','重来一次，换我主宰'],战神:['战神归来，满城跪迎','北境之王'],赘婿:['上门女婿竟是首富','龙婿'],霸总:['霸总的契约新娘','总裁他追妻火葬场'],萌宝:['天才萌宝寻爹记','妈咪是大佬'],狼人:['Alpha 的替身新娘','月下之约'],_:['逆光而来','她从深渊归来','不再回头']}
+  titles:{豪门:['豪门千金归来','退婚后，我成了顶级大佬','她的马甲藏不住了'],复仇:['三年后，前夫跪求复婚','复仇千金','血色订婚宴'],甜宠:['闪婚后被大佬宠上天','顾总的心尖宠'],重生:['重生后我手撕白月光','重来一次，换我主宰'],战神:['战神归来，满城跪迎','北境之王'],赘婿:['上门女婿竟是首富','龙婿'],霸总:['霸总的契约新娘','总裁他追妻火葬场'],萌宝:['天才萌宝寻爹记','妈咪是大佬'],狼人:['Alpha 的替身新娘','月下之约'],末世:['末世：我囤了一座城'],_:['逆光而来','她从深渊归来','不再回头']}
 };
 function genPlan(f,P){
-  seed=(f.idea||f.novelName||'x').length*97+f.genres.length*13+7;
   const c=cast(f);const m=MARKETS.find(x=>x.k===f.market);
-  const tpool=[...(T.titles[f.genres[0]]||[]),...(T.titles[f.genres[1]]||[]),...T.titles._];
-  const titles=[...new Set(tpool)].slice(0,3);
-  const idea=P.mode==='novel'?`改编自《${f.novelName||'未命名小说'}》：${(P.parsed?.mainline)||'女主被退婚后归来复仇的故事。'}`:P.mode==='benchmark'?`对标爆款结构（${P.benchDir||'同构新创'}）：${f.idea}`:f.idea;
+  const titles=[...new Set([...(T.titles[f.genres[0]]||[]),...(T.titles[f.genres[1]]||[]),...T.titles._])].slice(0,3);
+  const idea=P.mode==='novel'?`改编自《${f.novelName||'未命名小说'}》：${P.parsed?.mainline||'女主被退婚后归来复仇的故事。'}`:P.mode==='benchmark'?`对标爆款结构（${P.benchDir||'同构新创'}）：替嫁新娘与隐藏身份的大佬，在一次次掉马中反转命运。`:f.idea;
   const cards=defaultCards(f.episodes);
-  const local=f.market!=='cn'?`\n本土化：故事发生在 ${c.city}，人物改为当地常见名字，家族冲突改写为当地观众熟悉的阶层与家族企业语境，台词语言为 ${m.lang}。`:'';
+  const local=f.market!=='cn'?`\n本土化：故事发生在 ${c.city}，人物使用当地常见名字，家族冲突改写为当地观众熟悉的语境，台词语言为 ${m.lang}。`:'';
+  const set=f.setting||{};
   return {titles,title:titles[0],logline:idea,
-    synopsis:fill(`${idea}\n{P}在订婚宴上被{A}设计陷害，被{L}所在的家族当众退婚，又被逐出家门。三年后，{P}以神秘身份回到{city}，一边揭开当年陷害的真相，一边与{L}在误会与守护中重新靠近。随着{P}的马甲一层层掉落，{A}的阴谋步步败露，最终{X}道出当年隐情：那场退婚另有隐衷。`,c)+local,
-    world:fill(`现代都市 · {city}。两大豪门家族与新兴资本三方角力；{P}三年间在海外建立的商业版图，是回归后反击的底牌。`,c),
-    chars:[{n:c.P,r:'主角',d:fill('被陷害、被退婚、被逐出家门；三年后携神秘身份归来。人设：清醒、狠、护短。弧光：从隐忍到掌控全局。',c)},
-      {n:c.L,r:'男主 / 关键盟友',d:fill('当年被迫参与退婚，内心一直有愧。表面冷漠，暗中守护{P}。',c)},
+    synopsis:fill(`{P}在订婚宴上被{A}设计陷害，被{L}所在的家族当众退婚，又被逐出家门。三年后，{P}以神秘身份回到{city}，一边揭开当年陷害的真相，一边与{L}在误会与守护中重新靠近。随着{P}的马甲一层层掉落，{A}的阴谋步步败露，最终{X}道出当年隐情：那场退婚另有隐衷。`,c)+local,
+    world:fill(`${set.world||'现代都市'} · {city}。两大豪门家族与新兴资本三方角力；{P}三年间建立的商业版图，是回归后反击的底牌。`,c),
+    chars:[{n:c.P,r:'主角',d:fill(`${set.role?set.role+'。':''}被陷害、被退婚、被逐出家门；三年后携神秘身份归来。${set.cheat?'金手指：'+set.cheat+'。':''}清醒、狠、护短。`,c)},
+      {n:c.L,r:'男主 / 盟友',d:fill('当年被迫参与退婚，内心有愧。表面冷漠，暗中守护{P}。',c)},
       {n:c.A,r:'反派',d:fill('当年陷害{P}的人，靠伪装上位。擅长示弱和借刀杀人。',c)},
       {n:c.X,r:'关键配角',d:fill('掌握当年真相的人，沉默背后另有苦衷。',c)}],
-    conflict:fill('主线：{P}复仇并找回身份 vs {A}的伪装与幕后势力。\n爽点：当众打脸 · 马甲掉落 · 反派自食其果 · 男主追妻。\n名场面：订婚宴退婚 / 三年后私人飞机降落 / 峰会主讲人揭晓 / 雨夜对峙。',c),
-    pacing:`建议总集数 ${f.episodes}；建议卡点：一卡第 ${cards.c1} 集（身份悬念）、二卡第 ${cards.c2} 集（情感两难）、三卡第 ${cards.c3} 集（幕后黑手反转）。`,
-    cards, ending:fill('主线结局：{A}伏法，{P}与{L}和解。互动版可延伸为 好结局 / 坏结局 / 隐藏结局（{X}的秘密）。',c),
-    cast:c, skills:skillNames(f.skills)};
+    conflict:fill('主线：{P}复仇并找回身份，对抗{A}的伪装与幕后势力。\n爽点：当众打脸 · 马甲掉落 · 反派自食其果 · 男主追妻。\n名场面：订婚宴退婚 / 私人飞机降落 / 峰会主讲人揭晓 / 雨夜对峙。',c),
+    pacing:`总集数 ${f.episodes}。建议卡点：一卡第 ${cards.c1} 集（身份悬念），二卡第 ${cards.c2} 集（情感两难），三卡第 ${cards.c3} 集（幕后黑手反转）。`,
+    cards,ending:fill('{A}伏法，{P}与{L}和解。互动版可延伸出好结局、坏结局和隐藏结局（{X}的秘密）。',c),
+    cast:c,skills:skillNames(f.skills)};
 }
-function skillNames(ids){return ids.map(id=>[...BUILTIN_SKILLS,...S.userSkills].find(s=>s.id===id)?.name).filter(Boolean)}
+function skillNames(ids){return(ids||[]).map(id=>[...BUILTIN_SKILLS,...S.userSkills].find(s=>s.id===id)?.name).filter(Boolean)}
 function defaultCards(n){return{c1:Math.max(2,Math.round(n*0.15)),c2:Math.round(n*0.44),c3:Math.round(n*0.75)}}
 function genEpisode(no,ctx){
-  const {total,cards,c}=ctx; const isCard=[cards.c1,cards.c2,cards.c3].includes(no);
-  let t,s,h;
-  if(no<=3){[t,s]=T.open[no-1]}
-  else if(no===total){[t,s]=T.final}
-  else if(isCard){const i=[cards.c1,cards.c2,cards.c3].indexOf(no);[t,s,h]=T.card[i]}
-  else if(no>total*0.85){[t,s]=T.climax[no%T.climax.length]}
-  else{[t,s]=T.rise[(no*7)%T.rise.length]}
-  return{no,title:t,summary:fill(s,c),hook:fill(h||T.hooks[no%T.hooks.length],c),card:isCard?(no===cards.c1?'一卡':no===cards.c2?'二卡':'三卡'):''};
+  const{total,cards,c}=ctx;const cp=[cards.c1,cards.c2,cards.c3];const isCard=cp.includes(no);let t,s,h;
+  if(no<=3)[t,s]=T.open[no-1];
+  else if(no===total)[t,s]=T.final;
+  else if(isCard)[t,s,h]=T.card[cp.indexOf(no)];
+  else if(no>total*0.85)[t,s]=T.climax[no%T.climax.length];
+  else[t,s]=T.rise[(no*7)%T.rise.length];
+  return{no,title:t,summary:fill(s,c),hook:fill(h||T.hooks[no%T.hooks.length],c),card:isCard?['一卡','二卡','三卡'][cp.indexOf(no)]:''};
 }
 
 // ============ 项目与产物 ============
 function newArt(key,label,kind,status='empty'){return{key,label,kind,status,data:null,versions:0,task:null,prev:null,notice:''}}
 function segRanges(P){const{c1,c2,c3}=P.cards;const N=P.params.episodes;const r=[{k:'c1',label:'一卡',from:1,to:c1},{k:'c2',label:'二卡',from:c1+1,to:c2},{k:'c3',label:'三卡',from:c2+1,to:c3}];if(c3<N)r.push({k:'end',label:'结局段',from:c3+1,to:N});return r}
+function getArt(k){const P=S.project;if(!P||!k)return null;return k.startsWith('ia:')?P.ia[k.slice(3)]:P.arts[k]}
+function cost(n){if(S.credits<n){toast(`积分不足：需要 ${n}，剩余 ${S.credits}`);return false}return true}
+
 function createProject(){
-  const f=JSON.parse(JSON.stringify(S.form));
-  const P={id:Date.now(),mode:S.mode,gen:S.gen,params:f,stage:'draft',title:'',arts:{},cards:null,outlineMode:null,parsed:null,benchDir:null,ia:{}};
-  P.arts.plan=newArt('plan','策划案','plan');
-  S.project=P;S.log=[];log(`创建项目（${S.mode==='original'?'原创':S.mode==='novel'?'小说改编':'爆款对标'} · ${S.gen==='quick'?'一句话':'精细'}生成）`);
-  if(S.mode==='original'){startPlan()}
-  else{const o={status:'draft'};go('project',o,'parsing','项目');P.stage='parsing';P.parseState='parsing';S.sel='parse';S.view='project';render();
-    setTimeout(()=>{doParse()},1100)}
+  const f=eff(S.form);
+  const P={id:Date.now(),mode:S.mode,gen:S.fine?'fine':'quick',params:f,stage:'draft',title:'',arts:{plan:newArt('plan','策划案','plan')},cards:null,outlineMode:null,parsed:null,benchDir:null,ia:{}};
+  S.project=P;S.log=[];log(`创建项目（${{original:'原创',novel:'小说改编',benchmark:'爆款对标'}[S.mode]} · ${S.fine?'精细':'一句话'}生成）`);
+  S.view='project';
+  if(S.mode==='original'){startPlan();return}
+  const o={status:'draft'};go('project',o,'parsing','项目');P.stage='parsing';P.parseState='parsing';S.sel='parse';render();
+  setTimeout(doParse,1200);
 }
 function doParse(){
-  const P=S.project; const text=S.mode==='novel'?(P.params.novelText||''):(P.params.benchText||'');
-  if(S.failNext||text.trim().length<20){S.failNext=false;const o={status:'parsing'};go('project',o,'parse_failed','项目');P.stage='parse_failed';P.parseState='parse_failed';P.parseErr=text.trim().length<20?'文本太短（少于 20 字），无法识别章节或剧情':'文件编码无法识别（模拟失败）';save();render();return}
-  if(S.mode==='novel'){
-    const chs=text.match(/第[一二三四五六七八九十百千0-9]+[章回节][^\n]*/g)||[];
-    const words=text.replace(/\s/g,'').length;
-    P.parsed={chapters:chs.length?chs:['（未识别到章节标记，按全文处理）'],words,chars:Object.values(cast(P.params)).slice(0,4),mainline:'女主被退婚、三年后携新身份归来，揭开当年真相并完成复仇',range:[1,chs.length||1],strength:'适度改编'};
-  }else{
-    P.parsed={beats:[3,5,4,6,8,5,6,7,9,6,7,8,6,9,10,7,8,9,10,10],cards:[8,30,55],hooks:['身份反差（残疾大佬站起来）','双重身份层层掉马','契约婚姻 → 真心','反派在三卡集现身'],dir:'同构新创'};
-  }
+  const P=S.project;const text=P.mode==='novel'?(P.params.novelText||''):(P.params.benchText||'');
+  if(S.failNext||text.trim().length<20){S.failNext=false;const o={status:'parsing'};go('project',o,'parse_failed','项目');P.stage='parse_failed';P.parseState='parse_failed';P.parseErr=text.trim().length<20?'文本太短，识别不出章节或剧情':'文件编码无法识别';save();render();return}
+  if(P.mode==='novel'){const chs=text.match(/第[一二三四五六七八九十百千0-9]+[章回节][^\n]*/g)||[];
+    P.parsed={chapters:chs.length?chs:['全文（未识别到章节标记）'],words:text.replace(/\s/g,'').length,chars:Object.values(cast(P.params)).slice(0,4),mainline:'女主被退婚、三年后携新身份归来，揭开当年真相并完成复仇',range:[1,chs.length||1],strength:'适度改编'}}
+  else P.parsed={beats:[3,5,4,6,8,5,6,7,9,6,7,8,6,9,10,7,8,9,10,10],cards:[8,30,55],hooks:['身份反差：残疾大佬当场站起','双重身份层层掉马','契约婚姻转向真心','反派在三卡集现身']};
   P.parseState='done';log('解析完成');
-  if(S.gen==='quick'){startPlan()}else{save();render()}
+  if(P.gen==='quick')startPlan();else{save();render()}
 }
 function startPlan(){
-  const P=S.project;advanceStage('planning');S.view='project';S.sel='plan';
-  runTask(P.arts.plan,{steps:8,label:'策划案',produce:()=>genPlan(P.params,P),onDone:(a)=>{P.title=a.data.title;P.cards=a.data.cards;openOutlineModal(true)}});
+  const P=S.project;if(!cost(10))return;advanceStage('planning');S.sel='plan';
+  runTask(P.arts.plan,{steps:8,cost:10,lines:['理解创意…','确定题材与卖点…','设计主角与反派…','搭建人物关系…','规划主线冲突…','设计名场面…','规划付费节奏…','整理策划案…'],
+    produce:()=>genPlan(P.params,P),onDone:a=>{P.title=a.data.title;P.cards=a.data.cards;setTimeout(()=>openOutlineModal(true),350)}});
 }
 
-// 模拟生成任务：queued → running → succeeded / failed / cancelled
 const timers={};
 function runTask(art,opt){
   if(art.task&&['queued','running'].includes(art.task.status)){toast('正在生成中');return}
-  const hadData=!!art.data; art.prev=art.status;
+  const hadData=!!art.data;art.prev=art.status;
   if(!go('artifact',art,'generating',art.label))return;
-  art.task={id:'T'+Math.random().toString(36).slice(2,7),status:'queued',progress:0,steps:opt.steps,lines:[]};
-  log(`[生成任务] ${art.label}: 新建 → 排队中`);
-  render();
+  art.task={id:'T'+Math.random().toString(36).slice(2,7),status:'queued',progress:0,line:''};
+  log(`[生成任务] ${art.label}: 新建 → 排队中`);render();
   const willFail=S.failNext;S.failNext=false;
   setTimeout(()=>{
-    go('task',art.task,'running',art.label);render();
-    let i=0;
+    go('task',art.task,'running',art.label);render();let i=0;
     timers[art.key]=setInterval(()=>{
       i++;art.task.progress=Math.round(i/opt.steps*100);
-      if(opt.stream)art.task.lines.push(opt.stream(i));
+      art.task.line=opt.lines?opt.lines[Math.min(i-1,opt.lines.length-1)]:opt.stream?opt.stream(i):'';
       if(willFail&&i>=Math.ceil(opt.steps*0.6)){
-        clearInterval(timers[art.key]);go('task',art.task,'failed',art.label);art.task.err='模型超时（模拟）';
-        if(hadData){art.status=art.prev;log(`[产物] ${art.label}: 生成失败，已保留上一版本（${ST_LABEL(art.prev)}）`);toast('生成失败，已保留上一版本')}
+        clearInterval(timers[art.key]);go('task',art.task,'failed',art.label);art.task.err='生成超时';
+        if(hadData){art.status=art.prev;log(`[产物] ${art.label}: 失败，保留上一版本`);toast('生成失败，已保留上一版本，积分未扣除')}
         else go('artifact',art,'error',art.label);
         save();render();return}
       if(i>=opt.steps){
-        clearInterval(timers[art.key]);
-        art.data=opt.produce();art.versions++;
-        go('task',art.task,'succeeded',art.label);go('artifact',art,'ready',art.label);
-        art.notice='';
+        clearInterval(timers[art.key]);art.data=opt.produce();art.versions++;
+        go('task',art.task,'succeeded',art.label);go('artifact',art,'ready',art.label);art.notice='';
+        S.credits-=opt.cost||0;
         opt.onDone&&opt.onDone(art);afterReady(art);save();render();return}
-      updateGenBox(art);
-    },opt.speed||180);
+      updateGen(art);
+    },opt.speed||200);
   },400);
 }
 function cancelTask(art){
   if(!art.task||!['queued','running'].includes(art.task.status))return;
   clearInterval(timers[art.key]);go('task',art.task,'cancelled',art.label);
   if(art.data)art.status=art.prev;else go('artifact',art,'empty',art.label);
-  log(`[产物] ${art.label}: 已取消，${art.data?'保留上一版本':'回到未生成'}`);save();render();
+  toast('已取消，积分未扣除');save();render();
 }
 function afterReady(art){
   const P=S.project;
-  // 卡点段串行依赖：前一段就绪后解锁下一段
-  if(P.outlineMode==='cards'&&['c1','c2','c3'].includes(art.key)){
-    const order=segRanges(P).map(r=>r.k);const nx=P.arts[order[order.indexOf(art.key)+1]];
-    if(nx&&nx.status==='blocked')go('artifact',nx,'empty',nx.label);
-  }
+  if(P.outlineMode==='cards'&&['c1','c2','c3'].includes(art.key)){const ord=segRanges(P).map(r=>r.k);const nx=P.arts[ord[ord.indexOf(art.key)+1]];if(nx&&nx.status==='blocked')go('artifact',nx,'empty',nx.label)}
 }
-function markEdited(art){if(['ready','outdated','edited'].includes(art.status)){go('artifact',art,'edited',art.label);propagate(art.key)}save();renderSM()}
-// 上游变更向下游传播
-function downstream(key){
-  const P=S.project;
-  if(key==='plan')return['all','c1','c2','c3','end'].filter(k=>P.arts[k]);
-  return Object.keys(P.ia).filter(k=>P.ia[k].src===key).map(k=>'ia:'+k);
-}
-function getArt(k){const P=S.project;return k.startsWith('ia:')?P.ia[k.slice(3)]:P.arts[k]}
+function markEdited(art){if(['ready','outdated','edited'].includes(art.status)){go('artifact',art,'edited',art.label);propagate(art.key)}save();if(S.debug)renderDbg()}
+function downstream(key){const P=S.project;if(key==='plan')return['all','c1','c2','c3','end'].filter(k=>P.arts[k]);return Object.keys(P.ia).filter(k=>P.ia[k].src===key).map(k=>'ia:'+k)}
 function propagate(key){
   for(const k of downstream(key)){const a=getArt(k);if(!a||!a.data)continue;
-    if(a.status==='locked'){a.notice='上游已修改（已定稿，仅提示）';log(`[传播] ${a.label} 已定稿，仅提示`)}
-    else if(['ready','edited'].includes(a.status)){go('artifact',a,'outdated',a.label);a.notice='上游已修改，内容可能不一致'}}
+    if(a.status==='locked')a.notice=key==='plan'?'策划案有改动':'集纲有改动';
+    else if(['ready','edited'].includes(a.status)){go('artifact',a,'outdated',a.label);a.notice=key==='plan'?'策划案有改动，这部分集纲可能需要更新':'对应的集纲有改动，互动剧本可能需要更新'}}
 }
 
-// ============ 集纲生成 ============
+// ============ 集纲 ============
 function outlineCtx(){const P=S.project;return{total:P.params.episodes,cards:P.cards,c:P.arts.plan.data.cast}}
 function startOutline(mode){
   const P=S.project;advanceStage('outlining');
-  if(mode==='all'){
-    P.outlineMode='all';P.arts.all=P.arts.all||newArt('all','全部集纲','outline');S.sel='all';
-    genOutline(P.arts.all,1,P.params.episodes);
-  }else{
-    P.outlineMode='cards';
-    segRanges(P).forEach((r,i)=>{if(!P.arts[r.k]){P.arts[r.k]=newArt(r.k,r.label+'集纲','segment',i===0?'empty':'blocked');if(i>0)log(`[产物] ${r.label}集纲: 等待前置（${segRanges(P)[i-1].label}）`)}});
-    S.sel='c1';genOutline(P.arts.c1,1,P.cards.c1);
-  }
+  if(mode==='all'){P.outlineMode='all';P.arts.all=P.arts.all||newArt('all','全部集纲','outline');S.sel='all';genOutline(P.arts.all,1,P.params.episodes)}
+  else{P.outlineMode='cards';segRanges(P).forEach((r,i)=>{if(!P.arts[r.k])P.arts[r.k]=newArt(r.k,r.label+'集纲','segment',i===0?'empty':'blocked')});S.sel='c1';genOutline(P.arts.c1,1,P.cards.c1)}
 }
 function genOutline(art,from,to,chain){
-  const ctx=outlineCtx();const n=to-from+1;
-  runTask(art,{steps:Math.min(n,30),speed:Math.max(60,1800/n),label:art.label,
-    stream:i=>{const no=from+Math.floor((i-1)*n/Math.min(n,30));const e=genEpisode(no,ctx);return `第${no}集 ${e.title}…`},
+  const ctx=outlineCtx();const n=to-from+1;const c=Math.max(4,Math.ceil(n/4));if(!cost(c))return;
+  const steps=Math.min(n,30);
+  runTask(art,{steps,speed:Math.max(60,1800/n),cost:c,
+    stream:i=>{const no=from+Math.floor((i-1)*n/steps);return`正在写第 ${no} 集 · ${genEpisode(no,ctx).title}`},
     produce:()=>{const eps=[];for(let k=from;k<=to;k++)eps.push(genEpisode(k,ctx));return{from,to,eps}},
-    onDone:()=>{if(chain){const P=S.project;const ord=segRanges(P);const i=ord.findIndex(r=>r.k===art.key);const nx=ord[i+1];if(nx){setTimeout(()=>{const a=P.arts[nx.k];if(['empty'].includes(a.status)){S.sel=nx.k;genOutline(a,nx.from,nx.to,true)}},300)}}}});
+    onDone:()=>{if(!chain)return;const P=S.project;const ord=segRanges(P);const nx=ord[ord.findIndex(r=>r.k===art.key)+1];
+      if(nx)setTimeout(()=>{const a=P.arts[nx.k];if(a.status==='empty'){S.sel=nx.k;genOutline(a,nx.from,nx.to,true)}},300)}});
 }
 
-// ============ 互动剧本生成 ============
+// ============ 互动剧本 ============
 function buildInteractive(eps,cfg,P){
   const c=P.arts.plan.data.cast;const nodes=[];let nid=0;const id=()=>'n'+(++nid);
-  const cardEps=[P.cards.c1,P.cards.c2,P.cards.c3];
-  const pov=cfg.pov==='first';
+  const cardEps=[P.cards.c1,P.cards.c2,P.cards.c3];const pov=cfg.pov==='first';
   const nm=s=>pov?s.replace(new RegExp(c.P,'g'),'你'):s;
   const every=cfg.density==='low'?3:1;const nopt=cfg.density==='high'?3:2;
-  let col=0,rowY=0,rowH=0;let prevExits=[];const place=(n,dy=0)=>{n.x=col*190;n.y=rowY+dy;rowH=Math.max(rowH,dy+56)};
-  const link=(exits,to)=>exits.forEach(e=>{if(e.opt)e.opt.to=to;else e.node.to=to});
+  let col=0,rowY=0,rowH=0;let prev=[];
+  const place=(n,dy=0)=>{n.x=col*190;n.y=rowY+dy;rowH=Math.max(rowH,dy+56)};
+  const link=(ex,to)=>ex.forEach(e=>{e.node.to=to});
   eps.forEach((e,i)=>{
     if(i>0){rowY+=rowH+44;rowH=0}col=0;
     const sc={id:id(),type:'scene',ep:e.no,title:`第${e.no}集 · ${e.title}`,text:nm(`△ ${e.summary}\n${c.P}：${T.lines[e.no%T.lines.length]}\n△ ${e.hook}`),to:null,status:'ready'};place(sc);
-    nodes.push(sc);link(prevExits,sc.id);prevExits=[{node:sc}];col++;
-    if(cfg.paywall&&cardEps.includes(e.no)){const pw={id:id(),type:'paywall',ep:e.no,title:`💰 ${e.card||'卡点'} · 付费解锁`,text:'解锁后续剧情与隐藏分支',to:null,status:'ready'};place(pw);nodes.push(pw);link(prevExits,pw.id);prevExits=[{node:pw}];col++}
-    const isLast=i===eps.length-1;
-    if(!isLast&&(i%every===0)){
-      const ch=T.choices[(e.no)%T.choices.length];
-      const cn={id:id(),type:'choice',ep:e.no,title:nm(fill(ch.q,c)),text:pov?'你会怎么做？':fill(`${c.P}会怎么做？`,c),options:[],timed:cfg.form==='qte'?8:0,status:'ready'};place(cn);
-      nodes.push(cn);link(prevExits,cn.id);col++;prevExits=[];
-      ch.o.slice(0,nopt).forEach((o,k)=>{
-        const label=nm(fill(o[0],c));
-        const eff=cfg.form==='branch'?{}:o[1];
-        const br={id:id(),type:'scene',ep:e.no,title:`分支 · ${label}`,text:nm(`△ ${c.P}选择${label}。\n${Object.entries(o[1]).map(([k2,v])=>`${k2}${v>0?'+':''}${v}`).join('，')||'局势暂时平静'}。`),to:null,status:'ready'};place(br,k*70);
-        const opt={label,to:br.id,effects:cfg.form==='branch'?{好感:o[1].好感||0}:eff,flag:o[2]||''};
-        cn.options.push(opt);nodes.push(br);prevExits.push({node:br});
-      });col++;
+    nodes.push(sc);link(prev,sc.id);prev=[{node:sc}];col++;
+    if(cfg.paywall&&cardEps.includes(e.no)){const pw={id:id(),type:'paywall',ep:e.no,title:`${e.card||'卡点'} · 付费解锁`,text:'解锁后续剧情与隐藏分支',to:null,status:'ready'};place(pw);nodes.push(pw);link(prev,pw.id);prev=[{node:pw}];col++}
+    if(i<eps.length-1&&i%every===0){
+      const ch=T.choices[e.no%T.choices.length];
+      const cn={id:id(),type:'choice',ep:e.no,title:nm(fill(ch.q,c)),text:pov?'你会怎么做？':`${c.P}会怎么做？`,options:[],timed:cfg.form==='qte'?8:0,status:'ready'};place(cn);
+      nodes.push(cn);link(prev,cn.id);col++;prev=[];
+      ch.o.slice(0,nopt).forEach((o,k)=>{const label=nm(fill(o[0],c));const ef=cfg.form==='branch'?{好感:o[1].好感||0}:o[1];
+        const br={id:id(),type:'scene',ep:e.no,title:`分支 · ${label}`,text:nm(`△ ${c.P}选择${label}。`)+'\n'+(Object.entries(o[1]).map(([k2,v])=>`${k2}${v>0?'+':''}${v}`).join('，')||'局势暂时平静'),to:null,status:'ready'};place(br,k*70);
+        cn.options.push({label,to:br.id,effects:ef,flag:o[2]||''});nodes.push(br);prev.push({node:br})});col++;
     }
   });
-  // 结局
-  const E=cfg.converge==='merge'?1:Math.max(1,Math.min(5,cfg.endings));
-  const endDefs=[['好结局',fill('{P}与{L}携手，{A}伏法。',c)],['坏结局',fill('{P}赢了复仇，却失去了{L}。',c)],['隐藏结局',fill('{X}的秘密揭开：一切早有安排。',c)],['事业结局',fill('{P}选择独自登顶。',c)],['真结局',fill('所有误会解开，{P}原谅了过去。',c)]].slice(0,E);
   rowY+=rowH+44;rowH=0;col=0;
-  if(E===1){const en={id:id(),type:'ending',ep:eps[eps.length-1].no,title:'结局 · '+endDefs[0][0],text:nm(endDefs[0][1]),endingType:'good',status:'ready'};place(en);nodes.push(en);link(prevExits,en.id)}
-  else{
-    const cd={id:id(),type:'condition',ep:eps[eps.length-1].no,title:'结局判定',text:'按数值与标记分流',rules:[],else:null,status:'ready'};place(cd);nodes.push(cd);link(prevExits,cd.id);col++;
-    const ends=endDefs.map((d,k)=>{const en={id:id(),type:'ending',ep:cd.ep,title:'结局 · '+d[0],text:nm(d[1]),status:'ready'};place(en,k*70);nodes.push(en);return en});
-    const ruleDefs=[{var:'好感',op:'>=',val:30},null,{flag:'trust'},{var:'实力',op:'>=',val:30},{var:'好感',op:'>=',val:50}];
-    ends.forEach((en,k)=>{if(k===1)return;cd.rules.push({...ruleDefs[k],to:en.id})});
-    cd.rules.sort((a,b)=>(b.flag?1:0)-(a.flag?1:0));cd.else=ends[1].id;
-  }
+  const E=cfg.converge==='merge'?1:clamp(cfg.endings,2,5);
+  const defs=[['好结局',fill('{P}与{L}携手，{A}伏法。',c)],['坏结局',fill('{P}赢了复仇，却失去了{L}。',c)],['隐藏结局',fill('{X}的秘密揭开：一切早有安排。',c)],['事业结局',fill('{P}选择独自登顶。',c)],['真结局',fill('所有误会解开，{P}原谅了过去。',c)]].slice(0,E);
+  const last=eps[eps.length-1].no;
+  if(E===1){const en={id:id(),type:'ending',ep:last,title:'结局 · '+defs[0][0],text:nm(defs[0][1]),status:'ready'};place(en);nodes.push(en);link(prev,en.id)}
+  else{const cd={id:id(),type:'condition',ep:last,title:'结局判定',text:'按数值与标记分流',rules:[],else:null,status:'ready'};place(cd);nodes.push(cd);link(prev,cd.id);col++;
+    const ends=defs.map((d,k)=>{const en={id:id(),type:'ending',ep:last,title:'结局 · '+d[0],text:nm(d[1]),status:'ready'};place(en,k*70);nodes.push(en);return en});
+    const rd=[{var:'好感',op:'>=',val:30},null,{flag:'trust'},{var:'实力',op:'>=',val:30},{var:'好感',op:'>=',val:50}];
+    ends.forEach((en,k)=>{if(k!==1)cd.rules.push({...rd[k],to:en.id})});cd.rules.sort((a,b)=>(b.flag?1:0)-(a.flag?1:0));cd.else=ends[1].id}
   return{nodes,vars:cfg.form==='branch'?['好感']:['好感','实力'],start:nodes[0].id,cfg};
 }
 function convertToInteractive(srcKey,cfg){
-  const P=S.project;const src=P.arts[srcKey];advanceStage('interactive');
-  const key=srcKey;const label=`互动剧本 · ${src.label.replace('集纲','')}`;
-  if(!P.ia[key])P.ia[key]=Object.assign(newArt('ia:'+key,label,'interactive'),{src:srcKey,validate:{status:'unchecked'}});
-  const a=P.ia[key];a.cfg=cfg;S.sel='ia:'+key;S.selNode=null;S.iaTab='canvas';
+  const P=S.project;const src=P.arts[srcKey];if(!cost(20))return;advanceStage('interactive');
+  const label=`互动剧本 · ${src.label.replace('集纲','')}`;
+  if(!P.ia[srcKey])P.ia[srcKey]=Object.assign(newArt('ia:'+srcKey,label,'interactive'),{src:srcKey,validate:{status:'unchecked'}});
+  const a=P.ia[srcKey];a.cfg=cfg;S.sel='ia:'+srcKey;S.selNode=null;S.iaTab='canvas';VIEW.key=null;PL=null;
   const eps=src.data.eps.filter(e=>!e.placeholder);
-  runTask(a,{steps:10,speed:150,stream:i=>['解析集纲…','识别关键冲突点…','设计选择点…','分配数值…','生成分支剧情…','收束支线…','生成结局…','布局节点…','整理台词…','完成'][i-1],
-    produce:()=>buildInteractive(eps,cfg,P),
-    onDone:()=>{if(a.validate.status!=='unchecked')go('validate',a.validate,'unchecked',label);validateIA(a,true)}});
+  runTask(a,{steps:10,speed:160,cost:20,lines:['读取集纲…','找出关键冲突点…','设计选择点…','分配数值…','写分支剧情…','收束支线…','写结局…','排布节点…','打磨台词…','完成'],
+    produce:()=>buildInteractive(eps,cfg,P),onDone:()=>validateIA(a,true)});
 }
-
-// ============ 结构校验 ============
 function edgesOf(n){if(n.type==='choice')return n.options.map(o=>o.to);if(n.type==='condition')return[...n.rules.map(r=>r.to),n.else];if(n.type==='ending')return[];return[n.to]}
 function validateIA(a,silent){
   const d=a.data;if(!d)return;
-  if(a.validate.status!=='unchecked'){go('validate',a.validate,'unchecked',a.label)}
+  if(a.validate.status!=='unchecked')go('validate',a.validate,'unchecked',a.label);
   go('validate',a.validate,'checking',a.label);
-  const byId=Object.fromEntries(d.nodes.map(n=>[n.id,n]));const issues=[];
-  d.nodes.forEach(n=>{n.flag=''});
-  // 1 可达性
+  const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));const is=[];d.nodes.forEach(n=>n.flag='');
   const seen=new Set([d.start]);const q=[d.start];
-  while(q.length){const n=byId[q.shift()];if(!n)continue;for(const t of edgesOf(n))if(t&&byId[t]&&!seen.has(t)){seen.add(t);q.push(t)}}
-  d.nodes.forEach(n=>{if(!seen.has(n.id)){issues.push({l:'e',id:n.id,m:`孤立节点：「${n.title}」无法从起点到达`});n.flag='orphan'}});
-  // 2 死路 & 断链
-  d.nodes.forEach(n=>{if(n.type==='ending')return;const es=edgesOf(n);
-    if(!es.length||es.some(t=>!t||!byId[t])){issues.push({l:'e',id:n.id,m:`死路：「${n.title}」${!es.length?'没有出口':'有选项或出口未指定目标'}`});n.flag='error'}});
-  // 3 选项数
-  d.nodes.forEach(n=>{if(n.type==='choice'&&n.options.length<2){issues.push({l:'w',id:n.id,m:`选择点「${n.title}」只有 ${n.options.length} 个选项`});n.flag=n.flag||'warning'}});
-  // 4 结局条件可满足
+  while(q.length){const n=by[q.shift()];if(!n)continue;for(const t of edgesOf(n))if(t&&by[t]&&!seen.has(t)){seen.add(t);q.push(t)}}
+  d.nodes.forEach(n=>{if(!seen.has(n.id)){is.push({l:'e',id:n.id,m:`「${n.title}」从开头走不到这里`});n.flag='orphan'}});
+  d.nodes.forEach(n=>{if(n.type==='ending')return;const es=edgesOf(n);if(!es.length||es.some(t=>!t||!by[t])){is.push({l:'e',id:n.id,m:`「${n.title}」${!es.length?'没有下一步':'有出口没指定目标'}`});n.flag='error'}});
+  d.nodes.forEach(n=>{if(n.type==='choice'&&n.options.length<2){is.push({l:'w',id:n.id,m:`「${n.title}」只有 ${n.options.length} 个选项，算不上选择`});n.flag=n.flag||'warning'}});
   const maxv={};d.vars.forEach(v=>maxv[v]=0);const flags=new Set();
-  d.nodes.forEach(n=>{if(n.type==='choice'&&seen.has(n.id)){d.vars.forEach(v=>{maxv[v]+=Math.max(0,...n.options.map(o=>(o.effects||{})[v]||0))});n.options.forEach(o=>o.flag&&flags.add(o.flag))}});
-  d.nodes.forEach(n=>{if(n.type!=='condition')return;n.rules.forEach(r=>{const en=byId[r.to];
-    if(r.var&&r.val>maxv[r.var]){issues.push({l:'e',id:r.to,m:`结局不可达：「${en?.title}」要求 ${r.var}≥${r.val}，但全剧最多只能到 ${maxv[r.var]}`});if(en)en.flag='error'}
-    if(r.flag&&!flags.has(r.flag)){issues.push({l:'e',id:r.to,m:`结局不可达：「${en?.title}」需要标记「${r.flag}」，但没有任何选项会设置它`});if(en)en.flag='error'}})});
-  // 5 无法到达结局（循环无出口）
-  const canEnd=new Set(d.nodes.filter(n=>n.type==='ending').map(n=>n.id));let ch=true;
-  while(ch){ch=false;d.nodes.forEach(n=>{if(!canEnd.has(n.id)&&edgesOf(n).some(t=>canEnd.has(t))){canEnd.add(n.id);ch=true}})}
-  d.nodes.forEach(n=>{if(seen.has(n.id)&&!canEnd.has(n.id)&&!issues.some(i=>i.id===n.id&&i.l==='e')){issues.push({l:'e',id:n.id,m:`「${n.title}」无论怎么选都到不了任何结局（循环或死路）`});n.flag='error'}});
-  if(!d.nodes.some(n=>n.type==='ending'))issues.push({l:'e',id:d.start,m:'剧本没有结局节点'});
-  a.issues=issues;a.maxv=maxv;
-  const to=issues.some(i=>i.l==='e')?'invalid':issues.length?'warning':'valid';
-  go('validate',a.validate,to,a.label);
-  if(!silent)toast(to==='valid'?'校验通过':to==='warning'?`校验通过，有 ${issues.length} 条警告`:`发现 ${issues.filter(i=>i.l==='e').length} 个错误`);
+  d.nodes.forEach(n=>{if(n.type==='choice'&&seen.has(n.id)){d.vars.forEach(v=>maxv[v]+=Math.max(0,...n.options.map(o=>(o.effects||{})[v]||0)));n.options.forEach(o=>o.flag&&flags.add(o.flag))}});
+  d.nodes.forEach(n=>{if(n.type!=='condition')return;n.rules.forEach(r=>{const en=by[r.to];
+    if(r.var&&r.val>maxv[r.var]){is.push({l:'e',id:r.to,m:`「${en?.title}」要求${r.var}≥${r.val}，但全剧最多只能到 ${maxv[r.var]}`});if(en)en.flag='error'}
+    if(r.flag&&!flags.has(r.flag)){is.push({l:'e',id:r.to,m:`「${en?.title}」需要的条件没有任何选项能触发`});if(en)en.flag='error'}})});
+  const can=new Set(d.nodes.filter(n=>n.type==='ending').map(n=>n.id));let ch=true;
+  while(ch){ch=false;d.nodes.forEach(n=>{if(!can.has(n.id)&&edgesOf(n).some(t=>can.has(t))){can.add(n.id);ch=true}})}
+  d.nodes.forEach(n=>{if(seen.has(n.id)&&!can.has(n.id)&&!is.some(i=>i.id===n.id&&i.l==='e')){is.push({l:'e',id:n.id,m:`「${n.title}」之后怎么选都到不了结局`});n.flag='error'}});
+  if(!d.nodes.some(n=>n.type==='ending'))is.push({l:'e',id:d.start,m:'剧本没有结局'});
+  a.issues=is;a.maxv=maxv;
+  const to=is.some(i=>i.l==='e')?'invalid':is.length?'warning':'valid';go('validate',a.validate,to,a.label);
+  if(!silent)toast(to==='valid'?'结构检查通过':to==='warning'?`有 ${is.length} 条提醒`:`有 ${is.filter(i=>i.l==='e').length} 处需要修复`);
   save();
 }
-function iaChanged(a,node){
-  if(node)node.status='edited';
-  if(['ready','outdated'].includes(a.status))go('artifact',a,'edited',a.label);
-  if(a.validate.status!=='unchecked')go('validate',a.validate,'unchecked',a.label);
-  validateIA(a,true);
-}
+function iaChanged(a,node){if(node)node.status='edited';if(['ready','outdated'].includes(a.status))go('artifact',a,'edited',a.label);validateIA(a,true)}
 
-// ============ 渲染 ============
+// ============ 渲染：通用 ============
+function stepsHTML(){
+  const P=S.project;const items=[['start','开始创作'],['plan','策划案'],['outline','集纲'],['ia','互动剧本'],['done','导出']];
+  let cur='start';const done=new Set();
+  if(S.view==='project'&&P){
+    done.add('start');if(has(P.arts.plan))done.add('plan');
+    if(['all','c1','c2','c3','end'].some(k=>has(P.arts[k])))done.add('outline');
+    if(Object.values(P.ia).some(has))done.add('ia');
+    if(P.stage==='completed')done.add('done');
+    cur=S.sel==='plan'||S.sel==='parse'?'plan':S.sel.startsWith('ia:')?'ia':'outline';
+  }
+  return`<nav class="steps" aria-label="创作步骤">${items.map(([k,t],i)=>`${i?'<span class="dash"></span>':''}<button class="step ${k===cur?'cur':done.has(k)?'done':''}" ${S.view==='project'&&k!=='start'?`data-step="${k}"`:''} ${k===cur?'aria-current="step"':''}>${i?`<span class="n">${done.has(k)&&k!==cur?ic('check'):i}</span>`:''}${t}</button>`).join('')}</nav>`;
+}
 function render(){
-  const app=$('#app');
-  const P=S.project;
-  const top=`<header class="top">
-    <div class="brand"><span class="slate"></span>互动短剧剧本工作台</div>
-    ${S.view==='project'&&P?`<span class="crumb">/ ${esc(P.title||'新项目')} · ${pill(P.stage)}</span>`:''}
-    <span class="sp"></span>
-    ${S.view==='project'?`<button class="btn" data-act="home">← 首页</button><button class="btn ${S.smOpen?'primary':''}" data-act="sm">状态机</button>`:''}
-  </header>`;
-  app.innerHTML=top+(S.view==='home'?renderHome():renderProject());
+  const reopen=S.popKey;closePop();
+  const top=`<header class="topbar">${S.view==='project'?`<button class="iconbtn" data-act="home" aria-label="返回首页">${ic('x')}</button>`:''}${stepsHTML()}<span class="sp"></span><span class="credits" title="积分"><i></i>${S.credits}</span></header>`;
+  $('#app').innerHTML=top+(S.view==='home'?renderHome():renderProject());
   bind();
   if(S.view==='project'&&S.sel.startsWith('ia:')&&S.iaTab==='canvas')drawCanvas();
+  if(reopen&&S.keepPop){S.keepPop=false;const el=document.querySelector(`[data-pop="${reopen}"]`);if(el)openChipPop(el)}
+  if(S.debug)renderDbg();
 }
 
+// ============ 首页 ============
+function chipVal(k){
+  const f=S.form;
+  switch(k){
+    case'eps':return{v:`${f.episodes}集`,set:true,plain:true};
+    case'market':return f.market?{v:MARKETS.find(x=>x.k===f.market).name,set:true}:{v:'目标市场'};
+    case'audience':return f.audience?{v:f.audience,set:true}:{v:'目标受众'};
+    case'genre':return f.genres.length?{v:f.genres.join(' · '),set:true}:{v:'题材类型'};
+    case'style':return f.styles.length?{v:f.styles.join(' · '),set:true}:{v:'风格元素'};
+    case'setting':{const s=f.setting;const n=[s.role,s.cheat,s.world].filter(Boolean).length;return n?{v:`核心设定 · ${n}`,set:true}:{v:'核心设定'}}
+    case'skill':return f.skills.length?{v:`Skill · ${f.skills.length}`,set:true}:{v:'Skill'};
+  }
+}
+function chip(k){const c=chipVal(k);return`<button class="chip ${c.set&&!c.plain?'set':''}" data-pop="${k}" aria-haspopup="true">${c.plain?'':'<span class="star">✦</span>'}<span class="v">${esc(c.v)}</span>${c.plain?ic('down','i caret'):''}</button>`}
+function canSend(){const f=S.form;if(S.mode==='original')return f.idea.trim().length>=15;if(S.mode==='novel')return f.novelText.trim().length>=20;return f.benchText.trim().length>=20}
+function sendHint(){const f=S.form;if(S.mode==='original'){const n=f.idea.trim().length;return n&&n<15?`还差 ${15-n} 字`:''}return''}
 function renderHome(){
-  const f=S.form;const m=S.mode;const fine=S.gen==='fine';
-  const skills=[...BUILTIN_SKILLS,...S.userSkills];
-  const modeTab=(k,t,sub,tag='')=>`<button class="${m===k?'on':''}" data-mode="${k}">${t}${tag}<small>${sub}</small></button>`;
-  let input='';
-  if(m==='original'){input=`<div><label class="lbl" for="idea">${fine?'核心创意':'一句话创意'}</label><textarea class="idea" id="idea" maxlength="200" placeholder="例：被豪门退婚的女主，三年后带着神秘身份回归……">${esc(f.idea)}</textarea>
-    <div class="row small muted" style="margin-top:6px">试试：${['重生回到高考前，这次我要换个活法','赘婿隐忍三年，丈母娘寿宴上身份曝光','狼人 Alpha 误把替身当真爱'].map(x=>`<button class="chip" data-idea="${esc(x)}">${x}</button>`).join('')}</div></div>`}
-  else if(m==='novel'){input=`<div class="drop"><label class="lbl" for="novelFile">上传小说（txt / md，演示版只解析纯文本）</label>
-    <div class="row"><input type="file" id="novelFile" accept=".txt,.md,text/plain"><button class="btn" data-act="sampleNovel">载入示例小说</button><span class="small muted">${f.novelName?'已载入：《'+esc(f.novelName)+'》 '+f.novelText.replace(/\s/g,'').length+' 字':''}</span></div>
-    <textarea class="idea" id="novelText" placeholder="或直接粘贴小说正文">${esc(f.novelText)}</textarea>
-    ${fine?'':`<input type="text" id="idea" placeholder="一句话改编方向，例：保留主线，强化打脸节奏" value="">`}
-    <label class="toggle small"><input type="checkbox" id="copyright" checked> 我拥有该作品的改编权或已获授权</label></div>`}
-  else{input=`<div class="drop"><label class="lbl" for="benchText">上传或粘贴爆款短剧剧本 / 集纲</label>
-    <div class="row"><input type="file" id="benchFile" accept=".txt,.md,text/plain"><button class="btn" data-act="sampleBench">载入示例爆款</button></div>
-    <textarea class="idea" id="benchText" placeholder="粘贴爆款剧本或集纲">${esc(f.benchText)}</textarea>
-    <input type="text" id="idea" placeholder="你的新故事一句话（可选）" value="${esc(f.idea)}"></div>`}
-  const quickParams=`<div class="grid2">
-    <div><span class="lbl">类型（最多 3 个）</span><div class="chips">${GENRES.map(g=>`<button class="chip ${f.genres.includes(g)?'on':''}" data-genre="${g}">${g}</button>`).join('')}</div></div>
-    <div><span class="lbl">风格</span><div class="chips">${STYLES.map(g=>`<button class="chip ${f.styles.includes(g)?'on':''}" data-style="${g}">${g}</button>`).join('')}</div></div>
-    <div><label class="lbl" for="market">目标市场</label><select id="market">${MARKETS.map(x=>`<option value="${x.k}" ${f.market===x.k?'selected':''}>${x.name}</option>`).join('')}</select>
-      <div class="small muted" style="margin-top:4px">语言：${MARKETS.find(x=>x.k===f.market).lang} · 默认 ${MARKETS.find(x=>x.k===f.market).eps} 集</div></div>
-  </div>`;
-  const fineParams=fine?`<div class="fine">
-    <div class="row">
-      <div><label class="lbl" for="episodes">总集数</label><input type="number" id="episodes" min="10" max="150" value="${f.episodes}" style="width:90px"></div>
-      <div><label class="lbl" for="audience">受众</label><select id="audience">${['女频','男频','全年龄'].map(x=>`<option ${f.audience===x?'selected':''}>${x}</option>`).join('')}</select></div>
-      <div><label class="lbl" for="dur">单集时长</label><select id="dur"><option>1–2 分钟</option><option>2–3 分钟</option></select></div>
-    </div>
-    <div>
-      <div class="row" style="justify-content:space-between"><span class="lbl">挂载 Skill（已选 ${f.skills.length}/5）</span>
-        <label class="btn small" for="skillFile">＋ 上传我的 Skill</label><input type="file" id="skillFile" accept=".md,.txt" hidden></div>
-      <div class="skills">${skills.map(s=>`<button class="skill ${f.skills.includes(s.id)?'on':''}" data-skill="${s.id}" ${s.status&&s.status!=='active'?'disabled':''}>
-        <span class="box">${f.skills.includes(s.id)?'✓':''}</span><div><b>${esc(s.name)} ${s.builtin===false?pill(s.status):''}</b><span>${esc(s.desc)} · ${s.scope}</span></div></button>`).join('')}</div>
-    </div></div>`:'';
+  const f=S.form,m=S.mode;
+  const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'粘贴小说正文，或点下方「上传小说」。上传即表示你拥有该作品的改编权。',benchmark:'粘贴爆款短剧的剧本或集纲，我们会拆解它的节奏和卡点，再帮你写一部新的。'}[m];
+  const val=m==='original'?f.idea:m==='novel'?f.novelText:f.benchText;
+  const file=m==='novel'&&f.novelName?`<div class="filecard">${ic('book')}《${esc(f.novelName)}》<span class="muted mono">${f.novelText.replace(/\s/g,'').length} 字</span><button data-act="clearNovel" aria-label="移除">${ic('x')}</button></div>`:'';
   const P=S.project;
-  return `<main class="home">
-    <section class="hero"><h1>从一个想法，写到一部可以拍的互动短剧</h1>
-      <p>原创或改编小说 → 策划案 → 集纲（可按付费卡点分段） → 互动影视剧本。演示版的 AI 生成为模拟数据。</p></section>
-    ${P?`<div class="recent"><div><b>${esc(P.title||'未命名项目')}</b> <span class="small muted">${P.mode==='original'?'原创':P.mode==='novel'?'小说改编':'爆款对标'} · ${P.params.episodes} 集</span></div>${pill(P.stage)}<span style="flex:1"></span><button class="btn" data-act="open">继续编辑</button></div>`:''}
+  return`<main class="home">
+    <section class="intro"><h1>AI 互动短剧创作</h1><p>懂短剧节奏，懂付费卡点，懂互动分支<br>从一个想法，写到一部可以拍的互动影视剧本</p></section>
     <section class="composer">
-      <div class="modetabs" role="tablist">${modeTab('original','原创模式','从一个创意开始')}${modeTab('novel','小说改编','上传小说，解析后改编')}${modeTab('benchmark','爆款对标','本土化 / 出海改写','<span class="tag">暂定</span>')}</div>
-      <div class="cbody">
-        <div class="seg" role="tablist"><button class="${!fine?'on':''}" data-gen="quick">一句话生成</button><button class="${fine?'on':''}" data-gen="fine">精细生成</button></div>
-        ${input}${quickParams}${fineParams}
+      <div class="ctop">
+        <div class="modes" role="tablist">
+          <button class="${m==='original'?'on':''}" data-mode="original" role="tab" aria-selected="${m==='original'}">${ic('doc')}原创剧本</button>
+          <button class="${m==='novel'?'on':''}" data-mode="novel" role="tab" aria-selected="${m==='novel'}">${ic('book')}小说改编</button>
+          <button class="${m==='benchmark'?'on':''}" data-mode="benchmark" role="tab" aria-selected="${m==='benchmark'}">${ic('fire')}爆款对标<span class="badge">暂定</span></button>
+        </div><span class="sp"></span>
+        <button class="switch ${S.fine?'on':''}" data-act="fine" role="switch" aria-checked="${S.fine}"><span>精细生成</span><span class="tr"></span></button>
       </div>
-      <div class="cfoot"><div class="pipeline"><b>${m==='original'?'':'解析 →'} 策划案</b> → 集纲弹窗 → 全部 / 一卡·二卡·三卡 → <b class="hl">互动影视剧本</b></div><span style="flex:1"></span>
-        <button class="btn primary lg" data-act="create">生成策划案</button></div>
-    </section></main>`;
+      <div class="cinput">${file}<textarea id="mainInput" class="${S.fine?'':'tall'}" placeholder="${ph}" aria-label="输入">${esc(val)}</textarea></div>
+      <div class="cbar">
+        ${m==='novel'?`<label class="chip" for="novelFile">${ic('clip')}上传小说</label><input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleNovel">示例小说</button>`:''}
+        ${m==='benchmark'?`<label class="chip" for="benchFile">${ic('clip')}上传剧本</label><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleBench">示例爆款</button>`:''}
+        ${chip('eps')}${chip('market')}${chip('genre')}${chip('style')}
+        ${S.fine?chip('audience')+chip('setting')+chip('skill'):''}
+        <span class="sp"></span><span class="credits"><i></i>${S.credits}</span>
+        <button class="send" data-act="create" ${canSend()?'':'disabled'} aria-label="开始生成">${ic('up')}</button>
+      </div>
+      <div class="hint" id="hint">${sendHint()}</div>
+    </section>
+    ${m==='original'?`<section class="inspire"><h3>从爆款题材开始</h3><div class="ideas">${IDEAS.map((x,i)=>`<button data-idea="${i}"><span class="k">#${i+1}</span>${x[0]}</button>`).join('')}</div></section>`:''}
+    ${P?`<section class="recent"><h3>我的剧本</h3><button class="projcard" data-act="open"><span class="cov">${esc((P.title||'新')[0])}</span><div><b>${esc(P.title||'未命名项目')}</b><div class="sm muted">${{original:'原创',novel:'小说改编',benchmark:'爆款对标'}[P.mode]} · ${P.params.episodes} 集 · 进行到${stageText(P)}</div></div><span class="sp"></span>${ic('arrow')}</button></section>`:''}
+  </main>`;
 }
+function stageText(P){return{draft:'草稿',parsing:'解析',parse_failed:'解析',planning:'策划案',outlining:'集纲',interactive:'互动剧本',completed:'导出'}[P.stage]}
 
-function navItem(k,label,st,extra=''){return`<a class="${S.sel===k?'on':''} ${extra}" data-sel="${k}">${label}${st?pill(st):''}</a>`}
-function renderProject(){
-  const P=S.project;if(!P){S.view='home';return renderHome()}
-  let nav='<nav class="nav"><h4>前期</h4>';
-  if(P.mode!=='original')nav+=navItem('parse',P.mode==='novel'?'小说解析':'爆款拆解',P.parseState==='done'?'ready':P.parseState==='parse_failed'?'parse_failed':'parsing');
-  nav+=navItem('plan','策划案',P.arts.plan.status);
-  if(P.outlineMode){nav+='<h4>集纲</h4>';
-    if(P.outlineMode==='all')nav+=navItem('all','全部集纲 <span class="ep">1–'+P.params.episodes+'</span>',P.arts.all.status);
-    else segRanges(P).forEach(r=>{const a=P.arts[r.k];nav+=navItem(r.k,`${a.status==='blocked'?'🔒 ':''}${r.label} <span class="ep mono">${r.from}–${r.to}</span>`,a.status)});}
-  if(Object.keys(P.ia).length){nav+='<h4>互动剧本</h4>';Object.values(P.ia).forEach(a=>nav+=navItem(a.key,a.label.replace('互动剧本 · ',''),a.status))}
-  nav+='</nav>';
-  let main='';const sel=S.sel;
-  if(sel==='parse')main=renderParse();
-  else if(sel==='plan')main=renderPlan();
-  else if(sel.startsWith('ia:'))main=renderIA(getArt(sel));
-  else main=renderOutline(P.arts[sel]);
-  return `<div class="ws ${S.smOpen?'withsm':''}">${nav}<section class="main" id="main">${main}</section>${S.smOpen?`<aside class="sm" id="sm">${smHTML()}</aside>`:''}</div>`;
+// 下拉面板
+function closePop(){const p=$('#pop');p.hidden=true;p.innerHTML='';document.querySelectorAll('.chip.open').forEach(c=>c.classList.remove('open'));S.popKey=null}
+function placePop(anchor){
+  const p=$('#pop');p.hidden=false;const r=anchor.getBoundingClientRect();const pw=p.offsetWidth,ph=p.offsetHeight;
+  const x=clamp(r.left,12,innerWidth-pw-12);let y=r.bottom+8;if(y+ph>innerHeight-12)y=Math.max(12,r.top-ph-8);
+  p.style.left=x+'px';p.style.top=y+'px';
 }
-function genBox(a){const t=a.task;return`<div class="genbox" id="gen-${a.key.replace(':','_')}"><div class="row"><b>${a.label} 生成中</b>${pill(t.status)}<span class="mono small muted gp">${t.progress}%</span><span style="flex:1"></span><button class="btn" data-cancel="${a.key}">取消</button></div>
-  <div class="progress"><i style="width:${t.progress}%"></i></div><div class="stream">${esc((t.lines||[]).slice(-5).join('\n'))||'正在准备…'}</div></div>`}
-function updateGenBox(a){const el=document.getElementById('gen-'+a.key.replace(':','_'));if(!el)return renderSM();el.querySelector('.progress i').style.width=a.task.progress+'%';el.querySelector('.gp').textContent=a.task.progress+'%';el.querySelector('.stream').textContent=(a.task.lines||[]).slice(-5).join('\n');renderSM()}
-function failBox(a){return a.status==='error'?`<div class="banner err"><b>生成失败</b>${esc(a.task?.err||'')}，本次不扣额度。<span class="sp"></span><button class="btn" data-retry="${a.key}">重试</button></div>`:''}
-function noticeBox(a){
-  if(a.status==='outdated')return`<div class="banner warn"><b>待更新</b>${esc(a.notice||'上游已修改')}<span class="sp"></span><button class="btn" data-retry="${a.key}">重新生成</button><button class="btn" data-ignore="${a.key}">忽略</button></div>`;
-  if(a.status==='locked'&&a.notice)return`<div class="banner info">${esc(a.notice)}<span class="sp"></span><button class="btn" data-unlock="${a.key}">解锁</button></div>`;
+function openChipPop(anchor){
+  const k=anchor.dataset.pop;const f=S.form;const p=$('#pop');
+  if(S.popKey===k){closePop();return}
+  closePop();S.popKey=k;anchor.classList.add('open');
+  let h='';
+  if(k==='eps')h=`<h5>总集数</h5><div class="opts">${EPS.map(n=>`<button data-v="${n}" class="${f.episodes===n?'on':''}"><span class="ck">${f.episodes===n?'✓':''}</span>${n} 集</button>`).join('')}</div>
+    <div class="pfield"><label for="epsCustom">自定义（10–150）</label><input type="number" id="epsCustom" min="10" max="150" value="${f.episodes}"></div>`;
+  if(k==='market')h=`<h5>目标市场<span class="sp"></span>影响人名、背景和语言</h5><div class="opts">${MARKETS.map(x=>`<button data-v="${x.k}" class="${f.market===x.k?'on':''}"><span class="ck">${f.market===x.k?'✓':''}</span>${x.name}<small>${x.sub}</small></button>`).join('')}</div>`;
+  if(k==='audience')h=`<h5>目标受众</h5><div class="opts">${AUDIENCE.map(x=>`<button data-v="${x}" class="${f.audience===x?'on':''}"><span class="ck">${f.audience===x?'✓':''}</span>${x}</button>`).join('')}</div>`;
+  if(k==='genre')h=`<h5>题材类型<span class="sp"></span>最多 3 个</h5><div class="tags">${GENRES.map(g=>`<button data-v="${g}" class="${f.genres.includes(g)?'on':''}">${g}</button>`).join('')}</div>`;
+  if(k==='style')h=`<h5>风格元素</h5><div class="tags">${STYLES.map(g=>`<button data-v="${g}" class="${f.styles.includes(g)?'on':''}">${g}</button>`).join('')}</div>`;
+  if(k==='setting')h=`<h5>核心设定（选填）</h5><div class="pfield"><label for="sRole">主角身份</label><input id="sRole" placeholder="例：隐藏身份的财团继承人" value="${esc(f.setting.role)}"></div>
+    <div class="pfield"><label for="sCheat">金手指</label><input id="sCheat" placeholder="例：重生 / 读心术 / 系统" value="${esc(f.setting.cheat)}"></div>
+    <div class="pfield"><label for="sWorld">世界观</label><select id="sWorld">${['','现代都市','古代宫廷','玄幻仙侠','末世废土','民国年代'].map(x=>`<option value="${x}" ${f.setting.world===x?'selected':''}>${x||'不限'}</option>`).join('')}</select></div>
+    <div class="pfoot"><button class="btn pri" data-done>完成</button></div>`;
+  if(k==='skill'){const all=[...BUILTIN_SKILLS.map(s=>({...s,b:1})),...S.userSkills];
+    h=`<h5>挂载 Skill<span class="sp"></span>${f.skills.length}/5</h5><div class="opts">${all.map(s=>`<button data-v="${s.id}" class="${f.skills.includes(s.id)?'on':''}" ${s.status&&s.status!=='active'?'disabled':''}><span class="ck">${f.skills.includes(s.id)?'✓':''}</span>${esc(s.name)}<small>${s.b?esc(s.desc):s.status==='active'?'我上传的':ST_LABEL(s.status)}</small></button>`).join('')}</div>
+    <div class="pfoot" style="justify-content:space-between"><label class="btn ghost" for="skillFile">${ic('plus')}上传我的 Skill</label><input type="file" id="skillFile" accept=".md,.txt" hidden><button class="btn pri" data-done>完成</button></div>`}
+  p.innerHTML=h;placePop(anchor);
+  const keep=()=>{S.keepPop=true;render()};
+  p.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const v=b.dataset.v;
+    if(k==='eps'){f.episodes=+v;render()}
+    if(k==='market'){f.market=f.market===v?null:v;if(f.market)f.episodes=MARKETS.find(x=>x.k===v).eps;render()}
+    if(k==='audience'){f.audience=f.audience===v?null:v;render()}
+    if(k==='genre'){if(f.genres.includes(v))f.genres=f.genres.filter(x=>x!==v);else if(f.genres.length<3)f.genres.push(v);else{toast('题材最多选 3 个');return}keep()}
+    if(k==='style'){f.styles=f.styles.includes(v)?f.styles.filter(x=>x!==v):[...f.styles,v];keep()}
+    if(k==='skill'){if(f.skills.includes(v))f.skills=f.skills.filter(x=>x!==v);else if(f.skills.length<5)f.skills.push(v);else{toast('每次最多挂载 5 个 Skill');return}keep()}
+  });
+  const ec=$('#epsCustom');if(ec)ec.onchange=()=>{f.episodes=clamp(+ec.value||80,10,150);render()};
+  if(k==='setting'){const u=()=>{f.setting.role=$('#sRole').value.trim();f.setting.cheat=$('#sCheat').value.trim();f.setting.world=$('#sWorld').value};['sRole','sCheat'].forEach(i=>$('#'+i).oninput=u);$('#sWorld').onchange=u}
+  const dn=p.querySelector('[data-done]');if(dn)dn.onclick=()=>render();
+  const sf=$('#skillFile');if(sf)sf.onchange=()=>{const file=sf.files[0];if(!file)return;const r=new FileReader();r.onload=()=>uploadSkill(file,String(r.result));r.readAsText(file)};
+}
+function uploadSkill(file,t){
+  const f=S.form;const sk={id:'u'+Date.now(),name:file.name.replace(/\.\w+$/,''),desc:'',status:'uploading'};
+  S.userSkills.push(sk);log(`[Skill] ${sk.name}: 上传中`);
+  const refresh=()=>{if(S.view==='home'){const open=S.popKey==='skill';if(open)S.keepPop=true;render()}};refresh();
+  setTimeout(()=>{go('skill',sk,'validating','Skill '+sk.name);refresh();
+    setTimeout(()=>{if(t.trim().length<10||t.length>50000){go('skill',sk,'invalid','Skill '+sk.name);toast('这个 Skill 用不了：内容为空或超过 5 万字')}
+      else{go('skill',sk,'active','Skill '+sk.name);if(f.skills.length<5)f.skills.push(sk.id);toast(`已添加 Skill「${sk.name}」`)}save();refresh()},800)},500);
+}
+document.addEventListener('pointerdown',e=>{const p=$('#pop');if(p.hidden)return;if(p.contains(e.target)||e.target.closest('[data-pop],[data-menu]'))return;closePop()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#pop').hidden)closePop();else if($('#modal').innerHTML)closeModal()}
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='D'||e.key==='d')){e.preventDefault();S.debug=!S.debug;renderDbg()}});
+addEventListener('resize',()=>closePop());
+
+// ============ 项目页 ============
+function navIcon(a){
+  if(!a)return'';
+  if(a.status==='generating')return'<span class="spin" aria-label="生成中"></span>';
+  if(a.status==='outdated')return'<span class="dot amber" title="需要更新"></span>';
+  if(a.status==='error')return'<span class="dot red" title="生成失败"></span>';
+  if(a.status==='locked')return ic('lock');
   return'';
 }
-function lockBtn(a){return a.status==='locked'?`<button class="btn" data-unlock="${a.key}">🔓 解锁</button>`:`<button class="btn" data-lock="${a.key}" ${['ready','edited','outdated'].includes(a.status)?'':'disabled'}>🔒 定稿</button>`}
+function navItem(k,label,a,right=''){return`<a class="${S.sel===k?'on':''} ${a&&a.status==='blocked'?'dim':''}" data-sel="${k}">${label}${right?`<span class="r">${right}</span>`:''}${navIcon(a)}</a>`}
+function renderProject(){
+  const P=S.project;if(!P){S.view='home';return renderHome()}
+  let nav='<nav class="side">';
+  if(P.mode!=='original')nav+=navItem('parse',P.mode==='novel'?'小说解析':'爆款拆解',null);
+  nav+=navItem('plan','策划案',P.arts.plan);
+  if(P.outlineMode){nav+='<h4>集纲</h4>';
+    if(P.outlineMode==='all')nav+=navItem('all','全部集纲',P.arts.all,`1–${P.params.episodes}`);
+    else segRanges(P).forEach(r=>nav+=navItem(r.k,r.label,P.arts[r.k],`${r.from}–${r.to}`))}
+  if(Object.keys(P.ia).length){nav+='<h4>互动剧本</h4>';Object.values(P.ia).forEach(a=>nav+=navItem(a.key,a.label.replace('互动剧本 · ',''),a))}
+  nav+='</nav>';
+  const s=S.sel;
+  const main=s==='parse'?renderParse():s==='plan'?renderPlan():s.startsWith('ia:')?renderIA(getArt(s)):renderOutline(P.arts[s]);
+  return`<div class="ws">${nav}<section class="main" id="main">${main}</section></div>`;
+}
+function genHTML(a,title){const t=a.task||{progress:0};return`<div class="gen" id="gen-${a.key.replace(':','_')}"><div class="row"><span class="spin"></span><b>${title||'正在生成'+a.label}</b><span class="sp"></span><span class="mono sm muted gp">${t.progress}%</span><button class="btn ghost" data-cancel="${a.key}">取消</button></div>
+  <div class="bar"><i style="width:${t.progress}%"></i></div><div class="line">${esc(t.line||'准备中…')}</div><div class="skel"><i style="width:92%"></i><i style="width:78%"></i><i style="width:85%"></i><i style="width:60%"></i></div></div>`}
+function updateGen(a){const el=document.getElementById('gen-'+a.key.replace(':','_'));if(S.debug)renderDbg();if(!el)return;el.querySelector('.bar i').style.width=a.task.progress+'%';el.querySelector('.gp').textContent=a.task.progress+'%';el.querySelector('.line').textContent=a.task.line||''}
+function notes(a){
+  if(a.status==='error')return`<div class="note red">${ic('warn')}生成没有完成（${esc(a.task?.err||'网络异常')}），积分未扣除。<span class="sp"></span><button class="btn" data-retry="${a.key}">重新生成</button></div>`;
+  if(a.status==='outdated')return`<div class="note amber">${ic('warn')}${esc(a.notice)}<span class="sp"></span><button class="btn" data-retry="${a.key}">重新生成</button><button class="btn ghost" data-ignore="${a.key}">保持不变</button></div>`;
+  if(a.status==='locked'&&a.notice)return`<div class="note info">${esc(a.notice)}，这里已定稿，不会自动变动。<span class="sp"></span><button class="btn" data-unlock="${a.key}">解除定稿</button></div>`;
+  return'';
+}
+function moreBtn(items){return`<button class="btn sq" data-menu="${esc(JSON.stringify(items))}" aria-label="更多操作">${ic('more')}</button>`}
+function lockItem(a){return a.status==='locked'?['unlock:'+a.key,'解除定稿']:['lock:'+a.key,'定稿（防止误改）']}
 
 function renderParse(){
   const P=S.project;
-  if(P.parseState==='parsing')return`<div class="doc"><div class="genbox"><b>正在解析${P.mode==='novel'?'小说':'爆款剧本'}…</b>${pill('parsing')}<div class="progress"><i style="width:60%"></i></div><div class="stream">识别章节 · 抽取人物 · 梳理主线 · 定位名场面</div></div></div>`;
-  if(P.parseState==='parse_failed')return`<div class="doc"><div class="banner err"><b>解析失败</b>${esc(P.parseErr)}<span class="sp"></span><button class="btn" data-act="reparse">重新解析</button><button class="btn" data-act="home">返回修改</button></div></div>`;
-  const d=P.parsed;
-  if(P.mode==='novel')return`<div class="doc"><div class="dochead"><h2>小说解析总览</h2>${pill('ready')}</div>
-    <div class="grid2"><div class="block"><h3>基本信息</h3><div>《${esc(P.params.novelName||'未命名')}》 · <span class="mono">${d.words}</span> 字 · <span class="mono">${d.chapters.length}</span> 章</div><div class="small muted" style="margin-top:6px">主线：${esc(d.mainline)}</div></div>
-    <div class="block"><h3>主要人物</h3><div class="chips">${d.chars.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div></div></div>
-    <div class="block"><h3>章节（勾选改编范围）</h3><div class="row"><label>从第 <input type="number" id="rFrom" min="1" max="${d.chapters.length}" value="${d.range[0]}" style="width:64px"> 章</label><label>到第 <input type="number" id="rTo" min="1" max="${d.chapters.length}" value="${d.range[1]}" style="width:64px"> 章</label></div>
-      <ol class="small" style="margin:8px 0 0;padding-left:20px">${d.chapters.map(c=>`<li>${esc(c)}</li>`).join('')}</ol></div>
-    <div class="block"><h3>改编力度</h3><div class="seg">${['忠于原著','适度改编','大幅重构'].map(x=>`<button class="${d.strength===x?'on':''}" data-strength="${x}">${x}</button>`).join('')}</div></div>
-    ${P.arts.plan.status==='empty'?`<div><button class="btn primary lg" data-act="toPlan">确认并生成策划案</button></div>`:''}</div>`;
+  if(P.parseState==='parsing')return`<div class="doc"><div class="gen"><div class="row"><span class="spin"></span><b>正在解析${P.mode==='novel'?'小说':'爆款剧本'}</b></div><div class="line">识别章节 · 抽取人物 · 梳理主线 · 定位名场面</div><div class="skel"><i style="width:90%"></i><i style="width:70%"></i><i style="width:80%"></i></div></div></div>`;
+  if(P.parseState==='parse_failed')return`<div class="doc"><div class="note red">${ic('warn')}解析失败：${esc(P.parseErr)}<span class="sp"></span><button class="btn" data-act="reparse">重新解析</button><button class="btn ghost" data-act="home">返回修改</button></div></div>`;
+  const d=P.parsed;const pending=P.arts.plan.status==='empty';
+  if(P.mode==='novel')return`<div class="doc"><div class="dh"><div><h2>小说解析</h2><div class="meta">《${esc(P.params.novelName||'粘贴的小说')}》 · ${d.words} 字 · ${d.chapters.length} 章</div></div>${pending?`<div class="acts"><button class="btn pri" data-act="toPlan">确认，生成策划案 ${ic('arrow')}</button></div>`:''}</div>
+    <section class="sec"><h3>主线</h3><p>${esc(d.mainline)}</p></section>
+    <section class="sec"><h3>主要人物</h3><div class="titles">${d.chars.map(x=>`<span>${esc(x)}</span>`).join('')}</div></section>
+    <section class="sec"><h3>改编范围</h3><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--fg2)">第 <span class="stepper"><input type="number" id="rFrom" min="1" max="${d.chapters.length}" value="${d.range[0]}" aria-label="起始章"></span> 章到第 <span class="stepper"><input type="number" id="rTo" min="1" max="${d.chapters.length}" value="${d.range[1]}" aria-label="结束章"></span> 章</div>
+      <ol style="margin:4px 0 0;padding-left:20px;color:var(--fg2)">${d.chapters.map(c=>`<li>${esc(c)}</li>`).join('')}</ol></section>
+    <section class="sec"><h3>改编力度</h3><div><div class="seg">${['忠于原著','适度改编','大幅重构'].map(x=>`<button class="${d.strength===x?'on':''}" data-strength="${x}">${x}</button>`).join('')}</div></div></section></div>`;
   const max=Math.max(...d.beats);
-  return`<div class="doc"><div class="dochead"><h2>爆款拆解</h2>${pill('ready')}</div>
-    <div class="block"><h3>爽点强度曲线 <span class="small muted">（按 5 集一组）</span></h3>
-      <svg viewBox="0 0 400 120" style="width:100%;height:auto;max-height:180px" role="img" aria-label="爽点强度曲线">${d.beats.map((b,i)=>`<rect x="${i*20+2}" y="${110-b/max*100}" width="16" height="${b/max*100}" rx="2" fill="${[1,5,10].includes(i)?'var(--amber)':'var(--accent)'}" opacity="${[1,5,10].includes(i)?1:.55}"></rect>`).join('')}<line x1="0" y1="110" x2="400" y2="110" stroke="var(--line)"></line></svg>
-      <div class="small muted">琥珀色为识别出的卡点：第 ${d.cards.join(' / ')} 集</div></div>
-    <div class="block"><h3>钩子手法</h3><ul style="margin:0;padding-left:20px">${d.hooks.map(h=>`<li>${esc(h)}</li>`).join('')}</ul></div>
-    <div class="block"><h3>改写方向</h3><div class="seg">${['本土化','出海','同构新创'].map(x=>`<button class="${(P.benchDir||'同构新创')===x?'on':''}" data-bdir="${x}">${x}</button>`).join('')}</div>
-      <p class="small muted" style="margin:8px 0 0">只借鉴节奏结构，人物与情节原创；生成后会提示与原剧的相似度。</p></div>
-    ${P.arts.plan.status==='empty'?`<div><button class="btn primary lg" data-act="toPlan">生成对标策划案</button></div>`:''}</div>`;
+  return`<div class="doc"><div class="dh"><div><h2>爆款拆解</h2><div class="meta">识别出 3 个付费卡点和 4 种钩子手法</div></div>${pending?`<div class="acts"><button class="btn pri" data-act="toPlan">生成对标策划案 ${ic('arrow')}</button></div>`:''}</div>
+    <section class="sec"><h3>爽点强度曲线</h3><svg viewBox="0 0 400 130" style="width:100%;height:auto;max-height:200px" role="img" aria-label="每 5 集的爽点强度">${d.beats.map((b,i)=>{const ci=[1,5,10].includes(i);return`<rect x="${i*20+2}" y="${110-b/max*100}" width="16" height="${b/max*100}" rx="2" fill="${ci?'var(--amber)':'var(--accent)'}" opacity="${ci?1:.45}"></rect>`}).join('')}<line x1="0" y1="110" x2="400" y2="110" stroke="var(--line2)"></line><text x="0" y="126" font-size="10" fill="var(--muted)">第 1 集</text><text x="400" y="126" font-size="10" fill="var(--muted)" text-anchor="end">第 100 集</text></svg>
+      <p class="sm">琥珀色是卡点所在区间：第 ${d.cards.join(' / ')} 集</p></section>
+    <section class="sec"><h3>钩子手法</h3><p>${d.hooks.map(esc).join('\n')}</p></section>
+    <section class="sec"><h3>改写方向</h3><div><div class="seg">${['本土化','出海','同构新创'].map(x=>`<button class="${(P.benchDir||'同构新创')===x?'on':''}" data-bdir="${x}">${x}</button>`).join('')}</div></div><p class="sm">只借鉴节奏结构，人物和情节重新创作。</p></section></div>`;
 }
-
 function renderPlan(){
   const P=S.project;const a=P.arts.plan;
-  if(a.status==='generating')return`<div class="doc">${genBox(a)}</div>`;
-  if(a.status==='empty')return`<div class="doc"><div class="empty">还没有策划案${P.mode!=='original'?'，请先确认解析结果':''}</div></div>`;
-  if(a.status==='error')return`<div class="doc">${failBox(a)}</div>`;
+  if(a.status==='generating')return`<div class="doc">${genHTML(a,'正在生成策划案')}</div>`;
+  if(a.status==='empty')return`<div class="doc"><div class="empty">确认解析结果后，这里会生成策划案。</div></div>`;
+  if(a.status==='error')return`<div class="doc">${notes(a)}</div>`;
   const d=a.data;const ro=a.status==='locked';const ce=ro?'':'contenteditable="true"';
-  const blk=(k,t,body)=>`<div class="block"><h3>${t}<span class="sp"></span>${ro?'':`<button class="btn ghost small" data-regen="${k}">↻ 重新生成</button>`}</h3>${body}</div>`;
+  const sec=(k,t,body)=>`<section class="sec"><h3>${t}${ro?'':`<button class="btn ghost sq regen" data-regen="${k}" aria-label="重新生成${t}" title="重新生成这一部分">${ic('refresh')}</button>`}</h3>${body}</section>`;
+  const m=MARKETS.find(x=>x.k===P.params.market);
   return`<div class="doc">
-    <div class="dochead"><div><h2>${esc(d.title)}</h2><div class="small muted">策划案 · v${a.versions} · ${P.params.genres.join('/')} · ${P.params.styles.join('/')} · ${MARKETS.find(x=>x.k===P.params.market).name} · ${P.params.episodes} 集${d.skills.length?' · Skill：'+d.skills.join('、'):''}</div></div>
-      <span class="sp"></span>${pill(a.status)}${lockBtn(a)}<button class="btn primary" data-act="outlineModal" ${['ready','edited','locked','outdated'].includes(a.status)?'':'disabled'}>下一步：生成集纲 →</button></div>
-    ${noticeBox(a)}
-    ${blk('title','剧名候选',`<div class="chips">${d.titles.map(t=>`<button class="chip ${t===d.title?'on':''}" data-title="${esc(t)}" ${ro?'disabled':''}>${esc(t)}</button>`).join('')}</div><p style="margin:10px 0 0" ${ce} data-field="logline">${esc(d.logline)}</p>`)}
-    ${blk('synopsis','故事梗概',`<p style="margin:0;white-space:pre-wrap" ${ce} data-field="synopsis">${esc(d.synopsis)}</p>`)}
-    ${blk('world','世界观 / 背景',`<p style="margin:0" ${ce} data-field="world">${esc(d.world)}</p>`)}
-    ${blk('chars','人物小传',`<div class="chars">${d.chars.map((c,i)=>`<div class="char"><b>${esc(c.n)}</b> <span class="small muted">${esc(c.r)}</span><div class="small" ${ce} data-char="${i}">${esc(c.d)}</div></div>`).join('')}</div>`)}
-    ${blk('conflict','核心冲突与爽点',`<p style="margin:0;white-space:pre-wrap" ${ce} data-field="conflict">${esc(d.conflict)}</p>`)}
-    ${blk('pacing','节奏与付费建议',`<p style="margin:0" ${ce} data-field="pacing">${esc(d.pacing)}</p><p class="small muted" style="margin:6px 0 0">这里的建议卡点会作为集纲弹窗里滑块的默认值。</p>`)}
-    ${blk('ending','结局方向',`<p style="margin:0" ${ce} data-field="ending">${esc(d.ending)}</p>`)}
+    <div class="dh"><div><h2>${esc(d.title)}${ro?`<span class="lockmark">${ic('lock')}已定稿</span>`:''}</h2><div class="meta">${P.params.genres.join(' · ')} ｜ ${P.params.styles.join(' · ')} ｜ ${m.name} ｜ ${P.params.episodes} 集${d.skills.length?' ｜ Skill：'+d.skills.join('、'):''}</div></div>
+      <div class="acts">${moreBtn([lockItem(a),['regenAll','全部重新生成']])}<button class="btn pri" data-act="outlineNext">${P.outlineMode?'查看集纲':'下一步：生成集纲'} ${ic('arrow')}</button></div></div>
+    ${notes(a)}
+    ${sec('title','剧名',`<div class="titles">${d.titles.map(t=>`<button class="${t===d.title?'on':''}" data-title="${esc(t)}" ${ro?'disabled':''}>${esc(t)}</button>`).join('')}</div><p ${ce} data-field="logline">${esc(d.logline)}</p>`)}
+    ${sec('synopsis','故事梗概',`<p ${ce} data-field="synopsis">${esc(d.synopsis)}</p>`)}
+    ${sec('world','世界观',`<p ${ce} data-field="world">${esc(d.world)}</p>`)}
+    ${sec('chars','人物小传',`<div class="chars">${d.chars.map((c,i)=>`<div class="char"><span class="role">${esc(c.r)}</span><b>${esc(c.n)}</b><div ${ce} data-char="${i}">${esc(c.d)}</div></div>`).join('')}</div>`)}
+    ${sec('conflict','核心冲突与爽点',`<p ${ce} data-field="conflict">${esc(d.conflict)}</p>`)}
+    ${sec('pacing','节奏与付费卡点',`<p ${ce} data-field="pacing">${esc(d.pacing)}</p>`)}
+    ${sec('ending','结局方向',`<p ${ce} data-field="ending">${esc(d.ending)}</p>`)}
   </div>`;
 }
-
 function renderOutline(a){
   const P=S.project;if(!a)return'';
   const isSeg=a.kind==='segment';const r=isSeg?segRanges(P).find(x=>x.k===a.key):{from:1,to:P.params.episodes,label:'全部'};
-  const head=`<div class="dochead"><div><h2>${isSeg?r.label+'集纲':'全部集纲'}</h2><div class="small muted mono">第 ${r.from}–${r.to} 集 · 共 ${r.to-r.from+1} 集${isSeg?` · 卡点：第 ${P.cards[a.key]||P.params.episodes} 集`:''}</div></div><span class="sp"></span>${pill(a.status)}
-    <button class="btn" data-act="adjustCards">${P.outlineMode==='cards'?'调整卡点':'切换为分卡点'}</button>
-    ${P.outlineMode==='cards'?`<button class="btn" data-act="toAll">合并为全部集纲</button>`:''}
-    ${lockBtn(a)}
-    <button class="btn primary" data-act="toIA" ${['ready','edited','locked','outdated'].includes(a.status)?'':'disabled'}>⇄ 转互动影视剧本</button></div>`;
-  if(a.status==='blocked'){const ord=segRanges(P);const prev=ord[ord.findIndex(x=>x.k===a.key)-1];return`<div class="doc">${head}<div class="empty">🔒 请先完成「${prev.label}」集纲<div class="small">后一段要接着前一段的剧情往下写，所以按顺序生成。</div><button class="btn" data-sel="${prev.k}">去${prev.label}</button></div></div>`}
-  if(a.status==='generating')return`<div class="doc">${head}${genBox(a)}</div>`;
-  if(a.status==='error')return`<div class="doc">${head}${failBox(a)}</div>`;
-  if(a.status==='empty')return`<div class="doc">${head}<div class="empty">这一段还没有生成<div class="row" style="justify-content:center"><button class="btn primary" data-genseg="${a.key}">生成${r.label}集纲</button><button class="btn" data-genchain="${a.key}">从这里依次生成后续全部段</button></div></div></div>`;
-  const ro=a.status==='locked';
-  return`<div class="doc">${head}${noticeBox(a)}<div class="eps">${a.data.eps.map((e,i)=>`<div class="epcard ${e.card?'card':''} ${e.placeholder?'ph':''}"><div class="no">EP<b>${String(e.no).padStart(2,'0')}</b></div>
-    <div class="t"><span ${ro?'':'contenteditable="true"'} data-ep="${i}" data-k="title">${esc(e.title)}</span>${e.card?`<span class="cardmark">💰 ${e.card}</span>`:''}${e.placeholder?'<span class="pill st-outdated">待补生成</span>':''}</div>
-    <div ${ro?'':'contenteditable="true"'} data-ep="${i}" data-k="summary">${esc(e.summary)}</div><div class="hook">${esc(e.hook)}</div></div>`).join('')}</div></div>`;
+  const items=[];
+  if(P.outlineMode==='cards')items.push(['adjustCards','调整卡点位置'],['toAll','合并为全部集纲']);else items.push(['toCards','按卡点拆分']);
+  if(has(a)){items.push(lockItem(a));if(a.status!=='locked')items.push(['retry:'+a.key,'重新生成本页'])}
+  const head=`<div class="dh"><div><h2>${isSeg?r.label+'集纲':'全部集纲'}${a.status==='locked'?`<span class="lockmark">${ic('lock')}已定稿</span>`:''}</h2><div class="meta mono">第 ${r.from}–${r.to} 集 · ${r.to-r.from+1} 集${isSeg&&a.key!=='end'?` · 第 ${r.to} 集是付费卡点`:''}</div></div>
+    <div class="acts">${moreBtn(items)}<button class="btn pri" data-act="toIA" ${has(a)?'':'disabled'}>转互动剧本 ${ic('arrow')}</button></div></div>`;
+  if(a.status==='blocked'){const ord=segRanges(P);const pv=ord[ord.findIndex(x=>x.k===a.key)-1];return`<div class="doc">${head}<div class="empty">${ic('lock')}<div>先完成「${pv.label}」，这一段才能接着往下写</div><button class="btn" data-sel="${pv.k}">去${pv.label}</button></div></div>`}
+  if(a.status==='generating')return`<div class="doc">${head}${genHTML(a)}</div>`;
+  if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
+  if(a.status==='empty')return`<div class="doc">${head}<div class="empty"><div>这一段还没有生成</div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="btn pri" data-genseg="${a.key}">生成${r.label}集纲</button><button class="btn" data-genchain="${a.key}">依次生成剩下所有段</button></div></div></div>`;
+  const ce=a.status==='locked'?'':'contenteditable="true"';
+  return`<div class="doc">${head}${notes(a)}<div class="eps">${a.data.eps.map((e,i)=>`<div class="ep ${e.card?'card':''} ${e.placeholder?'ph':''}"><div class="no">EP<b>${String(e.no).padStart(2,'0')}</b></div>
+    <div class="t"><span ${ce} data-ep="${i}" data-k="title">${esc(e.title)}</span>${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}${e.placeholder?'<span class="cardtag" style="color:var(--muted);border-color:var(--line2)">待补写</span>':''}</div>
+    <div class="s" ${ce} data-ep="${i}" data-k="summary">${esc(e.summary)}</div><div class="h">钩子：${esc(e.hook)}</div></div>`).join('')}</div></div>`;
 }
-
+function checkChip(a){const v=a.validate.status;
+  if(v==='valid')return`<span class="check ok">${ic('check')}结构完整</span>`;
+  if(v==='warning')return`<button class="check warn" data-act="showIssues">${ic('warn')}${a.issues.length} 条提醒</button>`;
+  if(v==='invalid')return`<button class="check bad" data-act="showIssues">${ic('warn')}${a.issues.filter(i=>i.l==='e').length} 处需修复</button>`;
+  return'';}
 function renderIA(a){
   if(!a)return'';
-  const head=`<div class="dochead"><div><h2>${esc(a.label)}</h2><div class="small muted">来源：${esc(S.project.arts[a.src]?.label||'')} · ${a.cfg?cfgText(a.cfg):''}</div></div><span class="sp"></span>${pill(a.status)}${a.validate?pill(a.validate.status,'校验·'):''}${lockBtn(a)}</div>`;
-  if(a.status==='generating')return`<div class="doc">${head}${genBox(a)}</div>`;
-  if(a.status==='error')return`<div class="doc">${head}${failBox(a)}</div>`;
-  const d=a.data;const tabs=`<div class="iabar"><div class="seg">${[['canvas','画布'],['script','剧本'],['play','试玩']].map(([k,t])=>`<button class="${S.iaTab===k?'on':''}" data-iatab="${k}">${t}</button>`).join('')}</div>
-    <span class="small muted mono">${d.nodes.length} 节点 · ${d.nodes.filter(n=>n.type==='choice').length} 选择点 · ${d.nodes.filter(n=>n.type==='ending').length} 结局</span><span style="flex:1"></span>
-    <button class="btn" data-act="validate">校验结构</button><button class="btn primary" data-act="export">导出</button></div>`;
+  const head=`<div class="dh"><div><h2>${esc(a.label)}${a.status==='locked'?`<span class="lockmark">${ic('lock')}已定稿</span>`:''}</h2><div class="meta">${a.cfg?esc(cfgText(a.cfg)):''}</div></div>
+    <div class="acts">${moreBtn([lockItem(a),['reconf','修改设置并重新生成']])}${a.data?`<button class="btn pri" data-act="export">${ic('export')}导出</button>`:''}</div></div>`;
+  if(a.status==='generating')return`<div class="doc">${head}${genHTML(a,'正在转成互动剧本')}</div>`;
+  if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
+  const d=a.data;
+  const tabs=`<div class="iabar"><div class="seg">${[['canvas','分支图'],['script','剧本'],['play','试玩']].map(([k,t])=>`<button class="${S.iaTab===k?'on':''}" data-iatab="${k}">${t}</button>`).join('')}</div>
+    <span class="sm muted">${d.nodes.filter(n=>n.type==='choice').length} 个选择 · ${d.nodes.filter(n=>n.type==='ending').length} 个结局</span><span class="sp"></span>${checkChip(a)}</div>`;
   let body='';
-  if(S.iaTab==='canvas')body=`<div class="iawrap"><div class="canvas" id="canvas"><svg id="cv"></svg><div class="cvtools"><button class="btn" data-zoom="1.2">＋</button><button class="btn" data-zoom="0.8">－</button><button class="btn" data-act="fit">适配</button></div>
-    <div class="legend">${[['scene','场景','var(--line)'],['choice','选择','var(--accent)'],['condition','条件','var(--violet)'],['paywall','付费','var(--amber)'],['ending','结局','var(--green)']].map(x=>`<span><i class="swatch" style="background:${x[2]}"></i>${x[1]}</span>`).join('')}<span>拖动平移 · 滚轮缩放 · 点击编辑</span></div></div>
-    <div class="side">${issuesPanel(a)}${inspector(a)}</div></div>`;
+  if(S.iaTab==='canvas')body=`<div class="iawrap"><div class="canvas" id="canvas"><svg id="cv" aria-label="互动剧本分支图"></svg><div class="cvtools"><button class="btn sq" data-zoom="1.2" aria-label="放大">${ic('plus')}</button><button class="btn sq" data-zoom="0.8" aria-label="缩小">${ic('minus')}</button><button class="btn sq" data-act="fit" aria-label="适配画布">${ic('fit')}</button></div>
+    <div class="legend">${[['scene','剧情'],['choice','选择'],['condition','判定'],['paywall','付费'],['ending','结局']].map(x=>`<span><i class="sw" style="background:${nodeColor(x[0])}"></i>${x[1]}</span>`).join('')}</div></div>
+    ${inspector(a)}</div>`;
   else if(S.iaTab==='script')body=scriptView(a);
   else body=playView(a);
-  return`<div class="doc" style="max-width:none">${head}${noticeBox(a)}${tabs}${body}</div>`;
+  return`<div class="doc full">${head}${notes(a)}${tabs}${body}</div>`;
 }
-function cfgText(c){return[{branch:'选项分支',value:'数值养成',qte:'限时选择',mix:'混合'}[c.form],{low:'低密度',mid:'中密度',high:'高密度'}[c.density],c.converge==='merge'?'支线回主线':`多结局 ×${c.endings}`,c.paywall?'含付费节点':'',c.pov==='first'?'第一人称':'第三人称'].filter(Boolean).join(' · ')}
-function issuesPanel(a){const is=a.issues||[];return`<div class="panel"><h4>结构校验<span class="sp"></span>${pill(a.validate.status)}</h4>
-  ${is.length?is.map(i=>`<div class="issue ${i.l}" data-goto="${i.id}">${i.l==='e'?'✕':'!'} ${esc(i.m)}</div>`).join(''):'<div class="small muted">没有问题。可以试着删掉一个节点、改掉选项目标，或把结局门槛调高，看看校验怎么报错。</div>'}
-  ${a.maxv?`<div class="small muted mono">数值上限：${Object.entries(a.maxv).map(([k,v])=>k+' '+v).join(' · ')}</div>`:''}</div>`}
-function nodeColor(t){return{scene:'var(--line)',choice:'var(--accent)',condition:'var(--violet)',paywall:'var(--amber)',ending:'var(--green)'}[t]}
+function cfgText(c){return[{branch:'选项分支',value:'数值养成',qte:'限时选择',mix:'混合'}[c.form],{low:'每 3 集一次选择',mid:'每集一次选择',high:'每集三选一'}[c.density],c.converge==='merge'?'单结局':`${c.endings} 个结局`,c.paywall?'含付费点':'',c.pov==='first'?'第一人称':'第三人称'].filter(Boolean).join(' · ')}
+function nodeColor(t){return{scene:'#6A6E76',choice:'var(--accent)',condition:'var(--violet)',paywall:'var(--amber)',ending:'var(--green)'}[t]}
+const TYPE_CN={scene:'剧情',choice:'选择',condition:'判定',paywall:'付费',ending:'结局'};
 function inspector(a){
-  const d=a.data;const n=d.nodes.find(x=>x.id===S.selNode);const ro=a.status==='locked';
-  if(!n)return`<div class="panel"><h4>节点</h4><div class="small muted">点击画布上的节点进行编辑。</div></div>`;
-  const opts=d.nodes.map(x=>`<option value="${x.id}">${esc(x.title.slice(0,18))}</option>`).join('');
-  const sel=(v,attr)=>`<select ${attr} ${ro?'disabled':''}><option value="">（未指定）</option>${opts.replace(`value="${v}"`,`value="${v}" selected`)}</select>`;
-  let extra='';
-  if(n.type==='scene'||n.type==='paywall')extra=`<div class="field"><label>下一个节点</label>${sel(n.to,'data-nto')}</div>`;
-  if(n.type==='choice')extra=`<div class="field"><label>选项（${n.options.length}）</label>${n.options.map((o,i)=>`<div class="optrow"><input type="text" value="${esc(o.label)}" data-olabel="${i}" ${ro?'disabled':''}><button class="btn ghost danger" data-odel="${i}" ${ro?'disabled':''} aria-label="删除选项">✕</button>
-    <div class="r2" style="grid-column:1/-1">→ ${sel(o.to,`data-oto="${i}"`)} ${d.vars.map(v=>`${v}<input type="number" value="${(o.effects||{})[v]||0}" data-oeff="${i}" data-var="${v}" ${ro?'disabled':''}>`).join('')}</div></div>`).join('')}
-    <button class="btn" data-act="addOpt" ${ro||n.options.length>=4?'disabled':''}>＋ 添加选项</button>${n.timed?`<div class="small muted">限时 ${n.timed} 秒</div>`:''}</div>`;
-  if(n.type==='condition')extra=`<div class="field"><label>分流规则（自上而下匹配）</label>${n.rules.map((r,i)=>`<div class="optrow"><div class="r2">${r.flag?`标记「${r.flag}」`:`${r.var} ≥ <input type="number" value="${r.val}" data-rval="${i}" ${ro?'disabled':''}>`} → ${esc(d.nodes.find(x=>x.id===r.to)?.title||'?')}</div></div>`).join('')}<div class="small muted">其余 → ${esc(d.nodes.find(x=>x.id===n.else)?.title||'?')}</div></div>`;
-  return`<div class="panel"><h4><i class="swatch" style="background:${nodeColor(n.type)}"></i>${{scene:'场景',choice:'选择点',condition:'条件',paywall:'付费点',ending:'结局'}[n.type]}<span class="sp"></span>${pill(n.status)}</h4>
-    <div class="field"><label for="nTitle">标题</label><input type="text" id="nTitle" value="${esc(n.title)}" ${ro?'disabled':''}></div>
-    <div class="field"><label for="nText">内容</label><textarea id="nText" ${ro?'disabled':''}>${esc(n.text)}</textarea></div>
-    ${extra}
-    <div class="row"><button class="btn" data-act="expand" ${ro||n.type==='condition'?'disabled':''}>✦ AI 扩写</button><button class="btn danger" data-act="delNode" ${ro||n.id===d.start?'disabled':''}>删除节点</button></div></div>`;
+  const d=a.data;const n=d.nodes.find(x=>x.id===S.selNode);const ro=a.status==='locked';const dis=ro?'disabled':'';
+  if(!n){const is=a.issues||[];return`<aside class="insp"><h4>节点</h4><div class="sm muted">点击分支图里的节点，就能编辑剧情、选项和数值。</div>${is.length?`<h4 style="margin-top:6px">需要处理</h4><div class="issues">${is.map(i=>`<button class="issue ${i.l}" data-goto="${i.id}">${esc(i.m)}</button>`).join('')}</div>`:''}</aside>`}
+  const opts=d.nodes.map(x=>`<option value="${x.id}">${esc(x.title.slice(0,20))}</option>`).join('');
+  const sel=(v,attr)=>`<select ${attr} ${dis}><option value="">选择下一步…</option>${opts.replace(`value="${v}"`,`value="${v}" selected`)}</select>`;
+  let ex='';
+  if(n.type==='scene'||n.type==='paywall')ex=`<div class="f"><label>下一步</label>${sel(n.to,'data-nto')}</div>`;
+  if(n.type==='choice')ex=`<div class="f"><label>选项</label>${n.options.map((o,i)=>`<div class="optrow"><div class="r1"><input type="text" value="${esc(o.label)}" data-olabel="${i}" ${dis} aria-label="选项文字"><button class="btn ghost sq" data-odel="${i}" ${dis} aria-label="删除选项">${ic('x')}</button></div>
+    <div class="r2">${sel(o.to,`data-oto="${i}"`)}</div><div class="r2">${d.vars.map(v=>`${v}<input type="number" value="${(o.effects||{})[v]||0}" data-oeff="${i}" data-var="${v}" ${dis} aria-label="${v}变化">`).join('')}</div></div>`).join('')}
+    <button class="btn" data-act="addOpt" ${ro||n.options.length>=4?'disabled':''}>${ic('plus')}添加选项</button></div>`;
+  if(n.type==='condition')ex=`<div class="f"><label>分流规则（从上往下匹配）</label>${n.rules.map((r,i)=>`<div class="optrow"><div class="r2">${r.flag?'选过「先交给配角确认」':`${r.var} ≥ <input type="number" value="${r.val}" data-rval="${i}" ${dis} aria-label="门槛">`} → ${esc(d.nodes.find(x=>x.id===r.to)?.title||'?')}</div></div>`).join('')}<div class="sm muted">其余 → ${esc(d.nodes.find(x=>x.id===n.else)?.title||'?')}</div></div>`;
+  return`<aside class="insp"><h4><i class="sw" style="background:${nodeColor(n.type)}"></i>${TYPE_CN[n.type]}<span class="sp"></span><button class="btn ghost sq" data-act="deselect" aria-label="关闭">${ic('x')}</button></h4>
+    <div class="f"><label for="nTitle">标题</label><input type="text" id="nTitle" value="${esc(n.title)}" ${dis}></div>
+    <div class="f"><label for="nText">内容</label><textarea id="nText" ${dis}>${esc(n.text)}</textarea></div>${ex}
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" data-act="expand" ${ro||n.type==='condition'?'disabled':''}>${ic('spark')}AI 扩写</button><button class="btn ghost" data-act="delNode" ${ro||n.id===d.start?'disabled':''} style="color:var(--red)">删除节点</button></div></aside>`;
 }
 function scriptView(a){
   const d=a.data;const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));
-  return`<div class="script">${d.nodes.map(n=>{
-    let x='';if(n.type==='choice')x=`<div class="choice"><b>${esc(n.text)}</b>${n.options.map(o=>`<div>▸ ${esc(o.label)} → <span class="muted">${esc(by[o.to]?.title||'（未指定）')}</span> <span class="mono small muted">${Object.entries(o.effects||{}).filter(e=>e[1]).map(e=>e[0]+(e[1]>0?'+':'')+e[1]).join(' ')}${o.flag?' 标记:'+o.flag:''}</span></div>`).join('')}</div>`;
-    if(n.type==='condition')x=`<div class="choice">${n.rules.map(r=>`<div>若 ${r.flag?'标记 '+r.flag:r.var+' ≥ '+r.val} → ${esc(by[r.to]?.title)}</div>`).join('')}<div>否则 → ${esc(by[n.else]?.title)}</div></div>`;
-    return`<div class="sc" style="${n.type==='scene'&&!n.title.startsWith('分支')?'':'margin-left:24px'}"><div class="h">${n.id.toUpperCase()} · ${{scene:'场景',choice:'选择点',condition:'条件',paywall:'付费点',ending:'结局'}[n.type]} · EP${n.ep}</div><b>${esc(n.title)}</b>${n.type!=='choice'?`<div style="white-space:pre-wrap;font-size:13px">${esc(n.text)}</div>`:''}${x}</div>`}).join('')}</div>`;
+  return`<div class="script">${d.nodes.map(n=>{let x='';
+    if(n.type==='choice')x=`<div class="ch"><b>${esc(n.text)}</b>${n.options.map(o=>`<div>▸ ${esc(o.label)} <span class="muted">→ ${esc(by[o.to]?.title||'（未指定）')}</span> <span class="mono sm muted">${Object.entries(o.effects||{}).filter(e=>e[1]).map(e=>e[0]+(e[1]>0?'+':'')+e[1]).join(' ')}</span></div>`).join('')}</div>`;
+    if(n.type==='condition')x=`<div class="ch">${n.rules.map(r=>`<div>若 ${r.flag?'选过隐藏选项':r.var+' ≥ '+r.val} → ${esc(by[r.to]?.title)}</div>`).join('')}<div>否则 → ${esc(by[n.else]?.title)}</div></div>`;
+    const b=n.title.startsWith('分支')||n.type==='ending';
+    return`<div class="sc ${b?'b':''}"><div class="k">EP${n.ep} · ${TYPE_CN[n.type]}</div><b>${esc(n.title)}</b>${n.type!=='choice'?`<div class="x">${esc(n.text)}</div>`:''}${x}</div>`}).join('')}</div>`;
 }
-// 试玩
 let PL=null;
 function playView(a){
-  const d=a.data;if(!PL||PL.key!==a.key)PL={key:a.key,cur:d.start,vars:Object.fromEntries(d.vars.map(v=>[v,0])),flags:[],steps:0,unlocked:false};
-  const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));let n=by[PL.cur];
-  let guard=0;while(n&&n.type==='condition'&&guard++<10){const r=n.rules.find(r=>r.flag?PL.flags.includes(r.flag):PL.vars[r.var]>=r.val);PL.cur=r?r.to:n.else;n=by[PL.cur]}
-  if(!n)return`<div class="play"><div class="screen">剧情在这里断了（目标节点不存在）。先运行结构校验。</div><div class="chs"><button data-play="restart">重新开始</button></div></div>`;
+  const d=a.data;if(!PL||PL.key!==a.key)PL={key:a.key,cur:d.start,vars:Object.fromEntries(d.vars.map(v=>[v,0])),flags:[],steps:0};
+  const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));let n=by[PL.cur];let g=0;
+  while(n&&n.type==='condition'&&g++<10){const r=n.rules.find(r=>r.flag?PL.flags.includes(r.flag):PL.vars[r.var]>=r.val);PL.cur=r?r.to:n.else;n=by[PL.cur]}
+  if(!n)return`<div class="play"><div class="phone"><div class="story">剧情在这里断了，先去分支图修一下。</div><div class="chs"><button data-play="restart">重新开始</button></div></div></div>`;
   let ch='';
-  if(n.type==='scene')ch=n.to?`<button data-play="${n.to}">继续 ▸</button>`:'<div class="small">（死路：没有下一个节点）</div>';
-  if(n.type==='paywall')ch=`<button data-play="${n.to}" data-unlock="1">💰 解锁继续（演示，不扣费）</button>`;
+  if(n.type==='scene')ch=n.to?`<button data-play="${n.to}">继续 ▸</button>`:'<div class="sm muted">（这里没有下一步）</div>';
+  if(n.type==='paywall')ch=`<button data-play="${n.to}" style="border-color:var(--amber);color:var(--amber)">解锁后续剧情（演示，不扣费）</button>`;
   if(n.type==='choice')ch=n.options.map((o,i)=>`<button data-play="${o.to}" data-opt="${i}">${esc(o.label)}</button>`).join('');
-  if(n.type==='ending')ch=`<button data-play="restart">↺ 重新开始，试试别的选择</button>`;
-  return`<div class="play"><div class="vars">${Object.entries(PL.vars).map(([k,v])=>`<span>${k} ${v}</span>`).join('')}${PL.flags.map(f=>`<span>标记:${f}</span>`).join('')}<span>第 ${PL.steps} 步</span></div>
-    <div class="screen"><div class="ep">EP${n.ep} · ${esc(n.title)}</div><div style="white-space:pre-wrap">${esc(n.type==='choice'?n.title+'\n'+n.text:n.text)}</div>${n.type==='ending'?'<b style="font-size:20px;font-family:var(--f-display)">— '+esc(n.title.replace('结局 · ',''))+' —</b>':''}</div>
-    ${n.type==='choice'&&n.timed?'<div class="timer"><i style="width:100%"></i></div>':''}
-    <div class="chs">${ch}</div></div>`;
+  if(n.type==='ending')ch=`<button data-play="restart">↺ 再玩一次，试试别的选择</button>`;
+  return`<div class="play"><div class="phone"><div class="vars">${Object.entries(PL.vars).map(([k,v])=>`<span>${k} ${v}</span>`).join('')}</div>
+    <div class="story"><div class="ep">EP${n.ep}</div>${n.type==='ending'?`<div class="end">${esc(n.title.replace('结局 · ',''))}</div>`:''}<div style="white-space:pre-wrap">${esc(n.type==='choice'?n.title+'\n'+n.text:n.text)}</div></div>
+    ${n.type==='choice'&&n.timed?'<div class="timer"><i></i></div>':''}<div class="chs">${ch}</div></div></div>`;
 }
 
-// 画布
+// 分支图
 let VIEW={x:24,y:24,k:0.85,key:null};
 function drawCanvas(){
   const a=getArt(S.sel);const svg=$('#cv');if(!svg||!a||!a.data)return;const d=a.data;
-  const first=VIEW.key!==a.key;if(first){VIEW={x:24,y:24,k:0.85,key:a.key}}
-  const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));const W=150,H=56;
-  let edges='';
-  d.nodes.forEach(n=>{const outs=n.type==='choice'?n.options.map(o=>[o.to,o.label]):n.type==='condition'?[...n.rules.map(r=>[r.to,r.flag?r.flag:r.var+'≥'+r.val]),[n.else,'否则']]:n.type==='ending'?[]:[[n.to,'']];
+  if(VIEW.key!==a.key)VIEW={x:24,y:24,k:0.85,key:a.key};
+  const by=Object.fromEntries(d.nodes.map(n=>[n.id,n]));const W=150,H=56;let edges='';
+  d.nodes.forEach(n=>{const outs=n.type==='choice'?n.options.map(o=>[o.to,o.label]):n.type==='condition'?[...n.rules.map(r=>[r.to,r.flag?'隐藏':r.var+'≥'+r.val]),[n.else,'否则']]:n.type==='ending'?[]:[[n.to,'']];
     outs.forEach(([t,l])=>{const m=by[t];if(!m)return;const x1=n.x+W,y1=n.y+H/2,x2=m.x,y2=m.y+H/2;const back=x2<=x1;
-      const path=back?`M${x1},${y1} C${x1+50},${y1} ${x2-50},${y2} ${x2},${y2}`:`M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}`;
-      edges+=`<path d="${path}" fill="none" stroke="var(--muted)" stroke-width="1.4" marker-end="url(#ar)" opacity=".7"></path>`;
-      if(l)edges+=`<text x="${(x1+x2)/2}" y="${(y1+y2)/2-4}" font-size="10" text-anchor="middle" fill="var(--muted)">${esc(l.slice(0,10))}</text>`})});
-  const nodes=d.nodes.map(n=>{const sel=S.selNode===n.id;const stroke=n.flag==='error'?'var(--red)':n.flag==='warning'?'var(--amber)':sel?'var(--fg)':nodeColor(n.type);
-    const dash=n.flag==='orphan'?'stroke-dasharray="5 4"':'';
-    return`<g data-node="${n.id}" style="cursor:pointer"><rect x="${n.x}" y="${n.y}" width="${W}" height="${H}" rx="${n.type==='choice'||n.type==='condition'?14:6}" fill="var(--surface)" stroke="${stroke}" stroke-width="${sel||n.flag?2.5:1.5}" ${dash}></rect>
-      <rect x="${n.x}" y="${n.y}" width="5" height="${H}" rx="2" fill="${nodeColor(n.type)}"></rect>
-      <text x="${n.x+12}" y="${n.y+20}" font-size="10" fill="var(--muted)" font-family="var(--f-mono)">EP${n.ep} · ${{scene:'场景',choice:'选择',condition:'条件',paywall:'付费',ending:'结局'}[n.type]}${n.status==='edited'?' ·改':''}</text>
-      <text x="${n.x+12}" y="${n.y+40}" font-size="12" fill="var(--fg)" font-weight="600">${esc(n.title.replace(/^第\d+集 · /,'').slice(0,11))}</text></g>`}).join('');
-  svg.innerHTML=`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"></path></marker></defs><g id="vp" transform="translate(${VIEW.x},${VIEW.y}) scale(${VIEW.k})">${edges}${nodes}</g>`;
-  // 交互：平移 / 缩放 / 选择
+      const p=back?`M${x1},${y1} C${x1+50},${y1} ${x2-50},${y2} ${x2},${y2}`:`M${x1},${y1} C${(x1+x2)/2},${y1} ${(x1+x2)/2},${y2} ${x2},${y2}`;
+      edges+=`<path d="${p}" fill="none" stroke="#4A4E56" stroke-width="1.4" marker-end="url(#ar)"></path>`;
+      if(l&&!back)edges+=`<text x="${(x1+x2)/2}" y="${(y1+y2)/2-5}" font-size="10" text-anchor="middle" fill="#8A8E97">${esc(l.slice(0,9))}</text>`})});
+  const nodes=d.nodes.map(n=>{const s=S.selNode===n.id;const st=n.flag==='error'?'#F07167':n.flag==='warning'?'#F2B550':s?'#ECEDEF':'#34373D';
+    return`<g data-node="${n.id}" style="cursor:pointer"><rect x="${n.x}" y="${n.y}" width="${W}" height="${H}" rx="${n.type==='choice'||n.type==='condition'?16:8}" fill="#1E1F23" stroke="${st}" stroke-width="${s||n.flag?2:1}" ${n.flag==='orphan'?'stroke-dasharray="5 4"':''}></rect>
+      <circle cx="${n.x+14}" cy="${n.y+18}" r="4" fill="${nodeColor(n.type)}"></circle>
+      <text x="${n.x+24}" y="${n.y+22}" font-size="10" fill="#8A8E97">EP${n.ep} · ${TYPE_CN[n.type]}${n.status==='edited'?' · 已改':''}</text>
+      <text x="${n.x+12}" y="${n.y+42}" font-size="12" fill="#ECEDEF" font-weight="600">${esc(n.title.replace(/^第\d+集 · /,'').replace(/^分支 · /,'').slice(0,11))}</text></g>`}).join('');
+  svg.innerHTML=`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4A4E56"></path></marker></defs><g id="vp" transform="translate(${VIEW.x},${VIEW.y}) scale(${VIEW.k})">${edges}${nodes}</g>`;
   let drag=null;
-  svg.onpointerdown=e=>{const g=e.target.closest('[data-node]');if(g){S.selNode=g.dataset.node;renderMainOnly();return}drag={x:e.clientX,y:e.clientY,vx:VIEW.x,vy:VIEW.y};svg.classList.add('drag');svg.setPointerCapture(e.pointerId)};
+  svg.onpointerdown=e=>{const g=e.target.closest('[data-node]');if(g){S.selNode=g.dataset.node;renderMain();return}drag={x:e.clientX,y:e.clientY,vx:VIEW.x,vy:VIEW.y};svg.classList.add('drag');svg.setPointerCapture(e.pointerId)};
   svg.onpointermove=e=>{if(!drag)return;VIEW.x=drag.vx+e.clientX-drag.x;VIEW.y=drag.vy+e.clientY-drag.y;$('#vp').setAttribute('transform',`translate(${VIEW.x},${VIEW.y}) scale(${VIEW.k})`)};
   svg.onpointerup=()=>{drag=null;svg.classList.remove('drag')};
   svg.onwheel=e=>{e.preventDefault();zoom(e.deltaY<0?1.1:0.9,e.offsetX,e.offsetY)};
 }
 function zoom(f,cx,cy){const svg=$('#cv');if(!svg)return;if(cx==null){cx=svg.clientWidth/2;cy=svg.clientHeight/2}const k=clamp(VIEW.k*f,0.15,2.5);VIEW.x=cx-(cx-VIEW.x)*k/VIEW.k;VIEW.y=cy-(cy-VIEW.y)*k/VIEW.k;VIEW.k=k;$('#vp').setAttribute('transform',`translate(${VIEW.x},${VIEW.y}) scale(${VIEW.k})`)}
-function fit(){const a=getArt(S.sel);const svg=$('#cv');if(!a||!svg)return;const xs=a.data.nodes.map(n=>n.x),ys=a.data.nodes.map(n=>n.y);const w=Math.max(...xs)-Math.min(...xs)+200,h=Math.max(...ys)-Math.min(...ys)+120;
-  VIEW.k=clamp(Math.min(svg.clientWidth/w,svg.clientHeight/h),0.15,1.2);VIEW.x=20-Math.min(...xs)*VIEW.k;VIEW.y=(svg.clientHeight-(h-60)*VIEW.k)/2-Math.min(...ys)*VIEW.k;drawCanvas()}
-function renderMainOnly(){const m=$('#main');if(!m)return render();const a=getArt(S.sel);m.innerHTML=renderIA(a);bindMain();if(S.iaTab==='canvas')drawCanvas();renderSM()}
+function fit(){const a=getArt(S.sel);const svg=$('#cv');if(!a||!svg)return;const xs=a.data.nodes.map(n=>n.x),ys=a.data.nodes.map(n=>n.y);const w=Math.max(...xs)-Math.min(...xs)+190,h=Math.max(...ys)-Math.min(...ys)+90;
+  VIEW.k=clamp(Math.min(svg.clientWidth/w,svg.clientHeight/h),0.15,1.2);VIEW.x=20-Math.min(...xs)*VIEW.k;VIEW.y=20-Math.min(...ys)*VIEW.k;drawCanvas()}
+function renderMain(){const m=$('#main');if(!m)return render();m.innerHTML=renderIA(getArt(S.sel));bindMain();if(S.iaTab==='canvas')drawCanvas();if(S.debug)renderDbg()}
 
-// 状态机面板
-function smHTML(){
-  const P=S.project;if(!P)return'';
-  const rows=[['项目阶段',P.stage]];
-  rows.push(['策划案',P.arts.plan.status]);
-  ['all','c1','c2','c3','end'].forEach(k=>{if(P.arts[k])rows.push([P.arts[k].label,P.arts[k].status])});
-  Object.values(P.ia).forEach(a=>{rows.push([a.label.replace('互动剧本 · ','互动·'),a.status]);rows.push(['　└ 结构校验',a.validate.status])});
-  const cur=S.sel.startsWith('ia:')?getArt(S.sel):S.sel==='parse'?null:P.arts[S.sel];
-  const task=cur&&cur.task;
-  const graph=(kind,st)=>`<div class="smgraph">${Object.keys(SM[kind].states).map(s=>`<span class="pill st-${s} ${s===st?'cur':''}">${SM[kind].states[s]}</span>`).join('')}</div>`;
-  return`<h4>当前状态</h4><table class="smtable">${rows.map(r=>`<tr><td>${esc(r[0])}</td><td style="text-align:right">${pill(r[1])}</td></tr>`).join('')}</table>
-   ${cur?`<h4>「${esc(cur.label)}」产物状态</h4>${graph('artifact',cur.status)}
-   <div class="muted">可迁移到：${(SM.artifact.tr[cur.status]||[]).map(s=>SM.artifact.states[s]).join('、')||'—'}</div>`:''}
-   ${task?`<h4>最近一次生成任务 <span class="mono">${task.id}</span></h4>${graph('task',task.status)}`:''}
-   ${cur&&cur.validate?`<h4>结构校验</h4>${graph('validate',cur.validate.status)}`:''}
-   <label class="toggle"><input type="checkbox" id="failNext" ${S.failNext?'checked':''}> 模拟下一次生成失败</label>
-   <h4>事件日志</h4><div class="log">${S.log.map(l=>`<div class="${l.bad?'bad':''}">${l.t} ${esc(l.msg)}</div>`).join('')||'<div>暂无</div>'}</div>
-   <button class="btn danger" data-act="reset">清空项目，重新开始</button>`;
+// ============ 更多菜单 ============
+function openMenu(anchor){
+  const p=$('#pop');if(!p.hidden&&S.popKey==='menu'){closePop();return}
+  const items=JSON.parse(anchor.dataset.menu);closePop();S.popKey='menu';
+  p.innerHTML=`<div class="opts">${items.map(([k,t])=>`<button data-mi="${k}">${t}</button>`).join('')}</div>`;
+  placePop(anchor);const r=anchor.getBoundingClientRect();p.style.left=clamp(r.right-p.offsetWidth,12,innerWidth-p.offsetWidth-12)+'px';
+  p.querySelectorAll('[data-mi]').forEach(b=>b.onclick=()=>{closePop();menuAct(b.dataset.mi)});
 }
-function renderSM(){const el=$('#sm');if(el){el.innerHTML=smHTML();const f=$('#failNext');if(f)f.onchange=()=>{S.failNext=f.checked;log(S.failNext?'已开启：下一次生成将失败':'已关闭失败模拟')}}const bd=document.querySelector('.top .crumb');if(bd&&S.project)bd.innerHTML=`/ ${esc(S.project.title||'新项目')} · ${pill(S.project.stage)}`}
+function menuAct(k){
+  const P=S.project;const i=k.indexOf(':');const cmd=i<0?k:k.slice(0,i),arg=i<0?'':k.slice(i+1);
+  if(cmd==='lock'){const a=getArt(arg);a.prevLock=a.status;go('artifact',a,'locked',a.label);a.notice='';toast('已定稿');save();render()}
+  if(cmd==='unlock')unlock(arg);
+  if(cmd==='retry')regen(arg);
+  if(cmd==='regenAll')regen('plan');
+  if(cmd==='adjustCards')openOutlineModal(false,true);
+  if(cmd==='toCards'){MC={total:P.params.episodes,...(P.cards||defaultCards(P.params.episodes)),mode:'cards',adjust:false};drawOutlineModal()}
+  if(cmd==='toAll')mergeToAll();
+  if(cmd==='reconf'){const a=getArt(S.sel);openIAModal(a.src,a.cfg)}
+}
+function unlock(k){const a=getArt(k);const back=a.notice?'outdated':(a.prevLock==='ready'?'ready':'edited');go('artifact',a,back,a.label);if(back==='outdated')a.notice=a.notice+'，可能需要更新';else a.notice='';save();render()}
 
-// ============ 弹窗 ============
+// ============ 调试面板（Ctrl/⌘ + Shift + D，或地址加 #debug） ============
+function renderDbg(){
+  const el=$('#dbg');if(!S.debug){el.innerHTML='';return}
+  const P=S.project;const st=(kind,cur)=>`<div class="stl">${Object.keys(SM[kind].states).map(s=>`<span class="st ${s===cur?'cur':''}">${SM[kind].states[s]}</span>`).join('')}</div>`;
+  let rows='';
+  if(P){rows+=`<tr><td>项目</td><td><span class="st">${ST_LABEL(P.stage)}</span></td></tr>`;
+    Object.values(P.arts).forEach(a=>rows+=`<tr><td>${a.label}</td><td><span class="st">${ST_LABEL(a.status)}</span></td></tr>`);
+    Object.values(P.ia).forEach(a=>rows+=`<tr><td>${a.label}</td><td><span class="st">${ST_LABEL(a.status)}</span> <span class="st">${ST_LABEL(a.validate.status)}</span></td></tr>`)}
+  const cur=S.view==='project'?getArt(S.sel):null;
+  el.innerHTML=`<div class="dbg"><div style="display:flex;align-items:center"><b>状态机调试（仅内部）</b><span class="sp"></span><button class="iconbtn" id="dbgX" aria-label="关闭">${ic('x')}</button></div>
+    ${rows?`<table>${rows}</table>`:'<div class="muted">还没有项目</div>'}
+    ${cur?`<h4>「${cur.label}」产物</h4>${st('artifact',cur.status)}${cur.task?`<h4>生成任务 ${cur.task.id}</h4>${st('task',cur.task.status)}`:''}${cur.validate?`<h4>结构校验</h4>${st('validate',cur.validate.status)}`:''}`:''}
+    <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="failNext" ${S.failNext?'checked':''}> 模拟下一次生成失败</label>
+    <div style="display:flex;gap:6px"><button class="btn" id="addCr">积分 +100</button><button class="btn" id="dbgReset" style="color:var(--red)">清空项目</button></div>
+    <h4>事件日志</h4><div class="log">${S.log.map(l=>`<div class="${l.bad?'bad':''}">${l.t} ${esc(l.msg)}</div>`).join('')||'<div>暂无</div>'}</div></div>`;
+  $('#dbgX').onclick=()=>{S.debug=false;renderDbg()};
+  $('#failNext').onchange=e=>{S.failNext=e.target.checked;log(S.failNext?'调试：下一次生成将失败':'调试：关闭失败模拟')};
+  $('#addCr').onclick=()=>{S.credits+=100;save();render()};
+  $('#dbgReset').onclick=()=>act('reset');
+}
+
+// ============ 弹窗：集纲方式 ============
 function closeModal(){$('#modal').innerHTML=''}
-let MC=null;// 弹窗内卡点草稿
-function openOutlineModal(auto,adjust){
-  const P=S.project;const N=P.params.episodes;
-  MC={total:N,...(P.cards||defaultCards(N)),mode:adjust?'cards':(P.outlineMode||'cards'),adjust:!!adjust,auto};
-  drawOutlineModal();
-}
+let MC=null;
+function openOutlineModal(auto,adjust){const P=S.project;const N=P.params.episodes;MC={total:N,...(P.cards||defaultCards(N)),mode:adjust?'cards':(P.outlineMode||'cards'),adjust:!!adjust,auto};drawOutlineModal()}
 function drawOutlineModal(){
-  const P=S.project;const{total,c1,c2,c3,mode,adjust}=MC;
-  const segs=[['一卡','var(--accent)',1,c1],['二卡','var(--blue)',c1+1,c2],['三卡','var(--violet)',c2+1,c3]];if(c3<total)segs.push(['结局段','var(--muted)',c3+1,total]);
-  const pct=v=>((v-1)/(total-1)*100);
-  const cardsUI=mode==='cards'?`
-    <div><label class="lbl" for="mTotal">总集数</label><input type="number" id="mTotal" min="10" max="150" value="${total}" style="width:90px" ${adjust?'disabled':''}></div>
-    <div class="slider" id="slider"><div class="track" id="track">
-      ${segs.map(s=>`<div class="segc" style="left:${pct(s[2])}%;width:${pct(s[3])-pct(s[2])}%;background:${s[1]};opacity:.35"></div>`).join('')}
-      ${['c1','c2','c3'].map((k,i)=>`<div class="handle" id="h-${k}" data-h="${k}" role="slider" tabindex="0" aria-label="${['一卡','二卡','三卡'][i]}" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${MC[k]}" style="left:${pct(MC[k])}%"><span class="hl">${['一卡','二卡','三卡'][i]} · ${MC[k]}</span></div>`).join('')}
-    </div><div class="ticks"><span>1</span><span>${Math.round(total/4)}</span><span>${Math.round(total/2)}</span><span>${Math.round(total*3/4)}</span><span>${total}</span></div></div>
-    <div class="cardctl">${['c1','c2','c3'].map((k,i)=>`<div><b class="small">${['一卡','二卡','三卡'][i]}</b><div class="stp"><button data-step="${k}" data-d="-1" aria-label="减一集">−</button><input type="number" id="in-${k}" value="${MC[k]}" data-cin="${k}"><button data-step="${k}" data-d="1" aria-label="加一集">＋</button></div></div>`).join('')}</div>
-    <div class="errline" id="cerr"></div>
-    <div style="overflow-x:auto"><table class="segtable"><tr><th>分段</th><th>集数范围</th><th>集数</th><th>生成顺序</th></tr>${segs.map((s,i)=>`<tr><td><i class="swatch" style="background:${s[1]}"></i>${s[0]}</td><td class="mono">第 ${s[2]}–${s[3]} 集</td><td class="mono">${s[3]-s[2]+1}</td><td class="small muted">${i===0?'先生成':'等待'+segs[i-1][0]+'完成'}</td></tr>`).join('')}</table></div>
-    <div class="small muted">约束：一卡 &lt; 二卡 &lt; 三卡，相邻卡点至少间隔 3 集。可拖动圆点、点 ±、直接输入，或聚焦圆点后用 ← → 键。</div>`:'';
+  const{total,c1,c2,c3,mode,adjust,auto}=MC;
+  const segs=[['一卡','var(--accent)',1,c1,'c1'],['二卡','var(--blue)',c1+1,c2,'c2'],['三卡','var(--violet)',c2+1,c3,'c3']];
+  const pct=v=>(v-1)/(total-1)*100;
+  const cardsUI=mode==='cards'?`<div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="lbl" style="margin:0">拖动圆点，设置每个卡点落在第几集</span><span class="sp"></span>
+      <span class="sm muted">总集数</span><span class="stepper"><button data-tot="-5" aria-label="减少" ${adjust?'disabled':''}>−</button><input type="number" id="mTotal" value="${total}" ${adjust?'disabled':''} aria-label="总集数"><button data-tot="5" aria-label="增加" ${adjust?'disabled':''}>+</button></span></div>
+    <div class="slider"><div class="track" id="track">
+      ${segs.map(s=>`<div class="seg-c" style="left:${pct(s[2])}%;width:${pct(s[3])-pct(s[2])}%;background:${s[1]};opacity:.5"></div>`).join('')}
+      ${segs.map(s=>`<div class="handle" id="h-${s[4]}" data-h="${s[4]}" role="slider" tabindex="0" aria-label="${s[0]}" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${MC[s[4]]}" style="left:${pct(MC[s[4]])}%"><span class="hl">${s[0]} · ${MC[s[4]]}</span></div>`).join('')}
+    </div><div class="ticks"><span>第 1 集</span><span>第 ${total} 集</span></div></div>
+    <div class="cardrow">${segs.map(s=>`<div><div class="t"><i class="sw" style="background:${s[1]}"></i>${s[0]}<span class="sp"></span><span class="stepper"><button data-stp="${s[4]}" data-d="-1" aria-label="${s[0]}前移一集">−</button><input type="number" value="${MC[s[4]]}" data-cin="${s[4]}" aria-label="${s[0]}所在集数"><button data-stp="${s[4]}" data-d="1" aria-label="${s[0]}后移一集">+</button></span></div><div class="r" data-rng="${s[4]}">第 ${s[2]}–${s[3]} 集 · ${s[3]-s[2]+1} 集</div></div>`).join('')}</div>
+    <div class="sm muted" style="margin-top:8px" id="tail">${c3<total?`第 ${c3+1}–${total} 集是结局段，在三卡之后生成。`:'三卡就是最后一集。'}</div>
+    <div class="err" id="cerr"></div></div>`:'';
   $('#modal').innerHTML=`<div class="mask"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
-    <div class="mhead"><h3 id="mt">${adjust?'调整卡点':'生成集纲'}</h3><span class="sp"></span><button class="btn ghost" data-m="close" aria-label="关闭">✕</button></div>
-    <div class="mbody">
-      ${MC.auto?'<div class="banner info">策划案已生成。接下来选择集纲的生成方式。</div>':''}
-      ${adjust?'':`<button class="opt ${mode==='all'?'on':''}" data-m="all"><span class="radio"></span><div><b>直接生成全部集纲</b><span>一次生成第 1–${total} 集，适合先看整体</span></div></button>
-      <button class="opt ${mode==='cards'?'on':''}" data-m="cards"><span class="radio"></span><div><b>分卡点输出集纲 <span class="tag">推荐</span></b><span>按付费卡点分成一卡 / 二卡 / 三卡，逐段生成、逐段精修</span></div></button>`}
+    <div class="mh"><div><h3 id="mt">${adjust?'调整卡点':auto?'策划案写好了，接下来生成集纲':'生成集纲'}</h3><p>${adjust?'已生成的内容会按新卡点重新分段，受影响的段会提示更新。':'可以一次写完全部集数，也可以按付费卡点分段写、逐段精修。'}</p></div><span class="sp"></span><button class="iconbtn" data-m="close" aria-label="关闭">${ic('x')}</button></div>
+    <div class="mb">
+      ${adjust?'':`<div class="choose"><button class="${mode==='all'?'on':''}" data-m="all"><b>直接生成全部集纲</b><span>一次写完第 1–${total} 集</span></button><button class="${mode==='cards'?'on':''}" data-m="cards"><b>按卡点分段 <span class="badge">推荐</span></b><span>一卡 → 二卡 → 三卡，逐段生成</span></button></div>`}
       ${cardsUI}
     </div>
-    <div class="mfoot"><button class="btn" data-m="close">${MC.auto?'稍后再说':'取消'}</button><button class="btn primary" data-m="go">${adjust?'应用卡点':'开始生成'}</button></div></div></div>`;
+    <div class="mf"><button class="btn ghost" data-m="close">${auto?'稍后再说':'取消'}</button><button class="btn pri" data-m="go">${adjust?'应用':'开始生成'}</button></div></div></div>`;
   bindModal();
 }
-function setCard(k,v,src){
-  const g=3;const{total}=MC;const lo=k==='c1'?1:MC[k==='c2'?'c1':'c2']+g;const hi=k==='c3'?total:MC[k==='c1'?'c2':'c3']-g;
-  const nv=clamp(Math.round(v),lo,hi);
-  if(nv!==Math.round(v)){const h=$('#h-'+k);if(h){h.classList.remove('shake');void h.offsetWidth;h.classList.add('shake')}const er=$('#cerr');if(er)er.textContent=`${{c1:'一卡',c2:'二卡',c3:'三卡'}[k]}只能在第 ${lo}–${hi} 集之间`}
-  else{const er=$('#cerr');if(er)er.textContent=''}
+function setCard(k,v){
+  const g=3,{total}=MC;const lo=k==='c1'?1:MC[k==='c2'?'c1':'c2']+g;const hi=k==='c3'?total:MC[k==='c1'?'c2':'c3']-g;const nv=clamp(Math.round(v),lo,hi);const er=$('#cerr');
+  if(nv!==Math.round(v)){const h=$('#h-'+k);if(h){h.classList.remove('shake');void h.offsetWidth;h.classList.add('shake')}if(er)er.textContent=`${{c1:'一卡',c2:'二卡',c3:'三卡'}[k]}只能放在第 ${lo}–${hi} 集（相邻卡点至少隔 3 集）`}else if(er)er.textContent='';
   MC[k]=nv;
 }
 function refreshSlider(){
-  const{total}=MC;const pct=v=>((v-1)/(total-1)*100);
-  ['c1','c2','c3'].forEach((k,i)=>{const h=$('#h-'+k);h.style.left=pct(MC[k])+'%';h.setAttribute('aria-valuenow',MC[k]);h.querySelector('.hl').textContent=`${['一卡','二卡','三卡'][i]} · ${MC[k]}`;const inp=$('#in-'+k);if(inp&&document.activeElement!==inp)inp.value=MC[k]});
-  const segs=$('#track').querySelectorAll('.segc');const b=[[1,MC.c1],[MC.c1+1,MC.c2],[MC.c2+1,MC.c3],[MC.c3+1,total]];
-  segs.forEach((s,i)=>{if(!b[i])return;s.style.left=pct(b[i][0])+'%';s.style.width=(pct(b[i][1])-pct(b[i][0]))+'%'});
-  const tb=document.querySelector('.segtable');if(tb){const rows=tb.querySelectorAll('tr');b.forEach((r,i)=>{const tr=rows[i+1];if(!tr)return;tr.children[1].textContent=`第 ${r[0]}–${r[1]} 集`;tr.children[2].textContent=r[1]-r[0]+1})}
+  const{total}=MC;const pct=v=>(v-1)/(total-1)*100;const b=[[1,MC.c1],[MC.c1+1,MC.c2],[MC.c2+1,MC.c3]];
+  ['c1','c2','c3'].forEach((k,i)=>{const h=$('#h-'+k);h.style.left=pct(MC[k])+'%';h.setAttribute('aria-valuenow',MC[k]);h.querySelector('.hl').textContent=`${['一卡','二卡','三卡'][i]} · ${MC[k]}`;
+    const inp=document.querySelector(`[data-cin="${k}"]`);if(inp&&document.activeElement!==inp)inp.value=MC[k];
+    const rg=document.querySelector(`[data-rng="${k}"]`);if(rg)rg.textContent=`第 ${b[i][0]}–${b[i][1]} 集 · ${b[i][1]-b[i][0]+1} 集`});
+  $('#track').querySelectorAll('.seg-c').forEach((s,i)=>{s.style.left=pct(b[i][0])+'%';s.style.width=(pct(b[i][1])-pct(b[i][0]))+'%'});
+  const t=$('#tail');if(t)t.textContent=MC.c3<total?`第 ${MC.c3+1}–${total} 集是结局段，在三卡之后生成。`:'三卡就是最后一集。';
 }
 function bindModal(){
   const M=$('#modal');
-  M.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const v=b.dataset.m;
-    if(v==='close'){closeModal();return}
-    if(v==='all'||v==='cards'){MC.mode=v;drawOutlineModal();return}
-    if(v==='go')applyOutlineModal()});
+  M.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const v=b.dataset.m;if(v==='close')return closeModal();if(v==='all'||v==='cards'){MC.mode=v;return drawOutlineModal()}applyOutlineModal()});
   const tr=$('#track');if(!tr)return;
-  const tot=$('#mTotal');if(tot)tot.onchange=()=>{const n=clamp(+tot.value||80,10,150);const r=n/MC.total;MC.total=n;MC.c1=Math.round(MC.c1*r);MC.c2=Math.round(MC.c2*r);MC.c3=Math.round(MC.c3*r);
-    MC.c3=clamp(MC.c3,7,n);MC.c2=clamp(MC.c2,4,MC.c3-3);MC.c1=clamp(MC.c1,1,MC.c2-3);drawOutlineModal()};
+  const setTotal=n=>{n=clamp(n,10,150);const r=n/MC.total;MC.total=n;MC.c1=Math.round(MC.c1*r);MC.c2=Math.round(MC.c2*r);MC.c3=Math.round(MC.c3*r);MC.c3=clamp(MC.c3,7,n);MC.c2=clamp(MC.c2,4,MC.c3-3);MC.c1=clamp(MC.c1,1,MC.c2-3);drawOutlineModal()};
+  const tot=$('#mTotal');if(tot&&!tot.disabled){tot.onchange=()=>setTotal(+tot.value||80);M.querySelectorAll('[data-tot]').forEach(b=>b.onclick=()=>setTotal(MC.total+(+b.dataset.tot)))}
   M.querySelectorAll('[data-h]').forEach(h=>{const k=h.dataset.h;
-    h.onpointerdown=e=>{e.preventDefault();h.setPointerCapture(e.pointerId);
-      const mv=ev=>{const r=tr.getBoundingClientRect();const v=1+(clamp(ev.clientX-r.left,0,r.width)/r.width)*(MC.total-1);setCard(k,v);refreshSlider()};
-      h.onpointermove=mv;h.onpointerup=()=>{h.onpointermove=null;drawOutlineModal();$('#h-'+k)?.focus()}};
-    h.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();setCard(k,MC[k]+(e.key==='ArrowRight'?1:-1));refreshSlider()}if(e.key==='Enter')drawOutlineModal()}});
-  M.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{setCard(b.dataset.step,MC[b.dataset.step]+(+b.dataset.d));refreshSlider()});
+    h.onpointerdown=e=>{e.preventDefault();h.setPointerCapture(e.pointerId);h.onpointermove=ev=>{const r=tr.getBoundingClientRect();setCard(k,1+clamp(ev.clientX-r.left,0,r.width)/r.width*(MC.total-1));refreshSlider()};h.onpointerup=()=>{h.onpointermove=null}};
+    h.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();setCard(k,MC[k]+(e.key==='ArrowRight'?1:-1));refreshSlider()}}});
+  M.querySelectorAll('[data-stp]').forEach(b=>b.onclick=()=>{setCard(b.dataset.stp,MC[b.dataset.stp]+(+b.dataset.d));refreshSlider()});
   M.querySelectorAll('[data-cin]').forEach(i=>i.onchange=()=>{setCard(i.dataset.cin,+i.value);refreshSlider();i.value=MC[i.dataset.cin]});
 }
 function applyOutlineModal(){
   const P=S.project;const{c1,c2,c3,total,mode,adjust}=MC;
-  if(mode==='cards'&&!(c1<c2&&c2<c3&&c3<=total)){toast('卡点顺序不合法');return}
-  if(!adjust&&!P.outlineMode){P.params.episodes=total;P.cards={c1,c2,c3};log(`集纲方式：${mode==='all'?'直接生成全部':'分卡点'}${mode==='cards'?`（一卡 ${c1} / 二卡 ${c2} / 三卡 ${c3}）`:''}`);closeModal();startOutline(mode);return}
-  // 已有集纲后的切换 / 调整
+  if(!adjust&&!P.outlineMode){P.params.episodes=total;P.cards={c1,c2,c3};log(`集纲方式：${mode==='all'?'全部':'分卡点'}（一卡 ${c1} / 二卡 ${c2} / 三卡 ${c3}）`);closeModal();startOutline(mode);return}
   if(P.outlineMode==='all'&&mode==='cards'){splitAll({c1,c2,c3});closeModal();save();render();return}
-  if(P.outlineMode==='all'&&mode==='all'){closeModal();return}
-  if(adjust||P.outlineMode==='cards'){
-    const old=segRanges(P);const locked=old.filter(r=>P.arts[r.k]?.status==='locked');
-    const nc={c1,c2,c3};const tmp={...P,cards:nc};const neu=segRanges(tmp);
-    const changed=neu.filter(r=>{const o=old.find(x=>x.k===r.k);return!o||o.from!==r.from||o.to!==r.to}).map(r=>r.k);
-    if(locked.some(r=>changed.includes(r.k))){$('#cerr').textContent=`「${locked.map(r=>r.label).join('、')}」已定稿，请先解锁再调整卡点`;return}
-    if(!changed.length){closeModal();return}
-    // 汇总已有集，重新切分
-    const pool={};old.forEach(r=>(P.arts[r.k]?.data?.eps||[]).forEach(e=>pool[e.no]=e));
-    const ctx={...outlineCtx(),cards:nc};
-    P.cards=nc;log(`调整卡点 → 一卡 ${c1} / 二卡 ${c2} / 三卡 ${c3}`);
-    let firstChanged=neu.findIndex(r=>changed.includes(r.k));
-    neu.forEach((r,i)=>{let a=P.arts[r.k];if(!a){const pv=i>0&&P.arts[neu[i-1].k];a=P.arts[r.k]=newArt(r.k,r.label+'集纲','segment',i===0||(pv&&['ready','edited','locked'].includes(pv.status))?'empty':'blocked')}
-      if(i<firstChanged||!a.data)return;
-      const eps=[];for(let n=r.from;n<=r.to;n++){const e=pool[n]?{...pool[n]}:{...genEpisode(n,ctx),placeholder:true};const g=genEpisode(n,ctx);e.card=g.card;if(e.card&&!pool[n]?.card)e.hook=g.hook;eps.push(e)}
-      a.data={from:r.from,to:r.to,eps};
-      if(['ready','edited'].includes(a.status)){go('artifact',a,'outdated',a.label);a.notice=`卡点已调整，本段范围变为第 ${r.from}–${r.to} 集${eps.some(e=>e.placeholder)?'，有新增集待补生成':''}`}
-      propagate(r.k)});
-    if(P.cards.c3>=P.params.episodes&&P.arts.end){delete P.arts.end;log('三卡位于最后一集，移除结局段')}
-    closeModal();save();render();
-  }
+  if(P.outlineMode==='all'){closeModal();return}
+  const old=segRanges(P);const nc={c1,c2,c3};const neu=segRanges({...P,cards:nc});
+  const changed=neu.filter(r=>{const o=old.find(x=>x.k===r.k);return!o||o.from!==r.from||o.to!==r.to}).map(r=>r.k);
+  const locked=old.filter(r=>P.arts[r.k]?.status==='locked'&&changed.includes(r.k));
+  if(locked.length){$('#cerr').textContent=`「${locked.map(r=>r.label).join('、')}」已定稿，先解除定稿再调整`;return}
+  if(!changed.length){closeModal();return}
+  const pool={};old.forEach(r=>(P.arts[r.k]?.data?.eps||[]).forEach(e=>pool[e.no]=e));
+  const ctx={...outlineCtx(),cards:nc};P.cards=nc;log(`调整卡点 → ${c1} / ${c2} / ${c3}`);
+  const first=neu.findIndex(r=>changed.includes(r.k));
+  neu.forEach((r,i)=>{let a=P.arts[r.k];if(!a){const pv=i>0&&P.arts[neu[i-1].k];a=P.arts[r.k]=newArt(r.k,r.label+'集纲','segment',i===0||(pv&&['ready','edited','locked'].includes(pv.status))?'empty':'blocked')}
+    if(i<first||!a.data)return;
+    const eps=[];for(let n=r.from;n<=r.to;n++){const g=genEpisode(n,ctx);const e=pool[n]?{...pool[n]}:{...g,placeholder:true};e.card=g.card;if(g.card&&!pool[n]?.card)e.hook=g.hook;eps.push(e)}
+    a.data={from:r.from,to:r.to,eps};
+    if(['ready','edited'].includes(a.status)){go('artifact',a,'outdated',a.label);a.notice=`卡点调整后，这一段变成第 ${r.from}–${r.to} 集${eps.some(e=>e.placeholder)?'，新增的集还需要补写':''}`}
+    propagate(r.k)});
+  if(c3>=P.params.episodes&&P.arts.end)delete P.arts.end;
+  closeModal();save();render();toast('卡点已更新');
 }
 function splitAll(nc){
-  const P=S.project;const all=P.arts.all;P.cards=nc;P.outlineMode='cards';
-  segRanges(P).forEach(r=>{const a=newArt(r.k,r.label+'集纲','segment',all.data?all.status==='locked'?'ready':all.status:'empty');
-    if(all.data)a.data={from:r.from,to:r.to,eps:all.data.eps.filter(e=>e.no>=r.from&&e.no<=r.to).map(e=>({...e,card:genEpisode(e.no,{...outlineCtx(),cards:nc}).card}))};a.versions=all.versions;P.arts[r.k]=a});
-  delete P.arts.all;S.sel='c1';log('全部集纲 → 按卡点切分（不重新生成，状态继承）');
+  const P=S.project;const all=P.arts.all;P.cards=nc;P.outlineMode='cards';const ctx={...outlineCtx(),cards:nc};
+  segRanges(P).forEach(r=>{const a=newArt(r.k,r.label+'集纲','segment',all.data?(all.status==='locked'?'ready':all.status):'empty');
+    if(all.data)a.data={from:r.from,to:r.to,eps:all.data.eps.filter(e=>e.no>=r.from&&e.no<=r.to).map(e=>({...e,card:genEpisode(e.no,ctx).card}))};a.versions=all.versions;P.arts[r.k]=a});
+  Object.values(P.ia).forEach(x=>{if(x.src==='all')x.src='c1'});
+  delete P.arts.all;S.sel='c1';log('全部集纲 → 按卡点拆分（不重新生成）');toast('已按卡点拆分');
 }
 function mergeToAll(){
-  const P=S.project;const segs=segRanges(P);const eps=[];segs.forEach(r=>{const a=P.arts[r.k];if(a.data)eps.push(...a.data.eps);else for(let n=r.from;n<=r.to;n++)eps.push({...genEpisode(n,outlineCtx()),placeholder:true})});
+  const P=S.project;const segs=segRanges(P);const eps=[];
+  segs.forEach(r=>{const a=P.arts[r.k];if(a.data)eps.push(...a.data.eps);else for(let n=r.from;n<=r.to;n++)eps.push({...genEpisode(n,outlineCtx()),placeholder:true})});
   const sts=segs.map(r=>P.arts[r.k].status);const a=newArt('all','全部集纲','outline',sts.every(s=>['ready','edited','locked'].includes(s))?(sts.includes('edited')?'edited':'ready'):'outdated');
-  a.data={from:1,to:P.params.episodes,eps};a.versions=1;if(a.status==='outdated')a.notice='部分卡点段尚未生成，已用占位补齐';
+  a.data={from:1,to:P.params.episodes,eps};a.versions=1;if(a.status==='outdated')a.notice='还有几段没生成，先用占位补齐了';
   segs.forEach(r=>delete P.arts[r.k]);P.arts.all=a;P.outlineMode='all';S.sel='all';
-  Object.values(P.ia).forEach(x=>{if(['c1','c2','c3','end'].includes(x.src)){x.src='all'}});
-  log('卡点段 → 合并为全部集纲（不重新生成）');save();render();
+  Object.values(P.ia).forEach(x=>{if(['c1','c2','c3','end'].includes(x.src))x.src='all'});
+  log('卡点段 → 合并为全部集纲');save();render();toast('已合并为全部集纲');
 }
-function openIAModal(srcKey){
-  const c={form:'value',density:'mid',converge:'multi',endings:3,paywall:true,pov:'first'};
+
+// ============ 弹窗：转互动剧本 ============
+function openIAModal(srcKey,prev){
+  const c=prev?{...prev}:{form:'value',density:'mid',converge:'multi',endings:3,paywall:true,pov:'first'};
   const P=S.project;const src=P.arts[srcKey];
-  const draw=()=>{$('#modal').innerHTML=`<div class="mask"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="it"><div class="mhead"><h3 id="it">转互动影视剧本</h3><span class="sp"></span><button class="btn ghost" data-x aria-label="关闭">✕</button></div>
-    <div class="mbody"><div class="small muted">转换范围：${esc(src.label)}（第 ${src.data.from}–${src.data.to} 集）${P.ia[srcKey]?'。<b>已有互动剧本，会生成新版本</b>':''}</div>
-    ${opt('互动形式','form',[['branch','选项分支'],['value','数值养成'],['qte','限时选择'],['mix','混合']])}
-    ${opt('分支密度','density',[['low','低 · 每 3 集一个选择'],['mid','中 · 每集一个'],['high','高 · 每集三选一']])}
-    ${opt('分支收束','converge',[['merge','支线回主线（单结局）'],['multi','多结局']])}
-    ${c.converge==='multi'?`<div><label class="lbl" for="ends">结局数</label><input type="number" id="ends" min="2" max="5" value="${c.endings}" style="width:70px"></div>`:''}
-    ${opt('视角','pov',[['first','第一人称（观众即主角）'],['third','第三人称']])}
-    <label class="toggle"><input type="checkbox" id="pw" ${c.paywall?'checked':''}> 把卡点集映射为「付费解锁」节点</label>
-    <div class="small muted">已挂载 Skill：${skillNames(P.params.skills).filter(n=>['互动分支设计','台词口语化'].includes(n)).join('、')||'互动分支设计（默认）'}</div></div>
-    <div class="mfoot"><button class="btn" data-x>取消</button><button class="btn primary" data-go>开始转换</button></div></div></div>`;
+  if(!src||!src.data){toast('找不到对应的集纲');return}
+  const opt=(t,k,arr)=>`<div><span class="lbl">${t}</span><div class="seg">${arr.map(([v,l])=>`<button class="${c[k]===v?'on':''}" data-o="${k}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+  const draw=()=>{$('#modal').innerHTML=`<div class="mask"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="it">
+    <div class="mh"><div><h3 id="it">转成互动影视剧本</h3><p>${esc(src.label)}（第 ${src.data.from}–${src.data.to} 集）${P.ia[srcKey]?'，会覆盖当前的互动版本':''}</p></div><span class="sp"></span><button class="iconbtn" data-x aria-label="关闭">${ic('x')}</button></div>
+    <div class="mb">
+      ${opt('互动形式','form',[['branch','选项分支'],['value','数值养成'],['qte','限时选择'],['mix','混合']])}
+      ${opt('选择密度','density',[['low','每 3 集一次'],['mid','每集一次'],['high','每集三选一']])}
+      <div><span class="lbl">结局</span><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div class="seg">${[['merge','单结局'],['multi','多结局']].map(([v,l])=>`<button class="${c.converge===v?'on':''}" data-o="converge" data-v="${v}">${l}</button>`).join('')}</div>
+        ${c.converge==='multi'?`<span class="stepper"><button data-en="-1" aria-label="减少结局">−</button><input type="number" id="ends" value="${c.endings}" aria-label="结局数"><button data-en="1" aria-label="增加结局">+</button></span><span class="sm muted">个结局</span>`:''}</div></div>
+      ${opt('视角','pov',[['first','第一人称（观众就是主角）'],['third','第三人称']])}
+      <div><span class="lbl">付费</span><div class="seg"><button class="${c.paywall?'on':''}" data-pw="1">卡点集设为付费解锁</button><button class="${!c.paywall?'on':''}" data-pw="0">不设付费点</button></div></div>
+    </div>
+    <div class="mf"><span class="credits" style="margin-right:auto"><i></i>消耗 20</span><button class="btn ghost" data-x>取消</button><button class="btn pri" data-go>开始转换</button></div></div></div>`;
     const M=$('#modal');M.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeModal);
     M.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{c[b.dataset.o]=b.dataset.v;draw()});
-    const e=$('#ends');if(e)e.onchange=()=>c.endings=clamp(+e.value,2,5);
-    $('#pw').onchange=ev=>c.paywall=ev.target.checked;
+    M.querySelectorAll('[data-en]').forEach(b=>b.onclick=()=>{c.endings=clamp(c.endings+(+b.dataset.en),2,5);draw()});
+    const e=$('#ends');if(e)e.onchange=()=>{c.endings=clamp(+e.value||3,2,5);draw()};
+    M.querySelectorAll('[data-pw]').forEach(b=>b.onclick=()=>{c.paywall=b.dataset.pw==='1';draw()});
     M.querySelector('[data-go]').onclick=()=>{closeModal();convertToInteractive(srcKey,{...c})}};
-  const opt=(t,k,arr)=>`<div><span class="lbl">${t}</span><div class="seg" style="flex-wrap:wrap">${arr.map(([v,l])=>`<button class="${c[k]===v?'on':''}" data-o="${k}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
   draw();
 }
 function openExport(a){
-  const v=a.validate.status;
-  if(v==='unchecked')validateIA(a,true);
+  if(a.validate.status==='unchecked')validateIA(a,true);
   const vs=a.validate.status;
   const json=JSON.stringify({title:S.project.title,source:a.label,config:a.cfg,variables:a.data.vars,start:a.data.start,nodes:a.data.nodes.map(({x,y,flag,...n})=>n)},null,2);
-  const csv=['节点ID,类型,集,标题,出口'].concat(a.data.nodes.map(n=>[n.id,n.type,n.ep,`"${n.title}"`,`"${edgesOf(n).join('|')}"`].join(','))).join('\n');
+  const csv=['节点ID,类型,集,标题,下一步'].concat(a.data.nodes.map(n=>[n.id,TYPE_CN[n.type],n.ep,`"${n.title}"`,`"${edgesOf(n).join('|')}"`].join(','))).join('\n');
   let tab='json';
-  const draw=(confirmed)=>{
-    const blocked=vs==='invalid';const warn=vs==='warning'&&!confirmed;
-    $('#modal').innerHTML=`<div class="mask"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="et"><div class="mhead"><h3 id="et">导出互动剧本</h3>${pill(vs)}<span class="sp"></span><button class="btn ghost" data-x aria-label="关闭">✕</button></div>
-      <div class="mbody">${blocked?`<div class="banner err"><b>无法导出</b>结构校验有 ${a.issues.filter(i=>i.l==='e').length} 个错误，请先在画布里修复。</div>`:
-      warn?`<div class="banner warn"><b>有 ${a.issues.length} 条警告</b>可以继续导出，但建议先处理。<span class="sp"></span><button class="btn" data-ok>仍然导出</button></div>`:
-      `<div class="seg"><button class="${tab==='json'?'on':''}" data-t="json">互动剧本 JSON</button><button class="${tab==='csv'?'on':''}" data-t="csv">分支表 CSV</button></div>
-      <textarea id="exportText" readonly style="width:100%;min-height:320px;font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg)">${esc(tab==='json'?json:csv)}</textarea>`}</div>
-      <div class="mfoot"><span class="small muted" style="margin-right:auto">演示环境不能直接下载文件，请复制内容</span><button class="btn" data-x>关闭</button>${!blocked&&!warn?'<button class="btn primary" data-copy>复制</button>':''}</div></div></div>`;
+  const draw=ok=>{const bad=vs==='invalid',warn=vs==='warning'&&!ok;
+    $('#modal').innerHTML=`<div class="mask"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="et"><div class="mh"><div><h3 id="et">导出互动剧本</h3><p>JSON 给播放器或引擎用，分支表方便编剧和制片核对。</p></div><span class="sp"></span><button class="iconbtn" data-x aria-label="关闭">${ic('x')}</button></div>
+      <div class="mb">${bad?`<div class="note red">${ic('warn')}还有 ${a.issues.filter(i=>i.l==='e').length} 处结构问题，修好后才能导出。<span class="sp"></span><button class="btn" data-fix>去修复</button></div>`:
+      warn?`<div class="note amber">${ic('warn')}有 ${a.issues.length} 条提醒，不影响导出。<span class="sp"></span><button class="btn" data-ok>仍然导出</button></div>`:
+      `<div><div class="seg"><button class="${tab==='json'?'on':''}" data-t="json">互动剧本 JSON</button><button class="${tab==='csv'?'on':''}" data-t="csv">分支表 CSV</button></div></div>
+      <textarea id="exportText" readonly aria-label="导出内容" style="width:100%;min-height:320px;font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg2);color:var(--fg2)">${esc(tab==='json'?json:csv)}</textarea>`}</div>
+      <div class="mf"><span class="sm muted" style="margin-right:auto">演示环境不能直接下载，请复制内容</span><button class="btn ghost" data-x>关闭</button>${!bad&&!warn?'<button class="btn pri" data-copy>复制</button>':''}</div></div></div>`;
     const M=$('#modal');M.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeModal);
-    const ok=M.querySelector('[data-ok]');if(ok)ok.onclick=()=>draw(true);
+    const o=M.querySelector('[data-ok]');if(o)o.onclick=()=>draw(true);
+    const fx=M.querySelector('[data-fix]');if(fx)fx.onclick=()=>{closeModal();S.iaTab='canvas';S.selNode=null;renderMain()};
     M.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw(true)});
-    const cp=M.querySelector('[data-copy]');if(cp)cp.onclick=()=>{const t=$('#exportText');navigator.clipboard.writeText(t.value).then(()=>toast('已复制')).catch(()=>{t.select();toast('已选中，请按 Ctrl/⌘+C 复制')});log(`导出 ${a.label}（${tab.toUpperCase()}）`);advanceStage('completed');save();renderSM()}};
+    const cp=M.querySelector('[data-copy]');if(cp)cp.onclick=()=>{const t=$('#exportText');navigator.clipboard.writeText(t.value).then(()=>toast('已复制')).catch(()=>{t.select();toast('已选中，按 Ctrl/⌘ + C 复制')});log(`导出 ${a.label}（${tab}）`);advanceStage('completed');save()}};
   draw(false);
 }
 
-// ============ 事件绑定 ============
+// ============ 事件 ============
 function bind(){
   const A=$('#app');
   A.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>act(b.dataset.act));
-  if(S.view==='home')bindHome();else bindMain(),bindNav();
-  renderSM();
+  A.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>stepGo(b.dataset.step));
+  if(S.view==='home')bindHome();else{bindMain();A.querySelectorAll('.side [data-sel]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.sel;S.selNode=null;render()})}
 }
-function bindNav(){document.querySelectorAll('.nav [data-sel]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.sel;S.selNode=null;render()})}
+function stepGo(k){
+  const P=S.project;
+  if(k==='plan')S.sel=P.arts.plan.status==='empty'&&P.mode!=='original'?'parse':'plan';
+  if(k==='outline'){const o=['all','c1','c2','c3','end'].find(x=>P.arts[x]);if(o)S.sel=o;else if(has(P.arts.plan)){openOutlineModal(false);return}else{toast('先完成策划案');return}}
+  if(k==='ia'){const i=Object.keys(P.ia)[0];if(i)S.sel='ia:'+i;else{toast('在集纲页点「转互动剧本」就能生成');return}}
+  if(k==='done'){const i=Object.values(P.ia).find(has);if(i){S.sel=i.key;render();openExport(i);return}toast('先生成互动剧本');return}
+  S.selNode=null;render();
+}
 function bindHome(){
   const A=$('#app');const f=S.form;
-  A.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(S.mode!==b.dataset.mode){S.mode=b.dataset.mode;toast('已切换模式：通用参数已保留');render()}});
-  A.querySelectorAll('[data-gen]').forEach(b=>b.onclick=()=>{S.gen=b.dataset.gen;render()});
-  A.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{f.idea=b.dataset.idea;render()});
-  A.querySelectorAll('[data-genre]').forEach(b=>b.onclick=()=>{const g=b.dataset.genre;if(f.genres.includes(g))f.genres=f.genres.filter(x=>x!==g);else if(f.genres.length<3)f.genres.push(g);else toast('类型最多选 3 个');render()});
-  A.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>{const g=b.dataset.style;f.styles=f.styles.includes(g)?f.styles.filter(x=>x!==g):[...f.styles,g];render()});
-  A.querySelectorAll('[data-skill]').forEach(b=>b.onclick=()=>{const id=b.dataset.skill;if(f.skills.includes(id))f.skills=f.skills.filter(x=>x!==id);else if(f.skills.length<5)f.skills.push(id);else toast('每次最多挂载 5 个 Skill');render()});
-  const on=(id,fn,ev='input')=>{const el=document.getElementById(id);if(el)el.addEventListener(ev,fn)};
-  on('idea',e=>f.idea=e.target.value);on('novelText',e=>{f.novelText=e.target.value;if(!f.novelName)f.novelName='粘贴的小说'});on('benchText',e=>f.benchText=e.target.value);
-  on('market',e=>{f.market=e.target.value;f.episodes=MARKETS.find(x=>x.k===f.market).eps;render()},'change');
-  on('episodes',e=>f.episodes=clamp(+e.target.value||80,10,150),'change');on('audience',e=>f.audience=e.target.value,'change');
-  const readFile=(id,cb)=>on(id,e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>cb(file,String(r.result));r.readAsText(file)},'change');
-  readFile('novelFile',(file,t)=>{f.novelName=file.name.replace(/\.\w+$/,'');f.novelText=t;render()});
-  readFile('benchFile',(file,t)=>{f.benchText=t;render()});
-  readFile('skillFile',(file,t)=>{
-    const sk={id:'u'+Date.now(),name:file.name.replace(/\.\w+$/,''),desc:(t.split('\n').find(l=>l.trim())||'').replace(/^#+\s*/,'').slice(0,30)||'用户上传',scope:'全部',builtin:false,status:'uploading'};
-    S.userSkills.push(sk);render();
-    setTimeout(()=>{go('skill',sk,'validating','Skill '+sk.name);render();
-      setTimeout(()=>{if(t.trim().length<10||t.length>50000){go('skill',sk,'invalid','Skill '+sk.name);toast('Skill 校验失败：内容为空或超过 5 万字')}else{go('skill',sk,'active','Skill '+sk.name);if(f.skills.length<5)f.skills.push(sk.id);toast('Skill 已上传并挂载')}save();render()},800)},500)});
+  A.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;render()});
+  A.querySelectorAll('[data-pop]').forEach(b=>b.onclick=()=>openChipPop(b));
+  A.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{f.idea=IDEAS[+b.dataset.idea][1];render();const t=$('#mainInput');t.focus();t.setSelectionRange(t.value.length,t.value.length)});
+  const t=$('#mainInput');
+  t.oninput=()=>{if(S.mode==='original')f.idea=t.value;else if(S.mode==='novel'){f.novelText=t.value;if(!f.novelName&&t.value.trim())f.novelName='粘贴的小说'}else f.benchText=t.value;
+    A.querySelector('[data-act=create]').disabled=!canSend();$('#hint').textContent=sendHint()};
+  t.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&canSend())act('create')};
+  const rf=(id,cb)=>{const el=document.getElementById(id);if(el)el.onchange=()=>{const file=el.files[0];if(!file)return;const r=new FileReader();r.onload=()=>cb(file,String(r.result));r.readAsText(file)}};
+  rf('novelFile',(file,txt)=>{f.novelName=file.name.replace(/\.\w+$/,'');f.novelText=txt;render()});
+  rf('benchFile',(file,txt)=>{f.benchText=txt;render()});
 }
 function bindMain(){
   const M=$('#main');if(!M)return;const P=S.project;
   M.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>act(b.dataset.act));
+  M.querySelectorAll('[data-menu]').forEach(b=>b.onclick=()=>openMenu(b));
   M.querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.sel;render()});
   M.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>cancelTask(getArt(b.dataset.cancel)));
   M.querySelectorAll('[data-retry]').forEach(b=>b.onclick=()=>regen(b.dataset.retry));
   M.querySelectorAll('[data-ignore]').forEach(b=>b.onclick=()=>{const a=getArt(b.dataset.ignore);go('artifact',a,'edited',a.label);a.notice='';save();render()});
-  M.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>{const a=getArt(b.dataset.lock);a.prevLock=a.status;go('artifact',a,'locked',a.label);a.notice='';save();render()});
-  M.querySelectorAll('[data-unlock]').forEach(b=>{if(b.closest('.play'))return;b.onclick=()=>{const a=getArt(b.dataset.unlock);const back=a.notice?'outdated':(a.prevLock==='ready'?'ready':'edited');go('artifact',a,back,a.label);if(back!=='outdated')a.notice='';save();render()}});
+  M.querySelectorAll('[data-unlock]').forEach(b=>b.onclick=()=>unlock(b.dataset.unlock));
   M.querySelectorAll('[data-genseg]').forEach(b=>b.onclick=()=>{const r=segRanges(P).find(x=>x.k===b.dataset.genseg);genOutline(P.arts[r.k],r.from,r.to)});
   M.querySelectorAll('[data-genchain]').forEach(b=>b.onclick=()=>{const r=segRanges(P).find(x=>x.k===b.dataset.genchain);genOutline(P.arts[r.k],r.from,r.to,true)});
-  // 策划案编辑
-  if(S.sel==='plan'&&P.arts.plan.data){const a=P.arts.plan;const d=a.data;
+  if(S.sel==='plan'&&P.arts.plan.data){const a=P.arts.plan,d=a.data;
     M.querySelectorAll('[data-field]').forEach(el=>el.onblur=()=>{const v=el.innerText.trim();if(v!==d[el.dataset.field]){d[el.dataset.field]=v;markEdited(a);render()}});
     M.querySelectorAll('[data-char]').forEach(el=>el.onblur=()=>{const c=d.chars[+el.dataset.char];const v=el.innerText.trim();if(v!==c.d){c.d=v;markEdited(a);render()}});
     M.querySelectorAll('[data-title]').forEach(b=>b.onclick=()=>{d.title=b.dataset.title;P.title=d.title;markEdited(a);render()});
-    M.querySelectorAll('[data-regen]').forEach(b=>b.onclick=()=>{const k=b.dataset.regen;const fresh=genPlan({...P.params,idea:P.params.idea+' '},P);seed+=31;
-      if(k==='title'){d.titles=[...new Set([...fresh.titles.slice(1),...T.titles._])].slice(0,3)}else if(k==='chars'){d.chars=fresh.chars}else d[k]=fresh[k];
-      a.versions++;log(`[生成任务] 策划案·${b.parentElement.firstChild.textContent}：局部重新生成 → 成功`);markEdited(a);render();toast('已重新生成该区块')})}
-  // 集纲编辑
-  const oa=P.arts[S.sel];if(oa&&oa.data&&oa.data.eps){M.querySelectorAll('[data-ep]').forEach(el=>el.onblur=()=>{const e=oa.data.eps[+el.dataset.ep];const v=el.innerText.trim();if(v!==e[el.dataset.k]){e[el.dataset.k]=v;e.placeholder=false;markEdited(oa);render()}})}
-  // 解析页
+    M.querySelectorAll('[data-regen]').forEach(b=>b.onclick=()=>{const k=b.dataset.regen;if(!cost(2))return;const fr=genPlan(P.params,P);
+      if(k==='title')d.titles=[...new Set([...fr.titles.slice(1),...T.titles._])].slice(0,3);else if(k==='chars')d.chars=fr.chars;else d[k]=fr[k];
+      S.credits-=2;a.versions++;log(`局部重新生成：${k}`);markEdited(a);render();toast('已重新生成这一部分')})}
+  const oa=P.arts[S.sel];if(oa&&oa.data&&oa.data.eps)M.querySelectorAll('[data-ep]').forEach(el=>el.onblur=()=>{const e=oa.data.eps[+el.dataset.ep];const v=el.innerText.trim();if(v!==e[el.dataset.k]){e[el.dataset.k]=v;e.placeholder=false;markEdited(oa);render()}});
   M.querySelectorAll('[data-strength]').forEach(b=>b.onclick=()=>{P.parsed.strength=b.dataset.strength;render()});
   M.querySelectorAll('[data-bdir]').forEach(b=>b.onclick=()=>{P.benchDir=b.dataset.bdir;render()});
   ['rFrom','rTo'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.onchange=()=>{P.parsed.range[i]=+el.value}});
-  // 互动剧本
   if(S.sel.startsWith('ia:')){const a=getArt(S.sel);
-    M.querySelectorAll('[data-iatab]').forEach(b=>b.onclick=()=>{S.iaTab=b.dataset.iatab;renderMainOnly()});
+    M.querySelectorAll('[data-iatab]').forEach(b=>b.onclick=()=>{S.iaTab=b.dataset.iatab;renderMain()});
     M.querySelectorAll('[data-zoom]').forEach(b=>b.onclick=()=>zoom(+b.dataset.zoom));
-    M.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{S.selNode=b.dataset.goto;const n=a.data.nodes.find(x=>x.id===S.selNode);const svg=$('#cv');if(n&&svg){VIEW.x=svg.clientWidth/2-(n.x+75)*VIEW.k;VIEW.y=svg.clientHeight/2-(n.y+28)*VIEW.k}renderMainOnly()});
-    bindInspector(a);bindPlay(a)}
+    M.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{S.selNode=b.dataset.goto;S.iaTab='canvas';const n=a.data.nodes.find(x=>x.id===S.selNode);const svg=$('#cv');if(n&&svg){VIEW.x=svg.clientWidth/2-(n.x+75)*VIEW.k;VIEW.y=svg.clientHeight/2-(n.y+28)*VIEW.k}renderMain()});
+    if(a&&a.data){bindInspector(a);bindPlay(a)}}
 }
 function bindInspector(a){
-  const n=a.data?.nodes.find(x=>x.id===S.selNode);if(!n)return;const M=$('#main');
-  const t=$('#nTitle'),x=$('#nText');
-  if(t)t.onchange=()=>{n.title=t.value;iaChanged(a,n);renderMainOnly()};
-  if(x)x.onchange=()=>{n.text=x.value;iaChanged(a,n);renderMainOnly()};
-  M.querySelectorAll('[data-nto]').forEach(s=>s.onchange=()=>{n.to=s.value||null;iaChanged(a,n);renderMainOnly()});
-  M.querySelectorAll('[data-olabel]').forEach(i=>i.onchange=()=>{n.options[+i.dataset.olabel].label=i.value;iaChanged(a,n);renderMainOnly()});
-  M.querySelectorAll('[data-oto]').forEach(s=>s.onchange=()=>{n.options[+s.dataset.oto].to=s.value||null;iaChanged(a,n);renderMainOnly()});
-  M.querySelectorAll('[data-oeff]').forEach(i=>i.onchange=()=>{const o=n.options[+i.dataset.oeff];o.effects=o.effects||{};o.effects[i.dataset.var]=+i.value||0;iaChanged(a,n);renderMainOnly()});
-  M.querySelectorAll('[data-odel]').forEach(b=>b.onclick=()=>{n.options.splice(+b.dataset.odel,1);iaChanged(a,n);renderMainOnly()});
-  M.querySelectorAll('[data-rval]').forEach(i=>i.onchange=()=>{n.rules[+i.dataset.rval].val=+i.value||0;iaChanged(a,n);renderMainOnly()});
+  const n=a.data.nodes.find(x=>x.id===S.selNode);if(!n)return;const M=$('#main');const ch=()=>{iaChanged(a,n);renderMain()};
+  const t=$('#nTitle'),x=$('#nText');if(t)t.onchange=()=>{n.title=t.value;ch()};if(x)x.onchange=()=>{n.text=x.value;ch()};
+  M.querySelectorAll('[data-nto]').forEach(s=>s.onchange=()=>{n.to=s.value||null;ch()});
+  M.querySelectorAll('[data-olabel]').forEach(i=>i.onchange=()=>{n.options[+i.dataset.olabel].label=i.value;ch()});
+  M.querySelectorAll('[data-oto]').forEach(s=>s.onchange=()=>{n.options[+s.dataset.oto].to=s.value||null;ch()});
+  M.querySelectorAll('[data-oeff]').forEach(i=>i.onchange=()=>{const o=n.options[+i.dataset.oeff];o.effects=o.effects||{};o.effects[i.dataset.var]=+i.value||0;ch()});
+  M.querySelectorAll('[data-odel]').forEach(b=>b.onclick=()=>{n.options.splice(+b.dataset.odel,1);ch()});
+  M.querySelectorAll('[data-rval]').forEach(i=>i.onchange=()=>{n.rules[+i.dataset.rval].val=+i.value||0;ch()});
 }
 function bindPlay(a){
-  document.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{
-    const v=b.dataset.play;const d=a.data;
-    if(v==='restart'){PL=null;renderMainOnly();return}
-    if(b.dataset.opt!=null){const n=d.nodes.find(x=>x.id===PL.cur);const o=n.options[+b.dataset.opt];Object.entries(o.effects||{}).forEach(([k,val])=>PL.vars[k]=(PL.vars[k]||0)+val);if(o.flag&&!PL.flags.includes(o.flag))PL.flags.push(o.flag)}
-    PL.cur=v;PL.steps++;renderMainOnly()});
+  document.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{const v=b.dataset.play;
+    if(v==='restart'){PL=null;return renderMain()}
+    if(b.dataset.opt!=null){const n=a.data.nodes.find(x=>x.id===PL.cur);const o=n.options[+b.dataset.opt];Object.entries(o.effects||{}).forEach(([k,val])=>PL.vars[k]=(PL.vars[k]||0)+val);if(o.flag&&!PL.flags.includes(o.flag))PL.flags.push(o.flag)}
+    PL.cur=v;PL.steps++;renderMain()});
 }
 function regen(k){
   const P=S.project;const a=getArt(k);
-  if(k==='plan'){runTask(a,{steps:8,produce:()=>genPlan(P.params,P),onDone:()=>{propagate('plan')}});return}
+  if(k==='plan'){if(!cost(10))return;runTask(a,{steps:8,cost:10,lines:['重新理解创意…','调整人物…','重排冲突…','整理策划案…'],produce:()=>genPlan(P.params,P),onDone:x=>{P.title=x.data.title;propagate('plan')}});return}
   if(k.startsWith('ia:')){convertToInteractive(a.src,a.cfg);return}
-  const r=k==='all'?{from:1,to:P.params.episodes}:segRanges(P).find(x=>x.k===k);
-  const old=a.data;genOutline(a,r.from,r.to);
-  // 重新生成后下游互动剧本过期
-  const iv=setInterval(()=>{if(a.status!=='generating'){clearInterval(iv);if(a.data!==old)propagate(k);save();render()}},200);
+  const r=k==='all'?{from:1,to:P.params.episodes}:segRanges(P).find(x=>x.k===k);const old=a.data;genOutline(a,r.from,r.to);
+  const iv=setInterval(()=>{if(a.status!=='generating'){clearInterval(iv);if(a.data!==old){propagate(k);save();render()}}},200);
 }
 function act(x){
   const P=S.project;
   switch(x){
     case'home':S.view='home';render();break;
     case'open':S.view='project';render();break;
-    case'sm':S.smOpen=!S.smOpen;render();break;
+    case'fine':S.fine=!S.fine;render();break;
     case'sampleNovel':S.form.novelText=SAMPLE_NOVEL;S.form.novelName='重生之千金归来';render();break;
     case'sampleBench':S.form.benchText=SAMPLE_BENCH;render();break;
-    case'create':{
-      const f=S.form;
-      if(S.mode==='original'&&f.idea.trim().length<5){toast('创意太短了，至少写 5 个字');return}
-      if(S.mode==='novel'&&!f.novelText.trim()){toast('请先上传或粘贴小说');return}
-      if(S.mode==='novel'&&!$('#copyright').checked){toast('请确认你拥有改编权');return}
-      if(S.mode==='benchmark'&&!f.benchText.trim()){toast('请先上传或粘贴爆款剧本');return}
-      if(!f.genres.length){toast('请至少选择一个类型');return}
-      Object.values(timers).forEach(clearInterval);PL=null;createProject();break}
+    case'clearNovel':S.form.novelText='';S.form.novelName='';render();break;
+    case'create':if(!canSend())return;Object.values(timers).forEach(clearInterval);PL=null;VIEW.key=null;createProject();break;
     case'reparse':{const o={status:'parse_failed'};go('project',o,'parsing','项目');P.stage='parsing';P.parseState='parsing';render();setTimeout(doParse,900);break}
     case'toPlan':startPlan();break;
-    case'outlineModal':if(P.outlineMode){S.sel=P.outlineMode==='all'?'all':'c1';render();toast('集纲已存在，可在集纲页调整卡点')}else openOutlineModal(false);break;
-    case'adjustCards':if(P.outlineMode==='all'){MC={total:P.params.episodes,...(P.cards||defaultCards(P.params.episodes)),mode:'cards',adjust:false};drawOutlineModal()}else openOutlineModal(false,true);break;
-    case'toAll':mergeToAll();break;
+    case'outlineNext':if(P.outlineMode){S.sel=P.outlineMode==='all'?'all':'c1';render()}else openOutlineModal(false);break;
     case'toIA':openIAModal(S.sel);break;
-    case'validate':validateIA(getArt(S.sel));renderMainOnly();break;
+    case'showIssues':S.iaTab='canvas';S.selNode=null;renderMain();break;
     case'export':openExport(getArt(S.sel));break;
     case'fit':fit();break;
-    case'addOpt':{const a=getArt(S.sel);const n=a.data.nodes.find(x=>x.id===S.selNode);n.options.push({label:'新选项',to:null,effects:{}});iaChanged(a,n);renderMainOnly();break}
-    case'delNode':{const a=getArt(S.sel);const d=a.data;d.nodes=d.nodes.filter(x=>x.id!==S.selNode);log(`删除节点 ${S.selNode}`);S.selNode=null;iaChanged(a);renderMainOnly();break}
-    case'expand':{const a=getArt(S.sel);const n=a.data.nodes.find(x=>x.id===S.selNode);const c=P.arts.plan.data.cast;n.text+=`\n△ （扩写）镜头推近，${c.A}的表情一点点僵住。\n${c.L}（低声）：“我早就知道会是这样。”`;iaChanged(a,n);renderMainOnly();toast('已扩写');break}
-    case'reset':try{localStorage.removeItem('drama-demo')}catch(e){}Object.values(timers).forEach(clearInterval);S.project=null;S.log=[];S.view='home';PL=null;closeModal();render();break;
+    case'deselect':S.selNode=null;renderMain();break;
+    case'addOpt':{const a=getArt(S.sel);const n=a.data.nodes.find(x=>x.id===S.selNode);n.options.push({label:'新选项',to:null,effects:{}});iaChanged(a,n);renderMain();break}
+    case'delNode':{const a=getArt(S.sel);a.data.nodes=a.data.nodes.filter(x=>x.id!==S.selNode);S.selNode=null;iaChanged(a);renderMain();toast('已删除节点');break}
+    case'expand':{const a=getArt(S.sel);const n=a.data.nodes.find(x=>x.id===S.selNode);const c=P.arts.plan.data.cast;n.text+=`\n△ 镜头推近，${c.A}的表情一点点僵住。\n${c.L}（低声）：“我早就知道会是这样。”`;iaChanged(a,n);renderMain();toast('已扩写');break}
+    case'reset':try{localStorage.removeItem('drama-demo-v2')}catch(e){}Object.values(timers).forEach(clearInterval);S.project=null;S.log=[];S.view='home';S.credits=120;PL=null;closeModal();render();break;
   }
 }
 load();
-// 刷新时如果有任务停在生成中，恢复为可重试状态
-if(S.project){const fix=a=>{if(a&&a.status==='generating'){a.status=a.data?(a.prev||'ready'):'error';if(a.task)a.task.status='failed',a.task.err='页面刷新，任务中断'}};Object.values(S.project.arts).forEach(fix);Object.values(S.project.ia||{}).forEach(fix);if(S.project.parseState==='parsing'){S.project.parseState='parse_failed';S.project.parseErr='页面刷新，解析中断'}}
+if(location.hash==='#debug')S.debug=true;
+if(S.project){const fix=a=>{if(a&&a.status==='generating'){a.status=a.data?(a.prev||'ready'):'error';if(a.task){a.task.status='failed';a.task.err='页面刷新，生成中断'}}};Object.values(S.project.arts).forEach(fix);Object.values(S.project.ia||{}).forEach(fix);if(S.project.parseState==='parsing'){S.project.parseState='parse_failed';S.project.parseErr='页面刷新，解析中断'}}
 render();
 })();
 </script>
