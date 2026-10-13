@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<title>鲸幕 · AI 短剧剧本工作台</title>
+<title>澜幕 · AI 短剧剧本工作台</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -130,6 +130,7 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .chip.model{color:var(--fg)}
 .chip.model .mdot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2))}
 .chip .caret{opacity:.6}
+.chip.plus{width:34px;padding:0;justify-content:center;border-style:dashed}.chip.plus svg.i{width:18px;height:18px}.chip.plus:hover{border-color:var(--accent);color:var(--accent)}
 .send{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--on-accent);display:grid;place-items:center;flex:none;transition:transform .15s,opacity .15s}
 .send:hover:not(:disabled){transform:translateY(-1px) scale(1.04)}
 .send:disabled{background:var(--line2);color:var(--muted);cursor:not-allowed}
@@ -502,7 +503,7 @@ const IC={
   film:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>',branch:'<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8M8 6c6 0 8 1 8 3"/>',
   search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/>',upload:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',trash:'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>'};
 const ic=(k,cls='i')=>`<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
-const WHALE='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13c0-4 4-7 9-7 3 0 5 1 6 3l3-3c0 2-1 4-2 5 0 4-4 7-9 7-1 0-2 0-3-1l-2 2v-3c-1-1-2-2-2-3zm6-2a1 1 0 100 2 1 1 0 000-2z"/></svg>';
+const LOGO='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 15.5c2.2 0 2.8-2.5 5-2.5s2.8 2.5 5 2.5 2.8-2.5 5-2.5 2.8 2.5 5 2.5V19c-2.2 0-2.8-2.5-5-2.5s-2.8 2.5-5 2.5-2.8-2.5-5-2.5S4.2 19 2 19z"/><path opacity=".6" d="M2 9.5C4.2 9.5 4.8 7 7 7s2.8 2.5 5 2.5S14.8 7 17 7s2.8 2.5 5 2.5V13c-2.2 0-2.8-2.5-5-2.5S14.2 13 12 13s-2.8-2.5-5-2.5S4.2 13 2 13z"/></svg>';
 const WAVE_D='M0 60 Q150 20 300 60 T600 60 T900 60 T1200 60 T1500 60 T1800 60 T2100 60 T2400 60 V120 H0Z';
 
 // ============ 基础数据 ============
@@ -618,8 +619,8 @@ const modelOf=k=>MODELS.find(m=>m.k===k)||MODELS[0];
 const costOf=base=>Math.max(1,Math.round(base*modelOf(S.model).m));
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2400)}
 function log(){/* 内部事件不展示给用户 */}
-let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('jingmu-v3',JSON.stringify({projects:S.projects,userSkills:S.userSkills,form:S.form,mode:S.mode,fine:S.fine,credits:S.credits,model:S.model,skin:S.skin,auto:S.auto,history:S.history,novels:S.novels}))}catch(e){}},200);const sv=$('#saved');if(sv)sv.innerHTML=`${ic('check')}已自动保存`}
-function load(){try{const d=JSON.parse(localStorage.getItem('jingmu-v3')||'null');if(d){Object.assign(S,{projects:d.projects||[],userSkills:d.userSkills||[],mode:d.mode||'original',fine:!!d.fine,credits:d.credits??300,model:d.model||'auto',skin:d.skin||'dark',auto:!!d.auto,history:d.history||[],novels:d.novels||[]});S.form=Object.assign(defForm(),d.form||{})}}catch(e){}}
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('lanmu-v3',JSON.stringify({projects:S.projects,userSkills:S.userSkills,form:S.form,mode:S.mode,fine:S.fine,credits:S.credits,model:S.model,skin:S.skin,auto:S.auto,history:S.history,novels:S.novels}))}catch(e){}},200);const sv=$('#saved');if(sv)sv.innerHTML=`${ic('check')}已自动保存`}
+function load(){try{const d=JSON.parse(localStorage.getItem('lanmu-v3')||localStorage.getItem('jingmu-v3')||'null');if(d){Object.assign(S,{projects:d.projects||[],userSkills:d.userSkills||[],mode:d.mode||'original',fine:!!d.fine,credits:d.credits??300,model:d.model||'auto',skin:d.skin||'dark',auto:!!d.auto,history:d.history||[],novels:d.novels||[]});S.form=Object.assign(defForm(),d.form||{})}}catch(e){}}
 function go(kind,obj,to){const from=obj.status;const def=SM[kind];if(from===to)return true;if(!def.tr[from]||!def.tr[from].includes(to))return false;obj.status=to;return true}
 function advanceStage(P,to){if(STAGE_ORDER.indexOf(to)>STAGE_ORDER.indexOf(P.stage)){const o={status:P.stage};if(go('project',o,to))P.stage=o.status}}
 const ST_LABEL=k=>{for(const d of Object.values(SM))if(d.states[k])return d.states[k];return k};
@@ -1163,7 +1164,7 @@ function undo(){const P=S.project;if(!P||!P.undo)return;const a=getArt(P.undo.ke
 function setSkin(k){S.skin=k;document.documentElement.dataset.skin=k;save()}
 function renderRail(){
   const v=S.view;const it=(k,icn,t)=>`<a class="${v===k||(k==='home'&&v==='project')?'on':''}" data-nav="${k}" ${v===k?'aria-current="page"':''}>${ic(icn)}<span>${t}</span></a>`;
-  $('#rail').innerHTML=`<div class="logo" title="鲸幕">${WHALE}</div>${it('home','pen','创作')}${it('library','lib','剧本库')}${it('assets','box','素材库')}${it('history','clock','历史')}
+  $('#rail').innerHTML=`<div class="logo" title="澜幕">${LOGO}</div>${it('home','pen','创作')}${it('library','lib','剧本库')}${it('assets','box','素材库')}${it('history','clock','历史')}
     <div class="bottom"><a data-nav="skin" title="主题">${ic(S.skin==='dark'?'moon':S.skin==='eye'?'leaf':'sun')}<span>${{dark:'深海',light:'晴空',eye:'护眼'}[S.skin]}</span></a><div class="cr"><span class="credits"><i></i></span>${S.credits}</div></div>`;
   $('#rail').querySelectorAll('[data-nav]').forEach(a=>a.onclick=()=>{const k=a.dataset.nav;if(k==='skin')return openSkinPop(a);S.view=k;S.nudge=null;$('#nudge').innerHTML='';render()});
 }
@@ -1223,38 +1224,45 @@ function chip(k){const c=chipVal(k);return`<button class="chip ${c.set&&!c.plain
 function modelChip(){return`<button class="chip model" data-pop="model" aria-haspopup="true" title="生成模型"><span class="mdot"></span><span class="v">${esc(modelOf(S.model).name)}</span>${ic('down','i caret')}</button>`}
 function gameHint(){const f=S.form;const o='互动影游剧本';
   if(S.fine)return`精细生成：每一步都会停下来，可以调整互动形式、视角、结局数和生成范围，最后再转成${o}。`;
-  return f.gsrc==='upload'?`一句话生成：上传剧本后直接转成${o}，中间不用操作。`:`一句话生成：一站直出策划案、集纲、短剧剧本和${o}，中间不用操作，约 ${quickCost()+costOf(20)} 积分。`}
+  return f.gsrc==='upload'?`一句话生成：上传剧本后直接转成${o}，中间不用操作。`:`一句话生成：一站直出策划案、集纲、短剧剧本和${o}，中间不用操作。`}
 function quickCost(){const N=S.form.episodes;return costOf(10)+costOf(Math.ceil(N/4)+8)+costOf(Math.max(6,Math.ceil(N/2)))}
 function canSend(){const f=S.form;if(S.mode==='game')return f.gsrc==='upload'?f.gameText.trim().length>=20:f.idea.trim().length>=15;if(S.mode==='original')return f.idea.trim().length>=15;if(S.mode==='novel')return f.novelText.trim().length>=20;return f.benchText.trim().length>=20}
 function sendHint(){const f=S.form;if(S.mode==='original'||(S.mode==='game'&&f.gsrc==='idea')){const n=f.idea.trim().length;return n&&n<15?`还差 ${15-n} 字`:''}return''}
+function attachCard(){const f=S.form,m=S.mode;const n=t=>t.replace(/\s/g,'').length;
+  const card=(icon,t,sub,act)=>`<div><span class="filecard">${ic(icon)}${t}<span class="muted mono">${sub}</span><button data-act="${act}" aria-label="移除">${ic('x')}</button></span></div>`;
+  if(m==='novel')return card('book',`小说改编 · 《${esc(f.novelName||'粘贴的小说')}》`,f.novelText.trim()?n(f.novelText)+' 字':'待上传或粘贴','clearNovel');
+  if(m==='benchmark')return card('fire',`爆款转换 · ${f.conv==='global'?'海外本土化':'国内爆款迭代'}`,f.benchText.trim()?n(f.benchText)+' 字':'待上传或粘贴剧本','clearBench');
+  if(m==='game'&&f.gsrc==='upload')return card('doc','上传剧本转换',f.gameText.trim()?n(f.gameText)+' 字':'待上传或粘贴剧本','clearGame');
+  return'';}
+function homeHint(){const m=S.mode,F=S.fine;
+  if(m==='game')return gameHint();
+  if(m==='novel')return F?'精细生成：先解析小说，确认改编范围和力度，再一步步写策划案、集纲和剧本。':'一句话生成：解析小说后，一站直出策划案、全部集纲和全文短剧剧本，中间不用操作。';
+  if(m==='benchmark')return F?'精细生成：先拆解爆款并给出转换方案，确认后再一步步写。':'一句话生成：拆解爆款后，一站直出转换后的策划案、集纲和全文剧本。';
+  return F?'精细生成：策划案、集纲、剧本每一步写完都会停下来，你可以选卡点、选范围、挂 Skill、逐段确认。':'一句话生成：一站直出策划案、全部集纲和全文短剧剧本，中间不用操作。点左下角「＋」可以上传小说改编。';}
 function renderHome(){
-  const f=S.form,m=S.mode;
-  const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'粘贴小说正文，或点下方「上传小说」。上传即表示你拥有该作品的改编权。',benchmark:'上传或粘贴一部爆款短剧的剧本 / 集纲。可以把它迭代成国内另一个爆款题材，也可以本土化成海外版本。',
-    game:f.gsrc==='upload'?'粘贴剧本（需要有「第 N 集」标题），或点下方「上传剧本」，会把它转成互动影游剧本。':'描述你想做的互动影游，比如：玩家搬进合租屋，被三个性格不同的室友同时追求，选择决定最后和谁在一起。至少 15 字。'}[m];
-  const val=m==='game'?(f.gsrc==='upload'?f.gameText:f.idea):m==='original'?f.idea:m==='novel'?f.novelText:f.benchText;
-  const file=m==='novel'&&f.novelName?`<div><span class="filecard">${ic('book')}《${esc(f.novelName)}》<span class="muted mono">${f.novelText.replace(/\s/g,'').length} 字</span><button data-act="clearNovel" aria-label="移除">${ic('x')}</button></span></div>`:'';
-  const recent=S.projects.slice(0,3);
+  const f=S.form,m=S.mode;const tab=m==='game'?'game':'short';const up=m==='game'&&f.gsrc==='upload';
+  const ph={original:'在此输入想法，我们将为你定制创意，至少输入 15 字。',novel:'小说正文会显示在这里，也可以直接粘贴。上传即表示你拥有该作品的改编权。',benchmark:'粘贴爆款短剧的剧本或集纲，也可以点下方「爆款转换」上传。',
+    game:up?'粘贴剧本（需要有「第 N 集」标题），会把它转成互动影游剧本。':'描述你想做的互动影游，比如：玩家搬进合租屋，被三个性格不同的室友同时追求，选择决定最后和谁在一起。至少 15 字。点左下角「＋」可以上传剧本。'}[m];
+  const val=m==='game'?(up?f.gameText:f.idea):m==='original'?f.idea:m==='novel'?f.novelText:f.benchText;
+  const recent=S.projects.slice(0,3);const bset=m==='benchmark';
   return`<main class="home">
-    <section class="intro"><span class="eyebrow">JINGMU · AI SCRIPT STUDIO</span><h1>让故事像<em>浪潮</em>一样推进</h1><p>懂短剧节奏，懂付费卡点，懂互动影游<br>从一个想法，写到可以开拍的短剧剧本和互动影游剧本</p></section>
+    <section class="intro"><span class="eyebrow">LANMU · AI SCRIPT STUDIO</span><h1>让故事像<em>浪潮</em>一样推进</h1><p>懂短剧节奏，懂付费卡点，懂互动影游<br>从一个想法，写到可以开拍的短剧剧本和互动影游剧本</p></section>
     <section class="composer">
       <div class="ctop">
         <div class="modes" role="tablist">
-          <button class="${m==='original'?'on':''}" data-mode="original" role="tab" aria-selected="${m==='original'}">${ic('doc')}原创剧本</button>
-          <button class="${m==='novel'?'on':''}" data-mode="novel" role="tab" aria-selected="${m==='novel'}">${ic('book')}小说改编</button>
-          <button class="${m==='benchmark'?'on':''}" data-mode="benchmark" role="tab" aria-selected="${m==='benchmark'}">${ic('fire')}爆款转换</button>
-          <button class="${m==='game'?'on':''}" data-mode="game" role="tab" aria-selected="${m==='game'}">${ic('branch')}互动影游</button>
+          <button class="${tab==='short'?'on':''}" data-tab="short" role="tab" aria-selected="${tab==='short'}">${ic('film')}短剧剧本</button>
+          <button class="${tab==='game'?'on':''}" data-tab="game" role="tab" aria-selected="${tab==='game'}">${ic('branch')}互动影游</button>
         </div><span class="sp"></span>
         <button class="switch ${S.fine?'on':''}" data-act="fine" role="switch" aria-checked="${S.fine}"><span>精细生成</span><span class="tr"></span></button>
       </div>
-      <div class="modehint">${m==='game'?gameHint():S.fine?'精细生成：策划案、集纲、剧本每一步写完都会停下来，你可以选卡点、选范围、挂 Skill、逐段确认。':`一句话生成：一站直出策划案、全部集纲和全文短剧剧本，中间不用操作，约 ${quickCost()} 积分。`}</div>
-      <div class="cinput">${file}<textarea id="mainInput" class="${S.fine?'':'tall'}" placeholder="${ph}" aria-label="输入">${esc(val)}</textarea></div>
+      <div class="modehint">${homeHint()}</div>
+      <div class="cinput">${attachCard()}<textarea id="mainInput" class="${S.fine?'':'tall'}" placeholder="${ph}" aria-label="输入">${esc(val)}</textarea></div>
       <div class="cbar">
-        ${m==='novel'?`<label class="chip" for="novelFile">${ic('clip')}上传小说</label><input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleNovel">示例小说</button>`:''}
-        ${m==='benchmark'?`<label class="chip" for="benchFile">${ic('clip')}上传剧本</label><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleBench">示例爆款</button>`:''}
-        ${m==='game'?chip('gsrc')+(f.gsrc==='upload'?`<label class="chip" for="gameFile">${ic('clip')}上传剧本</label><input type="file" id="gameFile" accept=".txt,.md,text/plain" hidden><button class="chip" data-act="sampleGame">示例剧本</button>`:'')+chip('gform')+(S.fine?chip('gpov')+chip('gend'):''):''}
-        ${m==='game'&&f.gsrc==='upload'?'':`${m==='benchmark'?chip('conv'):''}${chip('eps')}`}${m==='game'&&f.gsrc==='upload'?'':`${m!=='benchmark'||f.conv==='global'?chip('market'):''}${m!=='benchmark'||f.conv!=='global'?chip('genre'):''}${chip('style')}
-        ${S.fine?chip('audience')+chip('setting')+chip('skill'):''}`}
-        <span class="sp"></span>${modelChip()}<span class="credits" title="${S.fine?'策划案约消耗 '+costOf(10):'一站直出约消耗 '+quickCost()} 积分"><i></i>${S.credits}</span>
+        <button class="chip plus" data-pop="attach" aria-haspopup="true" aria-label="${tab==='game'?'上传剧本':'上传小说'}" title="${tab==='game'?'上传剧本':'上传小说'}">${ic('plus')}</button>
+        <input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><input type="file" id="gameFile" accept=".txt,.md,text/plain" hidden>
+        ${tab==='game'?chip('gform')+(S.fine?chip('gpov')+chip('gend'):'')+(up?'':chip('eps')+chip('market')+chip('genre')+chip('style')+(S.fine?chip('audience')+chip('setting')+chip('skill'):''))
+          :`${chip('eps')}<button class="chip ${bset?'set':''}" data-pop="bench" aria-haspopup="true">${ic('fire')}<span class="v">${bset?'爆款转换 · '+(f.conv==='global'?'海外本土化':'国内迭代'):'爆款转换'}</span></button>${!bset||f.conv==='global'?chip('market'):''}${!bset||f.conv!=='global'?chip('genre'):''}${chip('style')}${S.fine?chip('audience')+chip('setting')+chip('skill'):''}`}
+        <span class="sp"></span>${modelChip()}
         <button class="send" data-act="create" ${canSend()?'':'disabled'} aria-label="开始生成">${ic('up')}</button>
       </div>
       <div class="hint" id="hint">${sendHint()}</div>
@@ -1286,6 +1294,11 @@ function openChipPop(anchor){
   if(k==='model')h=`<h5>生成模型<span class="sp"></span>影响文风和积分消耗</h5><div class="opts">${MODELS.map(x=>`<button data-v="${x.k}" class="${S.model===x.k?'on':''}"><span class="ck">${S.model===x.k?'✓':''}</span><span class="two">${esc(x.name)}<small>${esc(x.desc)}</small></span><small>${x.m===1?'标准':'×'+x.m} 积分</small></button>`).join('')}</div><div class="pfoot" style="justify-content:flex-start"><span class="sm muted">演示数据，实际可用模型以接入为准</span></div>`;
   if(k==='eps')h=`<h5>总集数</h5><div class="opts">${EPS.map(n=>`<button data-v="${n}" class="${f.episodes===n?'on':''}"><span class="ck">${f.episodes===n?'✓':''}</span>${n} 集</button>`).join('')}</div><div class="pfield"><label for="epsCustom">自定义（10–150）</label><input type="number" id="epsCustom" min="10" max="150" value="${f.episodes}"></div>`;
   const one=(title,key,list)=>`<h5>${title}</h5><div class="opts">${list.map(([v,t,d])=>`<button data-v="${v}" class="${f[key]===v?'on':''}"><span class="ck">${f[key]===v?'✓':''}</span><span class="two">${t}${d?`<small>${d}</small>`:''}</span></button>`).join('')}</div>`;
+  if(k==='attach'){const g=S.mode==='game';
+    h=`<h5>${g?'上传剧本，转成互动影游剧本':'上传小说，改编成短剧'}</h5><div class="opts">${(g?[['up','upload','上传剧本','.txt / .md，需要有「第 N 集」标题'],['paste','doc','粘贴剧本','直接粘贴到输入框'],['sample','spark','载入示例剧本','《心动合租屋》6 集']]
+      :[['up','book','上传小说','.txt / .md，先解析章节和人物，再改编'],['paste','doc','粘贴小说正文','直接粘贴到输入框'],['sample','spark','载入示例小说','《重生之千金归来》5 章']]).map(([v,i,t,d])=>`<button data-av="${v}">${ic(i)}<span class="two">${t}<small>${d}</small></span></button>`).join('')}</div>`}
+  if(k==='bench')h=`<h5>爆款转换<span class="sp"></span>上传一部爆款，转成新剧</h5><div class="opts">${[['cn','国内爆款迭代','保留节奏和卡点，换成另一个国内爆款题材'],['global','海外本土化','人名、城市、文化和语言换成目标市场版本']].map(([v,t,d])=>{const on=S.mode==='benchmark'&&f.conv===v;return`<button data-bc="${v}" class="${on?'on':''}"><span class="ck">${on?'✓':''}</span><span class="two">${t}<small>${d}</small></span></button>`}).join('')}</div>
+    <div class="pfoot" style="justify-content:space-between"><span style="display:flex;gap:6px"><button class="btn sm" data-bv="up">${ic('upload')}上传剧本</button><button class="btn sm ghost" data-bv="sample">示例爆款</button></span>${S.mode==='benchmark'?'<button class="btn sm ghost" data-bv="off">关闭爆款转换</button>':''}</div>`;
   if(k==='gsrc')h=one('从哪里开始','gsrc',[['idea','一句话创作','从一个想法写起，先出短剧剧本再转换'],['upload','上传剧本转换','已有剧本，直接转成互动影游剧本']]);
   if(k==='gform')h=one('互动形式','gform',[['branch','选项分支','每个选择走向不同剧情'],['value','数值养成','选择会改变好感、实力等数值，数值决定结局'],['qte','限时选择','关键时刻限时做决定'],['mix','混合','分支、数值和限时选择都有']]);
   if(k==='gend')h=one('结局','gend',[['1','单结局','支线最后都回到主线'],['3','3 个结局','好结局、坏结局、隐藏结局'],['5','5 个结局','再加事业结局和真结局']]);
@@ -1319,6 +1332,14 @@ function openChipPop(anchor){
     if(k==='style'){f.styles=f.styles.includes(v)?f.styles.filter(x=>x!==v):[...f.styles,v];keep()}
     if(k==='skill'){if(f.skills.includes(v))f.skills=f.skills.filter(x=>x!==v);else if(f.skills.length<5)f.skills.push(v);else{toast('每次最多挂载 5 个 Skill');return}keep()}
   });
+  const toBench=()=>{S.mode='benchmark';if(f.conv==='global'&&(!f.market||f.market==='cn')){f.market='na';f.episodes=60}};
+  p.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{const v=b.dataset.av;const g=S.mode==='game';closePop();
+    if(v==='up'){$(g?'#gameFile':'#novelFile').click();return}
+    if(g){f.gsrc='upload';if(v==='sample')f.gameText=SAMPLE_GAME}else{S.mode='novel';if(v==='sample'){f.novelText=SAMPLE_NOVEL;f.novelName='重生之千金归来'}else if(!f.novelText.trim())f.novelName=''}
+    render();if(v==='paste'){const t=$('#mainInput');t&&t.focus()}});
+  p.querySelectorAll('[data-bc]').forEach(b=>b.onclick=()=>{f.conv=b.dataset.bc;if(f.conv==='cn')f.market=null;toBench();render()});
+  p.querySelectorAll('[data-bv]').forEach(b=>b.onclick=()=>{const v=b.dataset.bv;closePop();
+    if(v==='up'){$('#benchFile').click();return}if(v==='sample'){f.benchText=SAMPLE_BENCH;toBench()}if(v==='off')S.mode='original';render()});
   const ec=$('#epsCustom');if(ec)ec.onchange=()=>{f.episodes=clamp(+ec.value||80,10,150);render()};
   if(k==='setting'){const u=()=>{f.setting.role=$('#sRole').value.trim();f.setting.cheat=$('#sCheat').value.trim();f.setting.world=$('#sWorld').value};['sRole','sCheat'].forEach(i=>$('#'+i).oninput=u);$('#sWorld').onchange=u}
   const dn=p.querySelector('[data-done]');if(dn)dn.onclick=()=>render();
@@ -1893,7 +1914,7 @@ function renderDbg(){
     <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="failNext" ${S.failNext?'checked':''}> 模拟下一次生成失败</label>
     <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" id="addCr">积分 +100</button><button class="btn sm" id="dbgReset" style="color:var(--red)">清空全部数据</button></div></div>`;
   $('#dbgX').onclick=()=>{S.debug=false;renderDbg()};$('#failNext').onchange=e=>{S.failNext=e.target.checked};
-  $('#addCr').onclick=()=>{S.credits+=100;save();render()};$('#dbgReset').onclick=()=>{try{localStorage.removeItem('jingmu-v3')}catch(e){}location.reload()};
+  $('#addCr').onclick=()=>{S.credits+=100;save();render()};$('#dbgReset').onclick=()=>{try{localStorage.removeItem('lanmu-v3');localStorage.removeItem('jingmu-v3')}catch(e){}location.reload()};
 }
 
 // ============ 事件绑定 ============
@@ -1935,15 +1956,15 @@ function stepGo(k){
 }
 function bindHome(){
   const A=$('#app');const f=S.form;
-  A.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;render()});
+  A.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{const t=b.dataset.tab;if(t==='game'&&S.mode!=='game')S.mode='game';if(t==='short'&&S.mode==='game')S.mode='original';render()});
   A.querySelectorAll('[data-idea]').forEach(b=>b.onclick=()=>{f.idea=IDEAS[+b.dataset.idea][1];render();const t=$('#mainInput');t.focus();t.setSelectionRange(t.value.length,t.value.length)});
   const t=$('#mainInput');
   t.oninput=()=>{if(S.mode==='game'){if(f.gsrc==='upload')f.gameText=t.value;else f.idea=t.value}else if(S.mode==='original')f.idea=t.value;else if(S.mode==='novel'){f.novelText=t.value;if(!f.novelName&&t.value.trim())f.novelName='粘贴的小说'}else f.benchText=t.value;
     A.querySelector('[data-act=create]').disabled=!canSend();$('#hint').textContent=sendHint()};
   t.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&canSend())act('create')};
-  const nf=$('#novelFile');if(nf)nf.onchange=()=>readFile(nf,(file,txt)=>{f.novelName=file.name.replace(/\.\w+$/,'');f.novelText=txt;render()});
-  const gf=$('#gameFile');if(gf)gf.onchange=()=>readFile(gf,(file,txt)=>{f.gameText=txt;render()});
-  const bf=$('#benchFile');if(bf)bf.onchange=()=>readFile(bf,(file,txt)=>{f.benchText=txt;render()});
+  const nf=$('#novelFile');if(nf)nf.onchange=()=>readFile(nf,(file,txt)=>{S.mode='novel';f.novelName=file.name.replace(/\.\w+$/,'');f.novelText=txt;render()});
+  const gf=$('#gameFile');if(gf)gf.onchange=()=>readFile(gf,(file,txt)=>{f.gsrc='upload';f.gameText=txt;render()});
+  const bf=$('#benchFile');if(bf)bf.onchange=()=>readFile(bf,(file,txt)=>{S.mode='benchmark';if(f.conv==='global'&&(!f.market||f.market==='cn')){f.market='na';f.episodes=60}f.benchText=txt;render()});
 }
 function bindMain(){
   const M=$('#main');if(!M)return;const P=S.project;
@@ -2022,7 +2043,9 @@ function act(x){
     case'sampleBench':S.form.benchText=SAMPLE_BENCH;render();break;
     case'sampleGame':S.form.gameText=SAMPLE_GAME;render();break;
     case'gameOpen':openGameInline(P,'full');render();break;
-    case'clearNovel':S.form.novelText='';S.form.novelName='';render();break;
+    case'clearNovel':S.form.novelText='';S.form.novelName='';S.mode='original';render();break;
+    case'clearBench':S.form.benchText='';S.mode='original';render();break;
+    case'clearGame':S.form.gameText='';S.form.gsrc='idea';render();break;
     case'create':if(!canSend())return;PL=null;VIEW.key=null;createProject();break;
     case'reparse':{const o={status:'parse_failed'};go('project',o,'parsing');P.stage='parsing';P.parseState='parsing';render();setTimeout(()=>doParse(P),900);break}
     case'toPlan':startPlan(P);break;
