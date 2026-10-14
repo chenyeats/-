@@ -535,7 +535,7 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
   .rail .logo,.rail .cr{display:none}.rail .bottom{margin:0;display:flex}
   .sea{left:0}
   .view{padding-bottom:70px}
-  .ws{grid-template-columns:1fr}
+  .ws,.ws.noasst{grid-template-columns:1fr}
   .tree{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px 10px}
   .tree h4{display:none}.tree a{white-space:nowrap}
   .main{padding:16px 16px 140px}
@@ -728,7 +728,7 @@ const STAGE_ORDER=['draft','parsing','planning','outlining','scripting','complet
 const defForm=()=>({gform:'value',gend:'3',gsrc:'idea',gout:'game',gtype:'love',gpov:'first',gsys:{aff:true,qte:true,col:true,ach:true,pay:true},gameText:'',conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[],nodes:NODE_ALL.slice()});
 const S={view:'home',mode:'original',fine:false,credits:300,model:'auto',skin:'dark',auto:false,form:defForm(),
   userSkills:[],projects:[],curId:null,sel:'plan',iaTab:'canvas',selNode:null,debug:false,popKey:null,keepPop:false,
-  history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:true,inline:null,failNext:false,edTip:null,askSkills:[],askPage:null,askDraft:''};
+  history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:innerWidth>760,inline:null,failNext:false,edTip:null,askSkills:[],askPage:null,askDraft:''};
 Object.defineProperty(S,'project',{get(){return S.projects.find(p=>p.id===S.curId)||null}});
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
