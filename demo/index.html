@@ -42,7 +42,7 @@
   --shadow:0 12px 34px rgba(60,70,40,.12);
 }
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{height:100%;margin:0}
 body{background:var(--glow),var(--bg);background-attachment:fixed;color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.6;transition:background-color .3s,color .3s}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0;padding:0}
@@ -352,9 +352,12 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .sv .ch{border-left:2px solid var(--accent);padding-left:10px;display:grid;gap:3px;font-size:13px;margin-top:4px}
 
 /* AI 助手 */
-.asst{border-left:1px solid var(--line);display:flex;flex-direction:column;height:calc(100vh - 59px);position:sticky;top:59px;background:color-mix(in srgb,var(--bg2) 60%,transparent)}
+.asst{border-left:1px solid var(--line);display:flex;flex-direction:column;height:calc(100vh - var(--tbh,59px));position:sticky;top:var(--tbh,59px);background:color-mix(in srgb,var(--bg2) 60%,transparent)}
 .asst header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
 .asst header b{font-size:14px}
+.asstbtn{width:36px;height:36px;border:1px solid var(--line);border-radius:10px}
+.asstbtn svg.i{width:18px;height:18px}
+.asstbtn.on{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-dim)}
 .msgs{flex:1;overflow:auto;padding:14px;display:grid;gap:12px;align-content:start}
 .msg{display:grid;gap:6px;max-width:100%;animation:slide .2s ease-out}
 .msg .bub{padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.65;white-space:pre-wrap}
@@ -398,18 +401,13 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .ask textarea{border:0;background:transparent;resize:none;outline:none;min-height:56px;font-size:13px;color:var(--fg)}
 .ask .row{display:flex;align-items:center;gap:6px}
 .ask .scope{font-size:11px;color:var(--muted)}
-.fab{position:fixed;right:18px;bottom:18px;z-index:40;display:none;align-items:center;gap:8px;height:52px;padding:0 20px 0 16px;border-radius:26px;border:1px solid color-mix(in srgb,var(--accent) 50%,transparent);background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--on-accent);box-shadow:var(--shadow);font-size:14px;font-weight:600;letter-spacing:.02em}
-.fab svg.i{width:22px;height:22px}
-.fab:hover{filter:brightness(1.06)}
-.fab.show{display:inline-flex}
-.fab:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
 .docbtn{border-color:color-mix(in srgb,var(--accent) 45%,var(--line2));color:var(--fg);font-weight:600}
 .docbtn svg.i{width:14px;height:14px;color:var(--accent)}
 .docbtn:hover{border-color:var(--accent);background:var(--accent-dim)}
 .docscore{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .docring{width:96px;height:96px;border-radius:50%;flex:none;display:grid;place-items:center;position:relative;background:conic-gradient(var(--dc) calc(var(--p)*1%),color-mix(in srgb,var(--line2) 60%,transparent) 0)}
 .docring::after{content:'';position:absolute;inset:8px;border-radius:50%;background:var(--surface)}
-.docring div{position:relative;text-align:center;line-height:1.1}
+.docring div{position:relative;z-index:1;text-align:center;line-height:1.1}
 .docring b{font-size:26px;display:block;color:var(--dc)}
 .docring small{font-size:11px;color:var(--muted)}
 .docsum{flex:1;min-width:200px;display:grid;gap:4px}
@@ -423,7 +421,14 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .docdim .h i{font-style:normal;font-variant-numeric:tabular-nums;color:var(--fg2)}
 .docdim .bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
 .docdim .bar span{display:block;height:100%;border-radius:3px;background:var(--dc)}
-.docdim p{margin:0;font-size:12px;line-height:1.6;color:var(--muted)}
+.docdim p{margin:0;font-size:12px;line-height:1.6;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.docdim{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.docdim .dck{display:flex;align-items:center;gap:8px;cursor:pointer}
+.docdim .dk{flex:none;font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--fg2)}
+.docdim .dk.ok{background:var(--accent-dim);color:var(--accent)}
+.doccmp{font-size:12px;color:var(--fg2);display:flex;align-items:baseline;gap:4px;flex-wrap:wrap}
+.doccmp span{font-family:var(--f-mono);color:var(--muted)}
+.mh h3 svg.i{width:18px;height:18px;color:var(--accent);vertical-align:-3px;margin-right:6px}
 
 /* 下一步卡片（人机协同） */
 .nudge{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:45;width:min(520px,calc(100% - 32px));background:var(--surface);border:1px solid var(--accent);border-radius:18px;box-shadow:var(--shadow);padding:16px 18px;display:grid;gap:10px;animation:up .28s cubic-bezier(.2,.9,.3,1.2)}
@@ -522,7 +527,8 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 
 .toast{position:fixed;left:50%;top:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 18px;border-radius:12px;z-index:90;font-size:13px;max-width:calc(100% - 32px);animation:popin .2s}
 
-@media (max-width:1240px){.ws{grid-template-columns:200px minmax(0,1fr)}.asst{display:none}.asst.float{display:flex;position:fixed;right:12px;top:70px;bottom:84px;height:auto;width:min(360px,calc(100% - 24px));z-index:46;border:1px solid var(--line2);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}.iawrap{grid-template-columns:1fr}}
+@media (max-width:1240px){.ws{grid-template-columns:180px minmax(0,1fr) 310px}.ws.noasst{grid-template-columns:180px minmax(0,1fr)}.main{padding:18px 22px 120px}.iawrap{grid-template-columns:1fr}}
+@media (max-width:1000px){.ws{grid-template-columns:150px minmax(0,1fr) 290px}.ws.noasst{grid-template-columns:150px minmax(0,1fr)}.topbar .steps{display:none}}
 @media (max-width:760px){
   .shell{grid-template-columns:1fr}
   .rail{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;justify-content:space-around;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));border-right:0;border-top:1px solid var(--line)}
@@ -538,7 +544,7 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
   .topbar{flex-wrap:wrap;padding:10px 16px}
   .topbar .saved,.topbar .ptitle{display:none}
   .dh .acts{margin-left:0}
-  .fab{bottom:84px}
+  .asst{position:fixed;left:0;right:0;top:0;bottom:62px;height:auto;z-index:46;background:var(--bg)}
   .nudge{bottom:84px}
   .page{padding-inline:16px}
   .dbg{left:12px;bottom:84px}
@@ -722,7 +728,7 @@ const STAGE_ORDER=['draft','parsing','planning','outlining','scripting','complet
 const defForm=()=>({gform:'value',gend:'3',gsrc:'idea',gout:'game',gtype:'love',gpov:'first',gsys:{aff:true,qte:true,col:true,ach:true,pay:true},gameText:'',conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[],nodes:NODE_ALL.slice()});
 const S={view:'home',mode:'original',fine:false,credits:300,model:'auto',skin:'dark',auto:false,form:defForm(),
   userSkills:[],projects:[],curId:null,sel:'plan',iaTab:'canvas',selNode:null,debug:false,popKey:null,keepPop:false,
-  history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:true,asstFloat:false,inline:null,failNext:false,edTip:null,askSkills:[],askPage:null,askDraft:''};
+  history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:true,inline:null,failNext:false,edTip:null,askSkills:[],askPage:null,askDraft:''};
 Object.defineProperty(S,'project',{get(){return S.projects.find(p=>p.id===S.curId)||null}});
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -876,7 +882,7 @@ function createProject(){
   const f=eff(S.form);
   if(S.mode==='game'){const g=S.form;f.game={src:g.gsrc,cfg:{form:g.gform||'value',pov:g.gpov||'first',converge:g.gend==='1'?'merge':'multi',endings:+(g.gend||3)>1?+(g.gend||3):3}}}
   if(S.mode==='benchmark'){f.conv=S.form.conv||'cn';if(f.conv==='global'){if(!S.form.market||S.form.market==='cn')f.market='na'}else{f.market='cn';if(!S.form.genres.length)f.genres=['重生','复仇']}}const P=newProject(f,S.mode,S.fine?'fine':'quick');
-  S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;S.edTip=null;P.autoRun=!S.fine;S.asstOpen=true;S.asstFloat=innerWidth<=1240;
+  S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;S.edTip=null;P.autoRun=!S.fine;S.asstOpen=innerWidth>760;
   const outName='互动影游剧本';
   P.chat.push({r:'me',t:S.mode==='game'?(f.game.src==='idea'?f.idea:`把这份剧本转成${outName}`):S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:(S.form.conv==='global'?`把这部爆款本土化成${MARKETS.find(m=>m.k===(S.form.market&&S.form.market!=='cn'?S.form.market:'na')).name}版`:'把这部爆款迭代成国内其他爆款题材'),at:Date.now()});
   if(S.mode==='game'&&f.game.src==='idea'){say(P,P.autoRun?`收到。一句话模式会一站直出：策划案 → 集纲 → 短剧剧本 → ${outName}，中间不用你操作。`:`收到。精细模式下每一步写完都会停下来，最后再按你选的玩法转成${outName}。`);nodeStart(P);return}
@@ -1196,7 +1202,7 @@ function renderGame(P,a){
   if(!a)return'';const d=a.data;const tab=S.gmTab||'level';
   const typeT={love:'恋爱养成',mystery:'悬疑推理',power:'爽文成长'};
   const head=`<div class="dh"><div><h2>${esc(a.label)}${stBadge(a)}</h2><div class="meta">${a.cfg?`${typeT[a.cfg.type]} · ${a.cfg.pov==='first'?'第一人称主视角':'第三人称'} · 每章 ${a.cfg.chap} 集`:''}${d?` · ${d.chapters.length} 章`:''}</div></div>
-    <div class="acts">${moreBtn([lockItem(a),verItem(a),['regame','修改设置并重新生成']])}${confirmBtn(a)}${d?`<button class="btn pri" data-act="export">${ic('export')}导出</button>`:''}</div></div>`;
+    <div class="acts">${moreBtn([...(d?[['doctor','剧本医生体检']]:[]),lockItem(a),verItem(a),['regame','修改设置并重新生成']])}${confirmBtn(a)}${d?`<button class="btn pri" data-act="export">${ic('export')}导出</button>`:''}</div></div>`;
   if(a.status==='generating')return`<div class="doc">${head}${genHTML(a,'正在转成影游剧本')}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   const ce=a.status==='locked'?'':'contenteditable="true"';
@@ -1338,6 +1344,7 @@ function render(){
   else if(S.view==='history')h=renderHistory();
   else h=renderProject();
   $('#app').innerHTML=h;bind();
+  const tb=document.querySelector('.topbar.solid');if(tb)document.documentElement.style.setProperty('--tbh',tb.offsetHeight+'px');
   if(S.view==='project'&&S.sel.startsWith('ia:')&&S.iaTab==='canvas')drawCanvas();
   if(S.view==='project'){renderAsstMsgs();if(flashEps.length){flashEps.forEach(n=>document.querySelectorAll(`[data-epno="${n}"]`).forEach(el=>el.classList.add('flash')));flashEps=[]}}
   if(reopen&&S.keepPop){S.keepPop=false;const el=document.querySelector(`[data-pop="${reopen}"]`);if(el)openChipPop(el)}
@@ -1611,14 +1618,14 @@ function renderProject(){
   const s=S.sel;
   const main=s==='parse'?renderParse(P):s==='plan'?renderPlan(P):s.startsWith('ia:')?renderIA(P,getArt(s)):s.startsWith('sc:')?renderScript(P,getArt(s)):s.startsWith('gm:')?renderGame(P,getArt(s)):renderOutline(P,P.arts[s]);
   const top=`<header class="topbar solid"><button class="iconbtn" data-act="toLib" aria-label="返回剧本库">${ic('back')}</button><span class="ptitle" contenteditable="true" id="ptitle" spellcheck="false">${esc(P.title||'新项目')}</span>
-    ${stepsHTML(P)}<span class="sp"></span><span class="saved" id="saved">${ic('check')}已自动保存</span>${modelChip()}</header>`;
+    ${stepsHTML(P)}<span class="sp"></span><span class="saved" id="saved">${ic('check')}已自动保存</span>${modelChip()}<button class="iconbtn asstbtn ${S.asstOpen?'on':''}" data-act="asst" aria-pressed="${S.asstOpen}" aria-controls="asst" aria-label="${S.asstOpen?'收起':'打开'} AI 助手" title="AI 助手">${ic('chat')}</button></header>`;
   if(S.askPage!==S.sel){S.askPage=S.sel;S.askSkills=[];S.askDraft=''}
-  const asst=S.asstOpen?`<aside class="asst ${S.asstFloat?'float':''}" aria-label="AI 助手"><header>${ic('spark')}<b>AI 助手</b><span class="sm muted">· ${esc(modelOf(S.model).name)}</span><span class="sp"></span><button class="iconbtn" data-act="asstClose" aria-label="收起">${ic('x')}</button></header>
+  const asst=S.asstOpen?`<aside class="asst" id="asst" aria-label="AI 助手"><header>${ic('spark')}<b>AI 助手</b><span class="sm muted">· ${esc(modelOf(S.model).name)}</span><span class="sp"></span><button class="iconbtn" data-act="asstClose" aria-label="收起 AI 助手" title="收起">${ic('x')}</button></header>
     <div class="msgs" id="msgs"></div>
     <div id="edtip"></div>
     <div class="quick">${quickHTML(getArt(S.sel))}</div>
     <div class="ask"><div class="chips" id="askSkills"></div><textarea id="askInput" placeholder="告诉 AI 怎么改，例如：第 5 集加一场打脸戏" aria-label="对 AI 说">${esc(S.askDraft||'')}</textarea><div class="row"><button class="btn sm ghost docbtn" data-act="doctor" title="让剧本医生检查这一页，给出打分报告和修改意见">${ic('doctor')}剧本医生</button><span class="sp"></span><span class="scope">作用于：${esc(getArt(S.sel)?.label||'当前页')}</span><span class="credits"><i></i>${costOf(2)}</span><button class="btn pri sq" data-act="ask" aria-label="发送">${ic('send')}</button></div></div></aside>`:'';
-  return top+`<div class="ws ${S.asstOpen&&!S.asstFloat?'':'noasst'}">${tree}<section class="main" id="main">${autoBar(P)}${main}</section>${asst}</div><button class="fab ${S.asstOpen?'':'show'}" data-act="asstFab" aria-label="打开 AI 助手">${ic('chat')}AI 助手</button>`;
+  return top+`<div class="ws ${S.asstOpen?'':'noasst'}">${tree}<section class="main" id="main">${autoBar(P)}${main}</section>${asst}</div>`;
 }
 function nodeBar(P){
   if(!P.nodeQueue)return'';const n=P.params.nodes||[];
@@ -1761,10 +1768,7 @@ function onEditFocus(el){
   const a=getArt(S.sel);if(!a||!guideOf(a)||tipOff[a.key]||a.status==='locked')return;
   const box=$('#edtip');if(S.edTip===a.key&&S.asstOpen&&box&&box.innerHTML)return;
   S.edTip=a.key;
-  if(!S.asstOpen){S.asstOpen=true;S.asstFloat=innerWidth<=1240;
-    const n=['data-field','data-char','data-ep','data-sl','data-gb'].find(x=>el.hasAttribute(x));
-    const sel=n?`[${n}="${el.getAttribute(n)}"]`+(el.dataset.k?`[data-k="${el.dataset.k}"]`:''):null;
-    render();const t=sel&&$('#main').querySelector(sel);if(t)t.focus();return}
+  if(!S.asstOpen)return;
   renderEdTip()}
 function verItem(a){return['versions:'+a.key,'版本记录']}
 
@@ -1818,7 +1822,7 @@ function renderPlan(P){
   const m=MARKETS.find(x=>x.k===P.params.market);
   return`<div class="doc">
     <div class="dh"><div><h2>${esc(d.title)}${stBadge(a)}</h2><div class="meta">${P.params.genres.map(g=>peLabel(g,P.params.market,P.params.audience)).join(' · ')} ｜ ${m.name} ｜ ${P.params.episodes} 集${d.skills.length?' ｜ Skill：'+d.skills.join('、'):''}</div></div>
-      <div class="acts">${moreBtn([lockItem(a),verItem(a),['regenAll','全部重新生成']])}${confirmBtn(a)}<button class="btn pri" data-act="outlineNext">${P.outlineMode?'查看集纲':'下一步：生成集纲'} ${ic('arrow')}</button></div></div>
+      <div class="acts">${moreBtn([['doctor','剧本医生体检'],lockItem(a),verItem(a),['regenAll','全部重新生成']])}${confirmBtn(a)}<button class="btn pri" data-act="outlineNext">${P.outlineMode?'查看集纲':'下一步：生成集纲'} ${ic('arrow')}</button></div></div>
     ${notes(a)}${editHint(a)}
     ${sec('title','剧名',`<div class="titles">${d.titles.map(t=>`<button class="${t===d.title?'on':''}" data-title="${esc(t)}" ${ro?'disabled':''}>${esc(t)}</button>`).join('')}</div><p ${ce} data-field="logline">${esc(d.logline)}</p>`)}
     ${sec('synopsis','故事梗概',`<p ${ce} data-field="synopsis">${esc(d.synopsis)}</p>`)}
@@ -1862,7 +1866,7 @@ function renderOutline(P,a){
   if(P.outlineMode==='cards')items.push(['adjustCards','调整卡点位置']);
   const scHit=Object.values(P.sc).find(x=>x.src==='full')||Object.values(P.sc).find(x=>overlaps(P,x,r));
   const iaHit=Object.values(P.ia).find(x=>x.src==='full')||Object.values(P.ia).find(x=>overlaps(P,x,r));
-  if(has(a)){if(scHit)items.push(['newSC','按其他范围写剧本']);if(iaHit)items.push(['newIA','按其他范围转互动影游剧本']);items.push(lockItem(a),verItem(a));if(a.status!=='locked')items.push(['retry:'+a.key,'重新生成本页'])}
+  if(has(a)){items.unshift(['doctor','剧本医生体检']);if(scHit)items.push(['newSC','按其他范围写剧本']);if(iaHit)items.push(['newIA','按其他范围转互动影游剧本']);items.push(lockItem(a),verItem(a));if(a.status!=='locked')items.push(['retry:'+a.key,'重新生成本页'])}
   const hasSc=!!scHit,hasIa=!!iaHit;
   const viewSeg=`<div class="seg" role="group" aria-label="集纲视图"><button class="${P.outlineMode==='cards'?'on':''}" data-act="viewCards">按卡点分段</button><button class="${P.outlineMode==='all'?'on':''}" data-act="viewAll">合并为全部集纲</button></div>`;
   const head=`<div class="dh"><div><h2>${isSeg?r.label+'集纲':'全部集纲'}${stBadge(a)}</h2><div class="meta mono">第 ${r.from}–${r.to} 集 · ${r.to-r.from+1} 集${isSeg&&a.key!=='end'?` · 第 ${r.to} 集是付费卡点`:''}</div></div>
@@ -1882,7 +1886,7 @@ function renderScript(P,a){
   const words=a.data?a.data.eps.reduce((s,e)=>s+e.scenes.reduce((t,sc)=>t+sc.lines.reduce((u,l)=>u+l.x.length,0),0),0):0;
   const mins=a.data?Math.round(a.data.eps.length*(a.cfg?.dur==='long'?2.5:1.5)):0;
   const head=`<div class="dh"><div><h2>${esc(a.label)}${stBadge(a)}</h2><div class="meta">${a.data?`第 ${a.data.eps[0]?.no}–${a.data.eps[a.data.eps.length-1]?.no} 集 · ${a.data.eps.reduce((s,e)=>s+e.scenes.length,0)} 场 · 约 ${words} 字 · 成片约 ${mins} 分钟`:''}${a.cfg?.shots?' · 带镜头提示':''}</div></div>
-    <div class="acts">${moreBtn([lockItem(a),verItem(a),['retry:'+a.key,'重新生成'],['extend:'+a.src,'在结尾加更几集']])}${a.data?`${confirmBtn(a)}<button class="btn" data-act="export">${ic('export')}导出</button><button class="btn" data-menu="${esc(JSON.stringify([[hasIa?'goIAfromSc':'toIAfromSc',hasIa?'查看互动影游剧本':'转互动影游剧本'],['convCn','爆款转换：换个国内题材'],['convGlobal','爆款转换：本土化成海外版']]))}" aria-label="转换">${ic('branch')}转换${ic('down','i caret')}</button><button class="btn pri" data-do="cont:${a.src}">${ic('pen')}${nx?'续写'+nx.label:'续写 · 加更'}</button>`:''}</div></div>`;
+    <div class="acts">${moreBtn([...(a.data?[['doctor','剧本医生体检']]:[]),lockItem(a),verItem(a),['retry:'+a.key,'重新生成'],['extend:'+a.src,'在结尾加更几集']])}${a.data?`${confirmBtn(a)}<button class="btn" data-act="export">${ic('export')}导出</button><button class="btn" data-menu="${esc(JSON.stringify([[hasIa?'goIAfromSc':'toIAfromSc',hasIa?'查看互动影游剧本':'转互动影游剧本'],['convCn','爆款转换：换个国内题材'],['convGlobal','爆款转换：本土化成海外版']]))}" aria-label="转换">${ic('branch')}转换${ic('down','i caret')}</button><button class="btn pri" data-do="cont:${a.src}">${ic('pen')}${nx?'续写'+nx.label:'续写 · 加更'}</button>`:''}</div></div>`;
   if(a.status==='generating'&&!a.data)return`<div class="doc">${head}${genHTML(a,'正在写分场剧本')}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   const ce=a.status==='locked'?'':'contenteditable="true"';
@@ -1899,7 +1903,7 @@ function checkChip(a){const v=a.validate.status;
 function renderIA(P,a){
   if(!a)return'';const nx=nextSeg(P,[a.src,...(a.extra||[])].pop());
   const head=`<div class="dh"><div><h2>${esc(a.label)}${stBadge(a)}</h2><div class="meta">${a.cfg?esc(cfgText(a.cfg)):''}</div></div>
-    <div class="acts">${moreBtn([lockItem(a),['reconf','修改设置并重新生成'],...(nx?[['iacont:'+a.src,'续写'+nx.label]]:[])])}${a.data?`<button class="btn pri" data-act="export">${ic('export')}导出</button>`:''}</div></div>`;
+    <div class="acts">${moreBtn([...(a.data?[['doctor','剧本医生体检']]:[]),lockItem(a),['reconf','修改设置并重新生成'],...(nx?[['iacont:'+a.src,'续写'+nx.label]]:[])])}${a.data?`<button class="btn pri" data-act="export">${ic('export')}导出</button>`:''}</div></div>`;
   if(a.status==='generating')return`<div class="doc">${head}${genHTML(a,'正在转成互动影游剧本')}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   const d=a.data;
@@ -2031,6 +2035,7 @@ function openMenu(anchor){
 }
 function menuAct(k){
   const P=S.project;const i=k.indexOf(':');const cmd=i<0?k:k.slice(0,i),arg=i<0?'':k.slice(i+1);
+  if(cmd==='doctor')act('doctor');
   if(cmd==='lock'){confirmArt(arg)}
   if(cmd==='unlock')unlock(arg);
   if(cmd==='retry')regen(P,arg);
@@ -2053,8 +2058,10 @@ function menuAct(k){
 function unlock(k){const a=getArt(k);const back=a.notice?'outdated':(a.prevLock==='ready'?'ready':'edited');go('artifact',a,back);if(back==='outdated')a.notice=a.notice+'，可能需要更新';else a.notice='';save();render()}
 
 // ============ 剧本医生 ============
-const DOC_STORE={},DOC_BONUS={};
-const docGrade=s=>s>=85?{t:'可以直接开拍',c:'var(--accent)'}:s>=70?{t:'合格，还能更好',c:'var(--accent)'}:s>=60?{t:'及格，需要打磨',c:'var(--amber)'}:{t:'不达上线标准',c:'var(--red)'};
+// DOC_HIST：每一页的体检记录（分数 + 对应版本），用于报告里的前后对比
+const DOC_STORE={},DOC_BONUS={},DOC_HIST={};
+const docGrade=s=>s>=85?{t:'优秀',c:'var(--accent)'}:s>=70?{t:'良好',c:'var(--accent)'}:s>=60?{t:'及格',c:'var(--amber)'}:{t:'待加强',c:'var(--red)'};
+const dimColor=s=>s>=75?'var(--accent)':s>=60?'var(--amber)':'var(--red)';
 // 给当前这一页做体检：返回 {s:总分, ds:各维度打分与修改意见}
 function docCheck(a){
   const P=S.project;if(!a||!a.data)return null;
@@ -2102,7 +2109,6 @@ function docCheck(a){
   }
   else return null;
   const bn=DOC_BONUS[a.key];if(bn&&bn.v===a.versions)ds.forEach(x=>x.s=Math.min(97,x.s+bn.b));
-  if(S.docLow){S.docLow=false;ds.forEach((x,i)=>x.s=Math.max(35,Math.min(x.s,42+i*4)))}
   const W=ds.reduce((t,x)=>t+x.w,0);
   const s=Math.round(ds.reduce((t,x)=>t+x.s*x.w,0)/W);
   return{s,ds}
@@ -2110,60 +2116,56 @@ function docCheck(a){
 const DIM_SK={开篇钩子:'sk1',梗概写法:'sk1',每集钩子:'sk3',付费卡点:'sk3',卡点:'sk3',结尾钩子:'sk3',爽点密度:'sk2',对白交锋:'sk2',人物:'sk5',结局:'sk5',主视角代入:'sk5',故事主线:'sk4',核心冲突:'sk4',每场有转折:'sk4',本地化:'sk6',台词口语化:'sk8',口播金句:'sk8',动作可拍:'sk8',选择难度:'sk7',分支收束:'sk7',即时反馈:'sk7',游戏系统密度:'sk7',失败也有剧情:'sk7'};
 function docRec(s,rep){
   if(rep&&rep.ds){const ids=[];rep.ds.slice().sort((x,y)=>x.s-y.s).forEach(x=>{const id=DIM_SK[x.n];if(id&&!ids.includes(id))ids.push(id)});if(ids.length)return ids.slice(0,3)}
-  if(s<60)return['sk4','sk3','sk2'];
-  if(s<75)return['sk2','sk3','sk5'];
-  return['sk5','sk4'];
+  return s<75?['sk2','sk3','sk5']:['sk5','sk4'];
 }
 function docRing(s){
   const g=docGrade(s);
   return`<div class="docring" style="--p:${s};--dc:${g.c}"><div><b>${s}</b><small>分 / 100</small></div></div>`;
 }
-function openDoctor(rep,st){
-  st=st||{};
+// 剧本医生：给当前页出一份体检报告（总分、分项打分、问题、修改意见）。
+// 分数只做参考，不会因为分低就弹窗催重写；重不重写、按哪几条改，都由用户决定。
+function openDoctor(){
   const P=S.project,a=getArt(S.sel);
   if(!a||!a.data){toast('这一页还没有内容，先生成再来体检');return}
-  if(!rep)rep=docCheck(a);
+  const rep=docCheck(a);
   if(!rep){toast('这一页还不支持剧本医生');return}
-  DOC_STORE[S.sel]={rep,sug:[]};
-  const g=docGrade(rep.s);const low=rep.s<60;
+  const hist=DOC_HIST[a.key]||(DOC_HIST[a.key]=[]);
+  const prev=hist.slice().reverse().find(h=>h.v!==a.versions)||null;
+  if(!hist.some(h=>h.v===a.versions&&h.s===rep.s))hist.push({s:rep.s,v:a.versions,at:Date.now()});
   const ds=rep.ds.slice().sort((x,y)=>x.s-y.s);
-  const worst=ds[0];
-  const secs=st.list||`<div class="docdims">${ds.map(x=>{const gc=x.s>=75?'var(--accent)':x.s>=60?'var(--amber)':'var(--red)';return`<div class="docdim" style="--dc:${gc}"><div class="h"><b>${x.n}</b><span class="sp"></span><i>${x.s}</i></div><div class="bar"><span style="width:${x.s}%"></span></div><p>${esc(x.tip)}</p></div>`}).join('')}</div>`;
-  const sug=st.sug||(low?[]:docRec(rep.s,rep));
-  if(sug.length)for(const id of sug)DOC_STORE[S.sel].sug.push(id);
-  const sugHtml=sug.length?`<div><span class="lbl">建议挂载的 Skill（点一下加进对话框，你可以改完再发送）</span><div class="tags">${sug.map(id=>{const sk=skOf(id);return sk?`<button data-dsug="${id}">${esc(sk.name)}<span class="muted"> · ${esc(sk.desc)}</span></button>`:''}).join('')}</div></div>`:'';
-  const body=st.body||`
-    <div class="docscore">${docRing(rep.s)}<div class="docsum"><b style="color:${g.c}">${g.t}</b>
-      <p>检查了 ${rep.ds.length} 项，最弱的是「${worst.n}」（${worst.s} 分）。${low?'这一版不建议直接开拍，建议让剧本医生按下面的意见重写一版。':'照着下面的意见改完，分数还能再上一档。'}</p>
-      ${low?`<div class="note red">${ic('warn')}低于 60 分，问题集中在「${worst.n}」：${esc(worst.tip)}</div>`:''}</div></div>
-    ${st.extra||''}
-    ${secs}
-    ${st.todo?`<div><span class="lbl">修改意见（会交给 AI 一起改）</span><div class="mb" style="padding:0"><div style="display:grid;gap:8px">${st.todo.map((t,i)=>`<label class="note" style="align-items:flex-start;background:var(--surface2);color:var(--fg2)"><input type="checkbox" data-dtodo="${i}" ${t.on?'checked':''}><span>${esc(t.t)}</span></label>`).join('')}</div></div></div>`:''}
-    ${sugHtml}`;
-  const acts=st.acts||(low
-    ?`<button class="btn ghost" data-x>先不改</button><button class="btn" data-dself>${ic('pen')}我自己改</button><button class="btn pri" data-drw>让剧本医生帮我重写</button>`
-    :`<button class="btn ghost" data-x>知道了</button><button class="btn" data-dself>我去手动改</button><button class="btn pri" data-drw>按意见整页重写</button>`);
-  $('#modal').innerHTML=`<div class="mask"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="dt"><div class="mh"><div><h3 id="dt">剧本医生 · ${esc(a.label)}</h3><p>体检结果、修改意见和建议挂载的 Skill —— 策划案、集纲、剧本都可以随时体检。</p></div><span class="sp"></span><button class="iconbtn" data-x aria-label="关闭">${ic('x')}</button></div>
-    <div class="mb">${body}</div><div class="mf">${acts}</div></div></div>`;
+  const sug=docRec(rep.s,rep);
+  DOC_STORE[S.sel]={rep,sug:sug.slice()};
+  const g=docGrade(rep.s);const best=ds[ds.length-1],worst=ds[0];
+  const cmp=prev?(()=>{const d=rep.s-prev.s;return`<div class="doccmp">上次体检（v${prev.v}）<b>${prev.s}</b> 分 → 这次（v${a.versions}）<b style="color:${d>=0?'var(--green)':'var(--red)'}">${rep.s}</b> 分 <span>${d>=0?'+':''}${d}</span></div>`})():'';
+  const rw=['interactive','game'].includes(a.kind)?'重写按重新生成计费':`重写约 ${costOf(a.kind==='plan'?6:4)} 积分`;
+  const ro=a.status==='locked';
+  $('#modal').innerHTML=`<div class="mask"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="dt"><div class="mh"><div><h3 id="dt">${ic('doctor')}剧本医生 · 体检报告</h3><p>${esc(a.label)} · v${a.versions} · ${fmtTime(Date.now())}</p></div><span class="sp"></span><button class="btn sm ghost" data-dcopy>${ic('export')}复制报告</button><button class="iconbtn" data-x aria-label="关闭">${ic('x')}</button></div>
+    <div class="mb">
+      <div class="docscore">${docRing(rep.s)}<div class="docsum"><b style="color:${g.c}">综合评级：${g.t}</b>
+        <p>检查了 ${rep.ds.length} 项。表现最好的是「${esc(best.n)}」（${best.s} 分），最需要加强的是「${esc(worst.n)}」（${worst.s} 分）。分数只作参考，要不要改、改哪几条由你决定。</p>${cmp}</div></div>
+      <div><span class="lbl">分项打分与修改意见 · 勾选的意见会用于「按勾选意见重写」</span>
+      <div class="docdims">${ds.map((x,i)=>`<div class="docdim" style="--dc:${dimColor(x.s)}"><div class="h"><label class="dck"><input type="checkbox" data-dtodo="${i}" ${i<3?'checked':''} ${ro?'disabled':''}><b>${esc(x.n)}</b></label><span class="sp"></span><i>${x.s}</i></div><div class="bar"><span style="width:${x.s}%"></span></div>
+        <p><span class="dk">问题</span>${esc(x.tip)}</p><p><span class="dk ok">建议</span>${esc(x.what)}</p></div>`).join('')}</div></div>
+      ${sug.length?`<div><span class="lbl">建议挂载的 Skill（点一下加进右侧对话框，可以改完再发送）</span><div class="tags">${sug.map(id=>{const sk=skOf(id);return sk?`<button data-dsug="${id}">${esc(sk.name)}<span class="muted"> · ${esc(sk.desc)}</span></button>`:''}).join('')}</div></div>`:''}
+      ${ro?`<div class="note info">${ic('lock')}这一页已确认定稿，可以看报告；要重写或修改，先点右上角「继续编辑」。</div>`:''}
+    </div>
+    <div class="mf"><span class="credits" style="margin-right:auto"><i></i>体检免费 · ${rw}</span><button class="btn ghost" data-x>关闭</button><button class="btn" data-dself ${ro?'disabled':''}>${ic('pen')}我自己改</button><button class="btn pri" data-drw ${ro?'disabled':''}>${ic('refresh')}按勾选意见重写</button></div></div></div>`;
   const M=$('#modal');
+  const picked=()=>ds.filter((x,i)=>{const c=M.querySelector(`[data-dtodo="${i}"]`);return c&&c.checked});
   M.querySelectorAll('[data-x]').forEach(b=>b.onclick=closeModal);
-  const self=M.querySelector('[data-dself]');if(self)self.onclick=()=>{
-    const picked=st.todo?st.todo.filter((t,i)=>{const c=M.querySelector(`[data-dtodo="${i}"]`);return!c||c.checked}):[];
-    closeModal();
-    if(picked.length){say(P,`剧本医生的修改清单（${a.label}）：${picked.map((t,i)=>`${i+1}. ${t.t}`).join('；')}`);save();render()}
+  M.querySelector('[data-dcopy]').onclick=()=>{const t=`剧本医生体检报告 · ${a.label}（v${a.versions}）\n综合得分 ${rep.s} / 100 · ${g.t}\n\n`+ds.map(x=>`【${x.n}】${x.s} 分\n问题：${x.tip}\n建议：${x.what}`).join('\n\n');
+    navigator.clipboard.writeText(t).then(()=>toast('报告已复制')).catch(()=>toast('复制失败，请手动选择文字复制'))};
+  const self=M.querySelector('[data-dself]');if(self)self.onclick=()=>{const list=picked();closeModal();
+    if(list.length){if(!S.asstOpen)S.asstOpen=true;say(P,`剧本医生的修改清单（${a.label}）：\n${list.map((x,i)=>`${i+1}. ${x.n}：${x.what}`).join('\n')}`);save();render()}
     toast('在页面上点任意文字就能改，改完点「确认修改」')};
-  const rw=M.querySelector('[data-drw]');if(rw)rw.onclick=()=>{if(!doctorRewriteGate())return;
-    const picked=st.todo?st.todo.filter((t,i)=>{const c=M.querySelector(`[data-dtodo="${i}"]`);return!c||c.checked}):null;
-    if(picked&&!picked.length){toast('至少勾选一条修改意见');return}
-    docRewrite(picked)};
-  M.querySelectorAll('[data-dsug]').forEach(b=>b.onclick=()=>{if(!S.asstOpen){S.asstOpen=true;S.asstFloat=innerWidth<=1240;render()}toggleSkill(b.dataset.dsug);toast('已加进对话框，可以改完再发送')});
+  const rb=M.querySelector('[data-drw]');if(rb)rb.onclick=()=>{if(!doctorRewriteGate())return;const list=picked();if(!list.length){toast('至少勾选一条修改意见');return}docRewrite(list)};
+  M.querySelectorAll('[data-dsug]').forEach(b=>b.onclick=()=>{if(!S.asstOpen){S.asstOpen=true;render()}toggleSkill(b.dataset.dsug);toast('已加进对话框，可以改完再发送')});
 }
-// 让剧本医生重写：按最弱的维度重写一遍
+// 按勾选的意见重写这一页；旧版本保留在版本记录里，可以撤销
 function docRewrite(picked){
   const P=S.project,a=getArt(S.sel);if(!a||!a.data)return;
   const rep=(DOC_STORE[S.sel]||{}).rep||docCheck(a);if(!rep)return;
-  const worst=rep.ds.slice().sort((x,y)=>x.s-y.s)[0];
-  const focus=(picked&&picked.length?picked.map(t=>t.t.split('：')[0]):[worst.n]).join('、');
+  const focus=picked.map(x=>x.n).join('、');
   closeModal();
   if(a.kind==='interactive'||a.kind==='game'){
     say(P,`剧本医生按「${focus}」重新生成${a.label}，旧版本可以在版本记录里恢复。`);
@@ -2174,7 +2176,7 @@ function docRewrite(picked){
   const cast=P.arts.plan?.data?.cast;
   runTask(P,a,{
     steps:6,cost:c,label:`剧本医生重写 · ${a.label}`,
-    lines:['重新读一遍这一页…',`定位问题：${focus}`,`按意见重写…`,'调整节奏和钩子…','收尾检查…','完成'],
+    lines:['重新读一遍这一页…',`定位问题：${focus}`,'按勾选的意见重写…','调整节奏和钩子…','收尾检查…','完成'],
     produce:()=>{
       if(a.kind==='plan')return{...genPlan(P.params,P),title:snap.title};
       if(a.kind==='outline'||a.kind==='segment'){
@@ -2195,10 +2197,10 @@ function docRewrite(picked){
       go('artifact',a,'edited');propagate(P,a.key);
       P.undo={key:a.key,data:snap};
       let nr=docCheck(a);
-      if(nr){const want=Math.min(92,before+12+Math.round(Math.random()*6));
+      if(nr){const want=Math.min(92,before+8+Math.round(Math.random()*8));
         if(nr.s<want){DOC_BONUS[a.key]={v:a.versions,b:want-nr.s};nr=docCheck(a)}
-        const fixed=nr.s;DOC_STORE[a.key]={rep:nr,sug:docRec(fixed,nr)};
-        say(P,`剧本医生重写好了：${a.label} 从 ${before} 分提到约 ${fixed} 分，重点改了「${focus}」。不满意可以撤销，或者再体检一次。`,[['undo','撤销这次重写'],['doctor:'+a.key,'再体检一次']])}
+        DOC_STORE[a.key]={rep:nr,sug:docRec(nr.s,nr)};(DOC_HIST[a.key]=DOC_HIST[a.key]||[]).push({s:nr.s,v:a.versions,at:Date.now()});
+        say(P,`剧本医生重写好了：${a.label} 重点改了「${focus}」，体检分 ${before} → ${nr.s}。不满意可以撤销，或者再体检一次看报告。`,[['doctor:'+a.key,'查看新的体检报告'],['undo','撤销这次重写']])}
       else say(P,'剧本医生重写好了。',[['undo','撤销这次重写']])}});
 }
 // 已确认的页面不能重写
@@ -2207,16 +2209,6 @@ function doctorRewriteGate(){
   if(a&&a.status==='locked'){toast('这一页已经确认定稿了，先点右上角「继续编辑」');return false}
   if(a&&a.status==='generating'){toast('还在生成中，等写完再体检');return false}
   return true;
-}
-function docConfirm(a){
-  const rep=docCheck(a);if(!rep)return;
-  const low=rep.s<60;
-  const todo=rep.ds.slice().sort((x,y)=>x.s-y.s).slice(0,low?4:3).map(x=>({t:`${x.n}：${x.tip}`,on:true}));
-  const sug=docRec(rep.s,rep);
-  DOC_STORE[S.sel]={rep,sug:sug.slice()};
-  const st={todo,acts:`<span class="credits" style="margin-right:auto"><i></i>重写 ${['interactive','game'].includes(a.kind)?'按重新生成计费':costOf(a.kind==='plan'?6:4)+' 积分'}</span><button class="btn ghost" data-x>稍后再说</button><button class="btn" data-dself>我自己改</button><button class="btn pri" data-drw>${low?'让剧本医生帮我重写':'按这些意见改'}</button>`};
-  if(low)st.extra=`<div class="note amber">${ic('warn')}建议直接让剧本医生重写（按勾选的意见），或者按意见逐条改完再体检一次。</div>`;
-  openDoctor(rep,st);
 }
 function closeModal(){$('#modal').innerHTML=''}
 function openVersions(P,key){
@@ -2371,9 +2363,8 @@ function renderDbg(){
   el.innerHTML=`<div class="dbg"><div style="display:flex;align-items:center"><b>内部调试</b><span class="sp"></span><button class="iconbtn" id="dbgX" aria-label="关闭">${ic('x')}</button></div>
     ${rows?`<table>${rows}</table>`:'<div class="muted">当前没有打开的项目</div>'}
     <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="failNext" ${S.failNext?'checked':''}> 模拟下一次生成失败</label>
-    <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="docLow" ${S.docLow?'checked':''}> 模拟下一次剧本医生低于 60 分</label>
     <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" id="addCr">积分 +100</button><button class="btn sm" id="dbgReset" style="color:var(--red)">清空全部数据</button></div></div>`;
-  $('#dbgX').onclick=()=>{S.debug=false;renderDbg()};$('#failNext').onchange=e=>{S.failNext=e.target.checked};$('#docLow').onchange=e=>{S.docLow=e.target.checked};
+  $('#dbgX').onclick=()=>{S.debug=false;renderDbg()};$('#failNext').onchange=e=>{S.failNext=e.target.checked};
   $('#addCr').onclick=()=>{S.credits+=100;save();render()};$('#dbgReset').onclick=()=>{try{localStorage.removeItem('lanmu-v3');localStorage.removeItem('jingmu-v3')}catch(e){}location.reload()};
 }
 
@@ -2455,7 +2446,7 @@ function bindMain(){
       S.credits-=c;a.versions++;pushVer(P,a,'局部重新生成',modelOf(S.model).name);markEdited(P,a);render();toast('已重新生成这一部分')})}
   M.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{const el=document.getElementById('ep-'+b.dataset.jump);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})});
   if(S.sel.startsWith('sc:')){const a=getArt(S.sel);
-    M.querySelectorAll('[data-epai]').forEach(b=>b.onclick=()=>{if(!S.asstOpen){S.asstOpen=true;if(innerWidth<=1240)S.asstFloat=true;render()}const t=$('#askInput');if(t){t.value=`第 ${b.dataset.epai} 集：`;S.askDraft=t.value;t.focus()}});
+    M.querySelectorAll('[data-epai]').forEach(b=>b.onclick=()=>{if(!S.asstOpen){S.asstOpen=true;render()}const t=$('#askInput');if(t){t.value=`第 ${b.dataset.epai} 集：`;S.askDraft=t.value;t.focus()}});
     M.querySelectorAll('[data-eprw]').forEach(b=>b.onclick=()=>rewriteEp(P,a,+b.dataset.eprw))}
   M.querySelectorAll('[data-strength]').forEach(b=>b.onclick=()=>{P.parsed.strength=b.dataset.strength;render()});
   M.querySelectorAll('[data-conv]').forEach(b=>b.onclick=()=>{const v=b.dataset.conv;P.params.conv=v;if(v==='global'){if(P.params.market==='cn')P.params.market='na'}else{P.params.market='cn';pePrune(P.params);if(!P.params.genres.length)P.params.genres=P.params.audience==='男频'?['逆袭','复仇']:['复仇','逆袭']}P.params.episodes=MARKETS.find(x=>x.k===P.params.market).eps;save();render()});
@@ -2525,10 +2516,9 @@ function act(x){
     case'deselect':S.selNode=null;renderMain();break;
     case'addOpt':{const a=getArt(S.sel);const n=a.data.nodes.find(x=>x.id===S.selNode);n.options.push({label:'新选项',to:null,effects:{}});iaChanged(P,a,n);renderMain();break}
     case'delNode':{const a=getArt(S.sel);a.data.nodes=a.data.nodes.filter(x=>x.id!==S.selNode);S.selNode=null;iaChanged(P,a);renderMain();toast('已删除节点');break}
-    case'asst':S.asstOpen=!S.asstOpen;S.asstFloat=false;render();break;
-    case'asstClose':S.asstOpen=false;S.asstFloat=false;render();break;
-    case'asstFab':S.asstOpen=true;S.asstFloat=innerWidth<=1240;render();break;
-    case'doctor':{const a=getArt(S.sel);if(!a||!has(a)){toast('这一页还没有内容，先生成再来体检');break}if(a.status==='generating'){toast('还在生成中，等写完再体检');break}if(!['plan','outline','segment','script','interactive','game'].includes(a.kind)){toast('这一页还不支持剧本医生');break}docConfirm(a);break}
+    case'asst':S.asstOpen=!S.asstOpen;render();break;
+    case'asstClose':S.asstOpen=false;render();break;
+    case'doctor':{const a=getArt(S.sel);if(!a||!has(a)){toast('这一页还没有内容，先生成再来体检');break}if(a.status==='generating'){toast('还在生成中，等写完再体检');break}if(!['plan','outline','segment','script','interactive','game'].includes(a.kind)){toast('这一页还不支持剧本医生');break}openDoctor();break}
     case'ask':sendAsk();break;
   }
 }
