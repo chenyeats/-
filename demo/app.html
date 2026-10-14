@@ -441,12 +441,13 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 /* 弹窗 */
 .mask{position:fixed;inset:0;background:rgba(2,10,16,.55);backdrop-filter:blur(4px);z-index:50;display:grid;place-items:center;padding:16px;animation:fade .15s}
 @keyframes fade{from{opacity:0}}
-.modal{background:var(--surface);border:1px solid var(--line2);border-radius:20px;width:min(640px,100%);max-height:calc(100% - 32px);overflow:auto;display:grid;box-shadow:var(--shadow);animation:popin .2s ease-out}
+.modal{background:var(--surface);border:1px solid var(--line2);border-radius:20px;width:min(640px,100%);max-height:calc(100% - 32px);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);animation:popin .2s ease-out}
 .modal.wide{width:min(860px,100%)}
 .mh{padding:20px 22px 4px;display:flex;align-items:flex-start;gap:8px}
 .mh h3{font-size:18px}.mh p{margin:4px 0 0;color:var(--muted);font-size:13px}
-.mb{padding:16px 22px;display:grid;gap:18px}
-.mf{padding:14px 22px 20px;display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.mb{padding:16px 22px;display:grid;gap:18px;overflow:auto;min-height:0;flex:1 1 auto;align-content:start}
+.mh,.mf{flex:none}
+.mf{padding:14px 22px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
 .choose{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .choose button{text-align:left;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface2);display:grid;gap:4px;transition:border-color .15s}
 .choose button b{font-size:15px;display:flex;gap:6px;align-items:center}
