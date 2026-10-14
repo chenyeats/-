@@ -355,6 +355,44 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .asst{border-left:1px solid var(--line);display:flex;flex-direction:column;height:calc(100vh - var(--tbh,59px));position:sticky;top:var(--tbh,59px);background:color-mix(in srgb,var(--bg2) 60%,transparent)}
 .asst header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
 .asst header b{font-size:14px}
+.chatcard{border:1px solid var(--line);background:var(--surface);border-radius:14px;overflow:hidden;font-size:13px}
+.chatcard .cc-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.chatcard .cc-h[data-ctog]{cursor:pointer}
+.chatcard .cc-h svg.i{width:15px;height:15px;color:var(--accent);flex:none}
+.chatcard .cc-h b{font-size:13px}
+.chatcard .cc-meta{font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.chatcard .cc-b{padding:8px 12px;display:grid;gap:6px;position:relative}
+.chatcard.open .cc-b{max-height:60vh;overflow:auto}
+.chatcard .cc-b p{margin:0;color:var(--fg2);line-height:1.6}
+.chatcard .cc-clip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chatcard .cc-clip1{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.chatcard .cc-ep{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.chatcard .cc-ep:last-child{border-bottom:0}
+.chatcard .cc-ep .no{font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:2px}
+.chatcard .cc-ep.card .no{color:var(--coral)}
+.chatcard .cc-ep b{font-size:13px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.chatcard .cc-fade{font-size:12px;color:var(--muted);padding-top:2px}
+.chatcard .cc-sec{display:grid;gap:3px;padding:4px 0;border-bottom:1px dashed var(--line)}.chatcard .cc-sec:last-child{border-bottom:0}
+.chatcard .cc-sec>b{font-size:12px;color:var(--fg)}
+.chatcard .cc-k{font-size:10px;color:var(--accent);margin-right:6px}
+.chatcard .cc-tags{display:flex;gap:4px;flex-wrap:wrap}.chatcard .cc-tags span{font-size:11px;padding:1px 7px;border-radius:6px;background:var(--surface2);color:var(--fg2)}
+.chatcard .cc-f{display:flex;align-items:center;gap:6px;padding:6px 8px;border-top:1px solid var(--line)}
+.chatcard .cc-f .caret{width:12px;height:12px;transition:transform .15s}.chatcard.open .cc-f .caret{transform:rotate(180deg)}
+.revtag{font-size:11px;font-weight:700;color:var(--violet);border:1px solid color-mix(in srgb,var(--violet) 60%,transparent);background:color-mix(in srgb,var(--violet) 12%,transparent);padding:0 6px;border-radius:5px;font-family:var(--f-body)}
+.ep .t .btn.sm,.scep>header>.btn.sm{height:24px;padding:0 8px;font-size:11px;font-weight:500;font-family:var(--f-body)}
+.cmpbox{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.cmpcol{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:4px;align-content:start;font-size:13px;background:var(--surface)}
+.cmpcol.new{border-color:color-mix(in srgb,var(--violet) 55%,var(--line))}
+.cmph{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em}.cmpcol.new .cmph{color:var(--violet)}
+.cmpcol p{margin:0;color:var(--fg2)}.cmpcol b{font-weight:700}
+.cmpcol .chg{background:color-mix(in srgb,var(--amber) 16%,transparent);border-radius:4px}
+.cmpcol.new .chg{background:color-mix(in srgb,var(--violet) 16%,transparent)}
+.cmpsh{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:4px}
+.cmpcol .ln.add{background:color-mix(in srgb,var(--violet) 16%,transparent);border-radius:4px}
+.cmpcol .ln.del{background:color-mix(in srgb,var(--red) 12%,transparent);border-radius:4px;text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--red) 60%,transparent)}
+.jump button.rev{border-color:var(--violet);color:var(--violet);position:relative}
+.jump button.rev::after{content:'';position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:var(--violet)}
+@media (max-width:760px){.cmpbox{grid-template-columns:1fr}}
 .asstbtn{width:36px;height:36px;border:1px solid var(--line);border-radius:10px}
 .asstbtn svg.i{width:18px;height:18px}
 .asstbtn.on{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-dim)}
@@ -507,7 +545,8 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .autobar b{display:flex;align-items:center;gap:6px;color:var(--accent)}.autobar .dash{width:18px;height:1px;background:var(--line2)}
 .ab{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}.ab i{width:8px;height:8px;border-radius:50%;background:var(--line2)}.ab.ok{color:var(--fg2)}.ab.ok svg{color:var(--accent)}.ab.cur{color:var(--fg);font-weight:600}
 .modehint{font-size:12px;color:var(--muted);margin-top:-4px}
-.jump{position:sticky;top:59px;z-index:5;display:flex;gap:4px;overflow-x:auto;padding:8px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);scrollbar-width:thin}
+.ep,.scep{scroll-margin-top:calc(var(--tbh,59px) + 52px)}
+.jump{position:sticky;top:var(--tbh,59px);z-index:5;display:flex;gap:4px;overflow-x:auto;padding:8px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);scrollbar-width:thin}
 .jump button{flex:none;min-width:34px;height:26px;padding:0 6px;border-radius:7px;font-family:var(--f-mono);font-size:11px;color:var(--fg2);border:1px solid var(--line);background:var(--surface)}
 .jump button:hover{border-color:var(--accent);color:var(--fg)}.jump button.card{border-color:var(--coral);color:var(--coral)}
 .scep>header .eptools{margin-left:auto;display:flex;gap:4px;opacity:0;transition:opacity .15s}.scep:hover>header .eptools,.scep>header .eptools:focus-within{opacity:1}.acard .d{font-size:12px;color:var(--fg2)}.acard .from{font-size:11px;color:var(--muted)}
@@ -875,6 +914,25 @@ function nextSeg(P,k){if(P.outlineMode!=='cards')return null;const o=segRanges(P
 function getArt(k,P=S.project){if(!P||!k)return null;if(k.startsWith('ia:'))return P.ia[k.slice(3)];if(k.startsWith('sc:'))return P.sc[k.slice(3)];if(k.startsWith('gm:'))return(P.gm||{})[k.slice(3)];return P.arts[k]}
 function cost(n){if(S.credits<n){toast(`积分不足：需要 ${n}，剩余 ${S.credits}`);return false}return true}
 function newProject(f,mode,gen){return{id:'p'+Date.now()+Math.random().toString(36).slice(2,5),mode,gen,params:f,stage:'draft',title:'',arts:{plan:newArt('plan','策划案','plan')},cards:null,outlineMode:null,parsed:null,benchDir:null,ia:{},sc:{},gm:{},chat:[],versions:{},created:Date.now(),updated:Date.now(),cover:COVERS[S.projects.length%COVERS.length]}}
+// AI 助手里展示生成的策划案 / 集纲（正文不进对话框）：存一份快照，长内容折叠
+function chatCard(P,art,title){
+  const d=art.data;if(!d)return;let c=null;
+  if(art.kind==='plan')c={t:'plan',key:'plan',title:title||`策划案 ·《${d.title}》`,d:{title:d.title,logline:d.logline,synopsis:d.synopsis,world:d.world,chars:(d.chars||[]).map(x=>({n:x.n,r:x.r,d:x.d})),conflict:d.conflict,pacing:d.pacing,ending:d.ending}};
+  else if(art.kind==='outline'||art.kind==='segment'){const eps=(d.eps||[]).filter(e=>!e.placeholder);if(!eps.length)return;
+    c={t:'outline',key:art.key,title:title||`集纲 · 第 ${eps[0].no}–${eps[eps.length-1].no} 集`,eps:eps.map(e=>({no:e.no,title:e.title,summary:e.summary,hook:e.hook,card:e.card}))}}
+  if(c)P.chat.push({r:'ai',card:c,at:Date.now()});
+}
+const CARD_OPEN=new Set();
+function cardHTML(m,i){
+  const c=m.card,open=CARD_OPEN.has(i);
+  if(c.t==='plan'){const d=c.d;const long=true;
+    const body=open?`<div class="cc-sec"><b>一句话梗概</b><p>${esc(d.logline)}</p></div><div class="cc-sec"><b>故事梗概</b><p>${esc(d.synopsis)}</p></div><div class="cc-sec"><b>世界观</b><p>${esc(d.world)}</p></div><div class="cc-sec"><b>人物小传</b>${d.chars.map(x=>`<p><span class="cc-k">${esc(x.r)}</span>${esc(x.n)}：${esc(x.d)}</p>`).join('')}</div><div class="cc-sec"><b>核心冲突与爽点</b><p>${esc(d.conflict)}</p></div><div class="cc-sec"><b>节奏与付费卡点</b><p>${esc(d.pacing)}</p></div><div class="cc-sec"><b>结局方向</b><p>${esc(d.ending)}</p></div>`
+      :`<p class="cc-clip">${esc(d.logline)}</p><p class="cc-clip muted">${esc(d.synopsis)}</p><div class="cc-tags">${d.chars.map(x=>`<span>${esc(x.n)} · ${esc(x.r)}</span>`).join('')}</div>`;
+    return`<div class="chatcard ${open?'open':''}"><div class="cc-h" data-ctog="${i}" role="button" tabindex="0" aria-expanded="${open}">${ic('doc')}<b>${esc(c.title)}</b><span class="sp"></span><span class="cc-meta">7 部分</span></div><div class="cc-b">${body}</div><div class="cc-f"><button class="btn sm ghost" data-ctog="${i}">${open?'收起':'展开全部内容'}${ic('down','i caret')}</button><span class="sp"></span><button class="btn sm ghost" data-do="view:${c.key}">在正文中打开</button></div></div>`}
+  const eps=c.eps,N=eps.length,long=N>3,list=open||!long?eps:eps.slice(0,3);
+  return`<div class="chatcard ${open?'open':''}"><div class="cc-h" ${long?`data-ctog="${i}" role="button" tabindex="0" aria-expanded="${open}"`:''}>${ic('book')}<b>${esc(c.title)}</b><span class="sp"></span><span class="cc-meta">${N} 集</span></div>
+    <div class="cc-b">${list.map(e=>`<div class="cc-ep ${e.card?'card':''}"><span class="no">EP${String(e.no).padStart(2,'0')}</span><div><b>${esc(e.title)}${e.card?`<span class="cardtag">${esc(e.card)}</span>`:''}</b><p ${open?'':'class="cc-clip1"'}>${esc(e.summary)}</p>${open?`<p class="muted">钩子：${esc(e.hook)}</p>`:''}</div></div>`).join('')}${long&&!open?`<div class="cc-fade">还有 ${N-3} 集…</div>`:''}</div>
+    <div class="cc-f">${long?`<button class="btn sm ghost" data-ctog="${i}">${open?'收起':`展开全部 ${N} 集`}${ic('down','i caret')}</button>`:''}<span class="sp"></span><button class="btn sm ghost" data-do="view:${c.key}">在正文中打开</button></div></div>`}
 function say(P,t,acts){P.chat.push({r:'ai',t,acts:acts||[],at:Date.now()});if(S.curId===P.id)renderAsstMsgs()}
 function pushVer(P,art,label,model){(P.versions[art.key]=P.versions[art.key]||[]).push({v:art.versions,at:Date.now(),label,model,data:clone(art.data)});P.updated=Date.now()}
 function addHist(P,what,key,v,c,kind='gen'){S.history.unshift({at:Date.now(),pid:P.id,title:P.title||'新项目',what,key,v,cost:c,model:modelOf(S.model).name,kind});S.history=S.history.slice(0,200)}
@@ -996,6 +1054,7 @@ function runTask(P,art,opt){
         clearInterval(timers[tk]);art.data=opt.produce();art.versions++;
         go('task',art.task,'succeeded');go('artifact',art,'ready');art.notice='';
         S.credits-=opt.cost||0;pushVer(P,art,'AI 生成',model);addHist(P,`生成了${opt.label||art.label}`,art.key,art.versions,opt.cost);
+        if(!opt.keepRevs)art.revs={};chatCard(P,art);
         afterReady(P,art);opt.onDone&&opt.onDone(art);save();render();return}
       updateGen(P,art);
     },opt.speed||200);
@@ -1090,11 +1149,11 @@ function scriptDone(P,k,chain){
 function rewriteEp(P,a,ei){
   const c=costOf(1);if(!cost(c))return;const old=a.data.eps[ei];
   const oe=outlineKeys(P).map(k=>P.arts[k]?.data?.eps||[]).flat().find(e=>e.no===old.no)||{no:old.no,title:old.title,card:old.card,summary:old.scenes[0]?.lines[0]?.x||'',hook:''};
-  const v=(old.v||0)+1;const ne=genScriptEp(oe,P.arts.plan.data.cast,a.cfg||DEF_SC,v);ne.v=v;a.data.eps[ei]=ne;
+  const v=(old.v||0)+1;const ne=genScriptEp(oe,P.arts.plan.data.cast,a.cfg||DEF_SC,v);ne.v=v;const revs0=clone(a.revs||{});a.data.eps[ei]=ne;markRev(a,old.no,old,'重写本集','重写本集');
   S.credits-=c;a.versions++;if(['ready','outdated'].includes(a.status))go('artifact',a,'edited');
   pushVer(P,a,`重写第 ${old.no} 集`,modelOf(S.model).name);addHist(P,`重写了${a.label}第 ${old.no} 集`,a.key,a.versions,c,'ai');
-  P.undo={key:a.key,data:(()=>{const d=clone(a.data);d.eps[ei]=old;return d})()};
-  say(P,`第 ${old.no} 集重写好了，换了场景和台词。`,[['undo','撤销']]);flashEps=[old.no];save();render();
+  P.undo={key:a.key,data:(()=>{const d=clone(a.data);d.eps[ei]=old;return d})(),revs:revs0};
+  say(P,`第 ${old.no} 集重写好了，换了场景和台词。修改版已经替换到正文第 ${old.no} 集，可以和第一版对比。`,[['cmp:'+a.key+':'+old.no,'对比第一版'],['undo','撤销']]);flashEps=[old.no];save();render();
 }
 function continueScript(P,k){
   const nx=nextSeg(P,k);if(!nx){openExtend(P,k);return}
@@ -1112,7 +1171,7 @@ function extendStory(P,k,n){
     onDone:()=>{propagate(P,ok);const sk=[P.sc.full,P.sc.all,P.sc.end].find(x=>has(x));
       say(P,`已在结尾后加更 ${n} 集大纲（第 ${oldN+1}–${oldN+n} 集），接着写这几集的剧本。`);
       if(sk&&has(sk)){const cast=P.arts.plan.data.cast;const add=P.arts[ok].data.eps.filter(e=>e.no>oldN);
-        S.sel=sk.key;runTask(P,sk,{steps:Math.max(6,n),speed:200,cost:costOf(n*2),label:`续写剧本第 ${oldN+1}–${oldN+n} 集`,stream:i=>`正在写第 ${oldN+Math.min(n,i)} 集分场…`,
+        S.sel=sk.key;runTask(P,sk,{keepRevs:true,steps:Math.max(6,n),speed:200,cost:costOf(n*2),label:`续写剧本第 ${oldN+1}–${oldN+n} 集`,stream:i=>`正在写第 ${oldN+Math.min(n,i)} 集分场…`,
           produce:()=>({eps:[...sk.data.eps,...add.map(e=>genScriptEp(e,cast,sk.cfg))]}),onDone:()=>{sk.status='ready';sk.notice='';flashEps=add.map(e=>e.no);scriptDone(P,sk.src)}})}
       else setTimeout(()=>startScript(P,rangeKey(P,oldN+1,oldN+n),P.sc[k]?.cfg),300)}});
 }
@@ -1282,7 +1341,7 @@ function aiEdit(text){
   if(a.status==='locked'){reply('这一页已经确认定稿了。要改的话，先点右上角「继续编辑」。');return}
   if(a.status==='generating'){reply('还在生成中，等写完我再改。');return}
   if(!cost(costOf(2)))return;
-  const snap=clone(a.data);const sk=S.sel;
+  const snap=clone(a.data);const sk=S.sel;const snapRevs=clone(a.revs||{});
   const nums=[...text.matchAll(/第\s*(\d+)\s*集/g)].map(x=>+x[1]);
   if(nums.length&&a.data.eps&&!a.data.eps.some(e=>nums.includes(e.no))){
     const home=[...Object.values(P.sc),...outlineKeys(P).map(k=>P.arts[k])].find(x=>x&&x.data&&x.data.eps&&x.data.eps.some(e=>e.no===nums[0])&&x.kind===a.kind);
@@ -1313,13 +1372,40 @@ function aiEdit(text){
   else if(a.kind==='interactive'){const n=a.data.nodes.find(x=>x.id===S.selNode);if(!n){reply('在剧本树里先点选一个节点，我再改它。');return}n.text+='\n△ '+add;n.status='edited';changed=[n.id];validateIA(a,true)}
   S.credits-=costOf(2);a.versions++;if(['ready','outdated'].includes(a.status))go('artifact',a,'edited');
   if(a.kind!=='interactive')propagate(P,a.key);
+  const nos=changed.filter(x=>typeof x==='number');
+  if(a.data.eps)nos.forEach(no=>{const o=snap.eps.find(e=>e.no===no);if(o)markRev(a,no,o,'AI 修改',text)});
   pushVer(P,a,'AI 修改：'+text.slice(0,20),modelOf(S.model).name);addHist(P,`AI 修改${a.label}：${text.slice(0,24)}`,a.key,a.versions,costOf(2),'ai');
-  P.undo={key:sk,data:snap};flashEps=changed.filter(x=>typeof x==='number');
+  P.undo={key:sk,data:snap,revs:snapRevs};flashEps=nos;
   const where=a.kind==='plan'?'策划案':a.kind==='interactive'?'选中的节点':`第 ${changed.join('、')} 集`;
-  reply(`改好了，改的是${where}。${want==='free'?'我按字面意思做了调整，不满意可以撤销后换个说法。':''}`,[['undo','撤销这次修改']]);
+  if(a.kind==='plan')setTimeout(()=>chatCard(P,a,`策划案 · 修改后`),480);
+  else if(a.kind==='outline'||a.kind==='segment')setTimeout(()=>{const c={...a,data:{eps:a.data.eps.filter(e=>nos.includes(e.no))}};chatCard(P,c,nos.length>1?`集纲修改版 · 第 ${nos.join('、')} 集`:`集纲修改版 · 第 ${nos[0]} 集`)},480);
+  if(nos.length)nos.forEach(no=>openCmp(sk,no));
+  reply(`改好了，改的是${where}。${nos.length?`修改版已经放在正文对应的集上（标「修改版」），并打开了和第一版的对比。`:''}${want==='free'?'我按字面意思做了调整，不满意可以撤销后换个说法。':''}`,[...(nos.length?[['cmp:'+sk+':'+nos[0],`查看第 ${nos[0]} 集对比`]]:[]),['undo','撤销这次修改']]);
   render();
 }
-function undo(){const P=S.project;if(!P||!P.undo)return;const a=getArt(P.undo.key);if(!a)return;a.data=P.undo.data;P.undo=null;a.versions++;pushVer(P,a,'撤销 AI 修改');say(P,'已撤销，恢复到修改前。');save();render()}
+// 记录 AI 改过的集：第一次改之前的内容存为「第一版」，正文里这一集标「修改版」，可以对比、恢复
+function markRev(a,no,orig,by,note){a.revs=a.revs||{};const r=a.revs[no]||(a.revs[no]={orig:clone(orig),n:0});r.n++;r.by=by;r.note=note;r.at=Date.now()}
+const CMP_OPEN=new Set();
+function openCmp(key,no){CMP_OPEN.add(key+'|'+no)}
+function restoreFirst(P,a,no){
+  const r=a.revs&&a.revs[no];if(!r)return;if(a.status==='locked'){toast('已定稿，先点「继续编辑」');return}
+  const i=a.data.eps.findIndex(e=>e.no===no);if(i<0)return;
+  P.undo={key:a.key,data:clone(a.data),revs:clone(a.revs)};
+  a.data.eps[i]=clone(r.orig);delete a.revs[no];CMP_OPEN.delete(a.key+'|'+no);a.versions++;
+  if(['ready','outdated'].includes(a.status))go('artifact',a,'edited');if(a.kind!=='script')propagate(P,a.key);
+  pushVer(P,a,`第 ${no} 集恢复第一版`);addHist(P,`把${a.label}第 ${no} 集恢复成第一版`,a.key,a.versions,0,'ai');
+  say(P,`第 ${no} 集已恢复成第一版。`,[['undo','撤销']]);flashEps=[no];save();render()}
+function cmpField(o,n,k){return String(o?.[k]??'')!==String(n?.[k]??'')}
+function cmpOutline(a,e){const o=a.revs[e.no].orig;
+  const col=(x,lab,cls)=>`<div class="cmpcol ${cls}"><div class="cmph">${lab}</div><b class="${cmpField(o,e,'title')?'chg':''}">${esc(x.title)}</b><p class="${cmpField(o,e,'summary')?'chg':''}">${esc(x.summary)}</p><p class="muted ${cmpField(o,e,'hook')?'chg':''}">钩子：${esc(x.hook)}</p></div>`;
+  return`<div class="cmpbox">${col(o,'第一版','old')}${col(e,`修改版 · 改了 ${a.revs[e.no].n} 次`,'new')}</div>`}
+function scLines(ep){return ep.scenes.flatMap(s=>[{h:1,x:s.head},...s.lines.map(l=>({t:l.t,x:l.t==='dlg'?`${l.w}（${l.p}）：${l.x}`:l.x}))])}
+function cmpScript(a,e){const o=a.revs[e.no].orig;const L0=scLines(o),L1=scLines(e);const s0=new Set(L0.map(l=>l.x)),s1=new Set(L1.map(l=>l.x));
+  const col=(L,other,lab,cls,mk)=>`<div class="cmpcol ${cls}"><div class="cmph">${lab}</div>${L.map(l=>l.h?`<div class="cmpsh">${esc(l.x)}</div>`:`<div class="ln ${l.t} ${other.has(l.x)?'':mk}">${esc(l.x)}</div>`).join('')}</div>`;
+  return`<div class="cmpbox">${col(L0,s1,'第一版','old','del')}${col(L1,s0,`修改版 · 改了 ${a.revs[e.no].n} 次`,'new','add')}</div>`}
+function revTools(a,e){const r=a.revs&&a.revs[e.no];if(!r)return'';const on=CMP_OPEN.has(a.key+'|'+e.no);
+  return`<span class="revtag" title="${esc(r.by+'：'+(r.note||''))}">修改版</span><button class="btn sm ghost" data-cmp="${e.no}">${on?'收起对比':'对比第一版'}</button>${a.status==='locked'?'':`<button class="btn sm ghost" data-rfirst="${e.no}">恢复第一版</button>`}`}
+function undo(){const P=S.project;if(!P||!P.undo)return;const a=getArt(P.undo.key);if(!a)return;a.data=P.undo.data;if('revs' in P.undo)a.revs=P.undo.revs||{};P.undo=null;a.versions++;pushVer(P,a,'撤销 AI 修改');say(P,'已撤销，恢复到修改前。');save();render()}
 
 // ============ 渲染 ============
 function setSkin(k){S.skin=k;document.documentElement.dataset.skin=k;save()}
@@ -1593,7 +1679,7 @@ function restoreVer(pid,key,v){
   if(!a||!snap){toast('这个版本已经找不到了');return}
   if(a.status==='locked'){toast('已定稿，先解除定稿再恢复');return}
   if(a.status==='generating'){toast('正在生成中，稍后再恢复');return}
-  a.data=clone(snap.data);a.versions++;if(['ready','outdated','error','empty'].includes(a.status))a.status='edited';
+  a.data=clone(snap.data);a.revs={};a.versions++;if(['ready','outdated','error','empty'].includes(a.status))a.status='edited';
   pushVer(P,a,`恢复到 v${v}`);propagate(P,key);addHist(P,`把${a.label}恢复到第 ${v} 版`,key,a.versions,0,'ai');
   S.curId=pid;S.view='project';S.sel=key;save();render();toast(`已恢复到第 ${v} 版`);
 }
@@ -1642,9 +1728,12 @@ function autoBar(P){
 function quickFor(a){if(!a)return[];if(a.kind==='game')return['第 1 章加一个 QTE','加一点好感互动','第 2 章加一个收集品'];if(a.kind==='plan')return['让反派更狠一点','节奏再快一点','加强卡点悬念'];if(a.kind==='script')return['台词更口语','加强卡点钩子','第 2 集加一场打脸戏'];if(a.kind==='interactive')return['让这个选择更难选','加一点感情线'];return['加强卡点钩子','节奏再快一点','第 4 集加一点甜']}
 function renderAsstMsgs(){
   const el=$('#msgs');const P=S.project;if(!el||!P)return;
-  let lastAi=-1;P.chat.forEach((m,i)=>{if(m.r==='ai')lastAi=i});
-  el.innerHTML=P.chat.map((m,i)=>`<div class="msg ${m.r}"><div class="who">${m.r==='ai'?ic('spark')+'AI 助手':'我'}</div><div class="bub">${esc(m.t)}</div>${m.acts&&m.acts.length&&i===lastAi?`<div class="acts">${m.acts.map(([k,t],j)=>`<button class="btn sm ${j===0?'pri':''}" data-do="${esc(k)}">${esc(t)}</button>`).join('')}</div>`:''}</div>`).join('')||'<div class="sm muted">有什么想改的，直接告诉我。</div>';
-  el.scrollTop=el.scrollHeight;el.querySelectorAll('[data-do]').forEach(b=>b.onclick=()=>doAction(b.dataset.do));
+  let lastAi=-1;P.chat.forEach((m,i)=>{if(m.r==='ai'&&!m.card)lastAi=i});
+  const keep=el.scrollHeight-el.scrollTop-el.clientHeight<40;const st=el.scrollTop;
+  el.innerHTML=P.chat.map((m,i)=>m.card?`<div class="msg ai"><div class="who">${ic('spark')}AI 助手</div>${cardHTML(m,i)}</div>`:`<div class="msg ${m.r}"><div class="who">${m.r==='ai'?ic('spark')+'AI 助手':'我'}</div><div class="bub">${esc(m.t)}</div>${m.acts&&m.acts.length&&i===lastAi?`<div class="acts">${m.acts.map(([k,t],j)=>`<button class="btn sm ${j===0?'pri':''}" data-do="${esc(k)}">${esc(t)}</button>`).join('')}</div>`:''}</div>`).join('')||'<div class="sm muted">有什么想改的，直接告诉我。</div>';
+  el.scrollTop=S.cardScroll?st:keep||!el.dataset.init?el.scrollHeight:st;el.dataset.init=1;S.cardScroll=false;
+  el.querySelectorAll('[data-do]').forEach(b=>b.onclick=()=>doAction(b.dataset.do));
+  el.querySelectorAll('[data-ctog]').forEach(b=>{const f=e=>{e.stopPropagation();const i=+b.dataset.ctog;CARD_OPEN.has(i)?CARD_OPEN.delete(i):CARD_OPEN.add(i);S.cardScroll=true;renderAsstMsgs()};b.onclick=f;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')f(e)}});
 }
 function genHTML(a,title){const t=a.task||{progress:0};return`<div class="gen" id="gen-${a.key.replace(':','_')}"><div class="row"><span class="spin"></span><b>${title||'正在生成'+a.label}</b><span class="sm muted">· ${esc(modelOf(S.model).name)}</span><span class="sp"></span><button class="btn ghost" data-cancel="${a.key}">取消</button></div>
   <div class="tank"><div class="fill" style="width:${t.progress}%"></div><span class="pct">${t.progress}%</span></div><div class="line">${esc(t.line||'准备中…')}</div><div class="skel"><i style="width:92%"></i><i style="width:78%"></i><i style="width:85%"></i></div></div>`}
@@ -1877,9 +1966,9 @@ function renderOutline(P,a){
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   if(a.status==='empty')return`<div class="doc">${head}<div class="empty"><div>这一段还没有生成</div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="btn pri" data-genseg="${a.key}">生成${r.label}集纲</button></div></div></div>`;
   const ce=a.status==='locked'?'':'contenteditable="true"';
-  return`<div class="doc">${head}${inlinePanel(P,a.key)}${notes(a)}${editHint(a)}${jumpStrip(a.data.eps)}<div class="eps">${a.data.eps.map((e,i)=>`<div class="ep ${e.card?'card':''} ${e.placeholder?'ph':''}" data-epno="${e.no}" id="ep-${e.no}"><div class="no">EP<b>${String(e.no).padStart(2,'0')}</b></div>
-    <div class="t"><span ${ce} data-ep="${i}" data-k="title">${esc(e.title)}</span>${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}${e.placeholder?'<span class="cardtag" style="color:var(--muted);border-color:var(--line2)">待补写</span>':''}</div>
-    <div class="s" ${ce} data-ep="${i}" data-k="summary">${esc(e.summary)}</div><div class="h">钩子：${esc(e.hook)}</div></div>`).join('')}</div></div>`;
+  return`<div class="doc">${head}${inlinePanel(P,a.key)}${notes(a)}${editHint(a)}${jumpStrip(a.data.eps,a)}<div class="eps">${a.data.eps.map((e,i)=>`<div class="ep ${e.card?'card':''} ${e.placeholder?'ph':''}" data-epno="${e.no}" id="ep-${e.no}"><div class="no">EP<b>${String(e.no).padStart(2,'0')}</b></div>
+    <div class="t"><span ${ce} data-ep="${i}" data-k="title">${esc(e.title)}</span>${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}${e.placeholder?'<span class="cardtag" style="color:var(--muted);border-color:var(--line2)">待补写</span>':''}${revTools(a,e)}</div>
+    <div class="s" ${ce} data-ep="${i}" data-k="summary">${esc(e.summary)}</div><div class="h">钩子：${esc(e.hook)}</div>${a.revs&&a.revs[e.no]&&CMP_OPEN.has(a.key+'|'+e.no)?cmpOutline(a,e):''}</div>`).join('')}</div></div>`;
 }
 function renderScript(P,a){
   if(!a)return'';const r=rangeOf(P,a.src);const nx=nextSeg(P,a.src);
@@ -1891,12 +1980,12 @@ function renderScript(P,a){
   if(a.status==='generating'&&!a.data)return`<div class="doc">${head}${genHTML(a,'正在写分场剧本')}</div>`;
   if(a.status==='error')return`<div class="doc">${head}${notes(a)}</div>`;
   const ce=a.status==='locked'?'':'contenteditable="true"';
-  return`<div class="doc">${head}${inlinePanel(P,a.src)}${notes(a)}${editHint(a)}${a.status==='generating'?genHTML(a,'正在续写'):''}${jumpStrip(a.data.eps)}<div class="scr">${a.data.eps.map((e,ei)=>`<article class="scep" data-epno="${e.no}" id="ep-${e.no}"><header><span class="no">EP${String(e.no).padStart(2,'0')}</span><b>${esc(e.title)}</b>${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}${a.status==='locked'?'':`<span class="eptools"><button class="btn sm ghost" data-epai="${e.no}">${ic('chat')}让 AI 改这一集</button><button class="btn sm ghost" data-eprw="${ei}">${ic('refresh')}重写本集</button></span>`}</header>
-    ${e.scenes.map((s,si)=>`<div class="scene"><div class="head">${esc(s.head)}</div><div class="cast">人物：${esc(s.cast)}</div>
+  return`<div class="doc">${head}${inlinePanel(P,a.src)}${notes(a)}${editHint(a)}${a.status==='generating'?genHTML(a,'正在续写'):''}${jumpStrip(a.data.eps,a)}<div class="scr">${a.data.eps.map((e,ei)=>`<article class="scep" data-epno="${e.no}" id="ep-${e.no}"><header><span class="no">EP${String(e.no).padStart(2,'0')}</span><b>${esc(e.title)}</b>${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}${revTools(a,e)}${a.status==='locked'?'':`<span class="eptools"><button class="btn sm ghost" data-epai="${e.no}">${ic('chat')}让 AI 改这一集</button><button class="btn sm ghost" data-eprw="${ei}">${ic('refresh')}重写本集</button></span>`}</header>
+    ${a.revs&&a.revs[e.no]&&CMP_OPEN.has(a.key+'|'+e.no)?cmpScript(a,e)+'<div class="sm muted">对比时正文只读；点「收起对比」后可以继续直接修改。</div>':e.scenes.map((s,si)=>`<div class="scene"><div class="head">${esc(s.head)}</div><div class="cast">人物：${esc(s.cast)}</div>
       ${s.lines.map((l,li)=>`<div class="ln ${l.t}">${l.t==='dlg'?`<b>${esc(l.w)}</b><span class="par">（${esc(l.p)}）</span>：`:''}<span ${ce} data-sl="${ei}|${si}|${li}">${esc(l.x)}</span></div>`).join('')}</div>`).join('')}</article>`).join('')}
     ${a.status!=='generating'?`<div class="cont"><span class="muted">${nx?`接下来是${nx.label}（第 ${nx.from}–${nx.to} 集）`:'已经写到结尾'}</span><button class="btn pri" data-do="cont:${a.src}">${ic('pen')}${nx?'续写'+nx.label+'剧本':'加更几集'}</button></div>`:''}</div></div>`;
 }
-function jumpStrip(eps){if(eps.length<=8)return'';return`<nav class="jump" aria-label="跳到某一集">${eps.map(e=>`<button class="${e.card?'card':''}" data-jump="${e.no}" title="${esc(e.title)}">${e.no}</button>`).join('')}</nav>`}
+function jumpStrip(eps,a){const rv=(a&&a.revs)||{};if(eps.length<=8&&!Object.keys(rv).length)return'';return`<nav class="jump" aria-label="跳到某一集">${eps.map(e=>`<button class="${e.card?'card':''} ${rv[e.no]?'rev':''}" data-jump="${e.no}" title="${esc(e.title)}${rv[e.no]?' · 修改版':''}">${e.no}</button>`).join('')}</nav>`}
 function checkChip(a){const v=a.validate.status;
   if(v==='valid')return`<span class="check ok">${ic('check')}结构完整</span>`;
   if(v==='warning')return`<button class="check warn" data-act="showIssues">${ic('warn')}${a.issues.length} 条提醒</button>`;
@@ -2012,6 +2101,7 @@ function doAction(k){
   else if(cmd==='scriptcur'){S.sel=arg;openInline('script',arg,'cur');render()}
   else if(cmd==='ia'){S.sel=arg;openInline('ia',arg,'full');render()}
   else if(cmd==='view'){S.sel=arg;render()}
+  else if(cmd==='cmp'){const j=arg.lastIndexOf(':');const key=arg.slice(0,j),no=+arg.slice(j+1);S.sel=key;openCmp(key,no);render();const el=document.getElementById('ep-'+no);if(el)el.scrollIntoView({block:'start'})}
   else if(cmd==='cont')continueScript(P,arg);
   else if(cmd==='extend')openExtend(P,arg);
   else if(cmd==='iacont')continueIA(P,arg);
@@ -2445,6 +2535,8 @@ function bindMain(){
     M.querySelectorAll('[data-regen]').forEach(b=>b.onclick=()=>{const k=b.dataset.regen;const c=costOf(2);if(!cost(c))return;const fr=genPlan(P.params,P);
       if(k==='title')d.titles=[...new Set([...fr.titles.slice(1),...T.titles._])].slice(0,3);else if(k==='chars')d.chars=fr.chars;else d[k]=fr[k];
       S.credits-=c;a.versions++;pushVer(P,a,'局部重新生成',modelOf(S.model).name);markEdited(P,a);render();toast('已重新生成这一部分')})}
+  M.querySelectorAll('[data-cmp]').forEach(b=>b.onclick=()=>{const k=S.sel+'|'+b.dataset.cmp;CMP_OPEN.has(k)?CMP_OPEN.delete(k):CMP_OPEN.add(k);renderMain()});
+  M.querySelectorAll('[data-rfirst]').forEach(b=>b.onclick=()=>{const a=getArt(S.sel);if(a)restoreFirst(P,a,+b.dataset.rfirst)});
   M.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>{const el=document.getElementById('ep-'+b.dataset.jump);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})});
   if(S.sel.startsWith('sc:')){const a=getArt(S.sel);
     M.querySelectorAll('[data-epai]').forEach(b=>b.onclick=()=>{if(!S.asstOpen){S.asstOpen=true;render()}const t=$('#askInput');if(t){t.value=`第 ${b.dataset.epai} 集：`;S.askDraft=t.value;t.focus()}});
@@ -2534,7 +2626,7 @@ function seed(){
   const sc=Object.assign(newArt('sc:c1','短剧剧本 · 一卡','script','ready'),{src:'c1',cfg:{...DEF_SC}});sc.data={eps:P.arts.c1.data.eps.map(e=>genScriptEp(e,pl.data.cast,sc.cfg))};sc.versions=1;P.sc.c1=sc;
   const ia=Object.assign(newArt('ia:c1','互动影游剧本 · 一卡','interactive','ready'),{src:'c1',validate:{status:'unchecked'},extra:[],cfg:{...DEF_IA}});ia.data=buildInteractive(P.arts.c1.data.eps,ia.cfg,P);ia.versions=1;P.ia.c1=ia;validateIA(ia,true);
   ['plan','c1','c2','c3','end'].forEach(k=>P.arts[k]&&pushVer(P,P.arts[k],'AI 生成','GLM-5.2'));pushVer(P,sc,'AI 生成','Gemini 3.1 Pro');
-  P.chat=[{r:'me',t:f.idea,at:Date.now()-36e5},{r:'ai',t:'这是一个示例项目：策划案、全部集纲、一卡的短剧剧本和互动影游剧本都已经写好。你可以在任何一页直接修改，或者在这里告诉我怎么改。',acts:[['cont:c1','续写二卡剧本'],['play:c1','试玩互动影游剧本']],at:Date.now()-36e5}];
+  P.chat=[{r:'me',t:f.idea,at:Date.now()-36e5}];chatCard(P,pl);segRanges(P).forEach(r=>chatCard(P,P.arts[r.k]));P.chat.push({r:'ai',t:'这是一个示例项目：策划案、全部集纲、一卡的短剧剧本和互动影游剧本都已经写好。你可以在任何一页直接修改，或者在这里告诉我怎么改。',acts:[['cont:c1','续写二卡剧本'],['play:c1','试玩互动影游剧本']],at:Date.now()-36e5});
   P.updated=Date.now()-36e5;P.created=Date.now()-72e5;
   const f2=eff({...defForm(),novelName:'重生之千金归来',novelText:SAMPLE_NOVEL,genres:['重生','复仇'],market:'na',episodes:60});
   const Q=newProject(f2,'novel','quick');Q.sample=true;Q.cover=COVERS[2];Q.parseState='done';Q.parsed={chapters:SAMPLE_NOVEL.match(/第.章[^\n]*/g),words:200,chars:Object.values(cast(f2)).slice(0,4),mainline:'女主被退婚、三年后携新身份归来，揭开当年真相并完成复仇',range:[1,5],strength:'适度改编'};
