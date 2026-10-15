@@ -410,6 +410,14 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 @media (max-width:760px){.cmpbox{grid-template-columns:1fr}}
 .asstbtn{width:36px;height:36px;border:1px solid var(--line);border-radius:10px}
 .asstbtn svg.i{width:18px;height:18px}
+.asstbtn{position:relative}.asstbtn.dot::after{content:'';position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 2px var(--bg);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.35)}}
+.ptwrap{display:inline-flex;align-items:center;gap:0;min-width:0}
+.ptwrap .ptitle{cursor:text}.ptwrap .ptitle:hover{background:var(--surface2)}
+.ptedit{width:26px;height:26px;opacity:.55}.ptedit svg.i{width:14px;height:14px}.ptwrap:hover .ptedit,.ptedit:focus-visible{opacity:1}
+.tcbtn{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--line2)!important;color:var(--muted)!important;background:transparent!important}
+.tcbtn svg.i{width:13px;height:13px}.tcbtn:hover{color:var(--fg)!important;border-color:var(--accent)!important}
+.titles .tcustom{display:inline-flex;gap:6px;align-items:center;padding:0;border:0;background:none}.tcustom input{height:34px;border:1px solid var(--accent);border-radius:10px;background:var(--surface);color:var(--fg);padding:0 10px;min-width:200px;font:inherit}
 .asstbtn.on{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-dim)}
 .msgs{flex:1;overflow:auto;padding:14px;display:grid;gap:12px;align-content:start}
 .msg{display:grid;gap:6px;max-width:100%;animation:slide .2s ease-out}
@@ -781,7 +789,7 @@ const SM={
 const STAGE_ORDER=['draft','parsing','planning','outlining','scripting','completed'];
 
 // ============ 全局状态 ============
-const defForm=()=>({gform:'value',gend:'3',gsrc:'idea',gout:'game',gtype:'love',gpov:'first',gsys:{aff:true,qte:true,col:true,ach:true,pay:true},gameText:'',conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[],nodes:NODE_ALL.slice()});
+const defForm=()=>({title:'',gform:'value',gend:'3',gsrc:'idea',gout:'game',gtype:'love',gpov:'first',gsys:{aff:true,qte:true,col:true,ach:true,pay:true},gameText:'',conv:'cn',idea:'',novelText:'',novelName:'',benchText:'',genres:[],styles:[],market:null,episodes:80,audience:null,setting:{role:'',cheat:'',world:''},skills:[],nodes:NODE_ALL.slice()});
 const S={view:'home',mode:'original',fine:false,credits:300,model:'auto',skin:'dark',auto:false,form:defForm(),
   userSkills:[],projects:[],curId:null,sel:'plan',iaTab:'canvas',selNode:null,debug:false,popKey:null,keepPop:false,
   history:[],novels:[],assetsTab:'novels',libFilter:'all',libQ:'',asstOpen:innerWidth>760,inline:null,failNext:false,edTip:null,askSkills:[],askPage:null,askDraft:''};
@@ -856,7 +864,9 @@ const TM={
   acts:['全场死寂，所有人都盯着{P}的拳头。','{A}脸色铁青，指节捏得发白。','{L}推开人群，站到{P}身边。','测力石轰然碎裂，碎片落了一地。','看台上的家族长老同时站了起来。','{X}在角落里，慢慢放下了手里的扫帚。'],
   shots:['【慢镜】拳风掠过，测力石裂出蛛网纹。','【特写】{P}眼底闪过一道金光。','【俯拍】擂台四周鸦雀无声。','【推近】{A}的笑容一点点僵住。','【跟拍】{P}一步步走上擂台。']};
 const tpl=c=>c&&c.male?{...T,...TM}:T;
-function genPlan(f,P){
+// 用户自己起的剧名优先：放在备选第一个，并设为当前剧名
+function genPlan(f,P){const d=genPlan0(f,P);const t=(f.title||'').trim();if(t){d.title=t;d.titles=[t,...(d.titles||[]).filter(x=>x!==t)].slice(0,3)}return d}
+function genPlan0(f,P){
   const c=cast(f);const m=MARKETS.find(x=>x.k===f.market);
   const titles=f.market!=='cn'&&f.market!=='jk'?EN_TITLES.slice(0,3):[...new Set([...(T.titles[f.genres[0]]||[]),...(T.titles[f.genres[1]]||[]),...T.titles._])].slice(0,3);
   const idea=P.mode==='novel'?`改编自《${f.novelName||'未命名小说'}》：${P.parsed?.mainline||'女主被退婚后归来复仇的故事。'}`:P.mode==='benchmark'?(f.conv==='global'?`爆款转换 · ${m.name}本土化：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，人物、城市、文化细节和台词语言全部换成${m.name}观众熟悉的版本（${m.lang}）。`:`爆款转换 · 国内题材迭代：保留原剧「替嫁 + 隐藏身份掉马」的节奏骨架和卡点位置，换成「${f.genres.join('、')}」题材，重写人设、金手指和名场面。`):f.idea;
@@ -930,6 +940,10 @@ function nextSeg(P,k){if(P.outlineMode!=='cards')return null;const o=segRanges(P
 function getArt(k,P=S.project){if(!P||!k)return null;if(k.startsWith('ia:'))return P.ia[k.slice(3)];if(k.startsWith('sc:'))return P.sc[k.slice(3)];if(k.startsWith('gm:'))return(P.gm||{})[k.slice(3)];return P.arts[k]}
 function cost(n){if(S.credits<n){toast(`积分不足：需要 ${n}，剩余 ${S.credits}`);return false}return true}
 function newProject(f,mode,gen){return{id:'p'+Date.now()+Math.random().toString(36).slice(2,5),mode,gen,params:f,stage:'draft',title:'',arts:{plan:newArt('plan','策划案','plan')},cards:null,outlineMode:null,parsed:null,benchDir:null,ia:{},sc:{},gm:{},chat:[],versions:{},created:Date.now(),updated:Date.now(),cover:COVERS[S.projects.length%COVERS.length]}}
+// 改剧名：顶栏、策划案、剧本库同步；记为用户起的名字，之后重新生成策划案也保留
+function renameProject(P,v){v=(v||'').trim().slice(0,30);if(!v||v===P.title)return false;P.title=v;P.params.title=v;
+  const d=P.arts.plan&&P.arts.plan.data;if(d){d.title=v;d.titles=[v,...(d.titles||[]).filter(x=>x!==v)].slice(0,3)}
+  P.updated=Date.now();save();toast(`剧名已改为《${v}》`);return true}
 // AI 助手里展示生成的策划案 / 集纲（正文不进对话框）：存一份快照，长内容折叠
 function chatCard(P,art,title){
   const d=art.data;if(!d)return;let c=null;
@@ -957,7 +971,7 @@ function createProject(){
   const f=eff(S.form);
   if(S.mode==='game'){const g=S.form;f.game={src:g.gsrc,cfg:{form:g.gform||'value',pov:g.gpov||'first',converge:g.gend==='1'?'merge':'multi',endings:+(g.gend||3)>1?+(g.gend||3):3}}}
   if(S.mode==='benchmark'){f.conv=S.form.conv||'cn';if(f.conv==='global'){if(!S.form.market||S.form.market==='cn')f.market='na'}else{f.market='cn';if(!S.form.genres.length)f.genres=['重生','复仇']}}const P=newProject(f,S.mode,S.fine?'fine':'quick');
-  S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;S.edTip=null;P.autoRun=!S.fine;S.asstOpen=innerWidth>760;
+  P.title=(f.title||'').trim();S.projects.unshift(P);S.curId=P.id;S.view='project';S.inline=null;S.nudge=null;S.edTip=null;P.autoRun=!S.fine;S.asstOpen=innerWidth>760;
   const outName='互动影游剧本';
   P.chat.push({r:'me',t:S.mode==='game'?(f.game.src==='idea'?f.idea:`把这份剧本转成${outName}`):S.mode==='original'?f.idea:S.mode==='novel'?`改编《${f.novelName||'粘贴的小说'}》`:(S.form.conv==='global'?`把这部爆款本土化成${MARKETS.find(m=>m.k===(S.form.market&&S.form.market!=='cn'?S.form.market:'na')).name}版`:'把这部爆款迭代成国内其他爆款题材'),at:Date.now()});
   if(S.mode==='game'&&f.game.src==='idea'){say(P,P.autoRun?`收到。一句话模式会一站直出：策划案 → 集纲 → 短剧剧本 → ${outName}，中间不用你操作。`:`收到。精细模式下每一步写完都会停下来，最后再按你选的玩法转成${outName}。`);nodeStart(P);return}
@@ -994,7 +1008,7 @@ function parseGameScript(P,text){
     scm[no]={no,title:e.title,scenes:[{head:'',cast:'',lines}]};
     const card=no===P.cards.c1?'一卡':no===P.cards.c2?'二卡':no===P.cards.c3?'三卡':'';
     return{no,title:e.title,summary:act.replace(/^△\s*/,''),hook:e.body[e.body.length-1]||'',card}});
-  const pl=genPlan(P.params,P);pl.cast=c;pl.title=tline||'上传的剧本';pl.titles=[pl.title];pl.logline=`上传剧本，共 ${N} 集，转成互动影游剧本。`;
+  const pl=genPlan(P.params,P);pl.cast=c;pl.title=(P.params.title||'').trim()||tline||'上传的剧本';pl.titles=[pl.title];pl.logline=`上传剧本，共 ${N} 集，转成互动影游剧本。`;
   pl.chars=[{n:c.L,r:'主要角色',d:'剧本中台词最多的角色。'},{n:c.X,r:'主要角色',d:'剧本中的重要配角。'},{n:c.A,r:'对立角色',d:'和主角站在对立面的人。'}];
   P.arts.plan.data=pl;P.arts.plan.status='ready';P.arts.plan.versions=1;P.title=pl.title;
   P.outlineMode='all';P.arts.all=Object.assign(newArt('all','全部集纲','outline','ready'),{data:{from:1,to:N,eps:oeps},versions:1});
@@ -1482,6 +1496,7 @@ function chipVal(k){
     case'nodes':{const n=(f.nodes||NODE_ALL).length;const full=n===NODE_ALL.length;return{v:'自定义节点',set:!full,n:full?0:n}}
     case'setting':{const s=f.setting;const n=[s.role,s.cheat,s.world].filter(Boolean).length;return n?{v:`核心设定 · ${n}`,set:true}:{v:'核心设定'}}
     case'skill':return f.skills.length?{v:`Skill · ${f.skills.length}`,set:true}:{v:'Skill'};
+    case'title':return f.title?{v:`剧名 ·《${f.title}》`,set:true}:{v:'剧名：AI 起名'};
   }
 }
 function chip(k){const c=chipVal(k);return`<button class="chip ${c.set&&!c.plain?'set':''}" data-pop="${k}" aria-haspopup="true">${c.plain?'':'<span class="star">✦</span>'}<span class="v">${esc(c.v)}</span>${c.n?`<span class="cnt">${c.n}</span>`:''}${c.plain?ic('down','i caret'):''}</button>`}
@@ -1523,7 +1538,7 @@ function renderHome(){
       <div class="cinput">${attachCard()}<button class="upbox" data-pop="attach" aria-haspopup="true"><span class="pc">${ic('plus')}</span><b>${tab==='game'?'上传剧本':'上传小说'}</b><span class="fmt">格式要求 <i>i</i><span class="tip">支持 .txt / .md，单文件不超过 20MB<br>${tab==='game'?'剧本需要有「第 N 集」分集标题':'按「第 N 章」识别章节，上传即表示拥有改编权'}</span></span></button><textarea id="mainInput" class="${S.fine?'':'tall'}" placeholder="${ph}" aria-label="输入">${esc(val)}</textarea></div>
       <div class="cbar">
         <input type="file" id="novelFile" accept=".txt,.md,text/plain" hidden><input type="file" id="benchFile" accept=".txt,.md,text/plain" hidden><input type="file" id="gameFile" accept=".txt,.md,text/plain" hidden>
-        ${tab==='game'?chip('gform')+(S.fine?chip('gpov')+chip('gend'):'')+(up?'':chip('eps')+chip('market')+chip('genre')+(S.fine?chip('audience')+chip('skill')+chip('nodes'):''))
+        ${chip('title')}${tab==='game'?chip('gform')+(S.fine?chip('gpov')+chip('gend'):'')+(up?'':chip('eps')+chip('market')+chip('genre')+(S.fine?chip('audience')+chip('skill')+chip('nodes'):''))
           :`${chip('eps')}<button class="chip ${bset?'set':''}" data-pop="bench" aria-haspopup="true">${ic('fire')}<span class="v">${bset?'爆款转换 · '+(f.conv==='global'?'海外本土化':'国内迭代'):'爆款转换'}</span></button>${!bset||f.conv==='global'?chip('market'):''}${!bset||f.conv!=='global'?chip('genre'):''}${S.fine?chip('audience')+chip('skill')+chip('nodes'):''}`}
         <span class="sp"></span>${modelChip()}
         <button class="send" data-act="create" ${canSend()?'':'disabled'} aria-label="开始生成">${ic('up')}</button>
@@ -1582,6 +1597,7 @@ function openChipPop(anchor){
     <div class="tags">${ok.map(g=>`<button data-v="${g.v}" class="${f.genres.includes(g.v)?'on':''}">${g.label}</button>`).join('')}</div>
     <div class="sm muted" style="padding:12px 2px 6px">${ov?'非出海 PE 类型，暂不可选':'非国内 PE 类型，暂不可选'}</div>
     <div class="tags">${no.map(g=>`<button data-v="${g}" disabled title="当前的 PE 类型里没有这一项">${g}</button>`).join('')}</div>`}
+  if(k==='title')h=`<h5>剧名<span class="sp"></span>一句话生成和精细生成都可以用</h5><div class="pfield"><label for="tTitle">自己起名（选填，最多 30 字）</label><input id="tTitle" maxlength="30" placeholder="不填就由 AI 起 3 个备选剧名" value="${esc(f.title||'')}"></div><div class="sm muted" style="padding:2px 2px 4px">生成后也可以随时在工作台顶部或策划案里改剧名。</div><div class="pfoot" style="justify-content:space-between"><button class="btn ghost" data-tclear>交给 AI 起名</button><button class="btn pri" data-done>完成</button></div>`;
   if(k==='nodes'){const cur=f.nodes||NODE_ALL;const same=a=>a.length===cur.length&&a.every(x=>cur.includes(x));
     h=`<h5>自定义节点<span class="sp"></span>只生成勾选的步骤</h5>
     <div class="tags" style="margin-bottom:8px">${NODE_PRESETS.map(([id,t,arr])=>`<button data-np="${id}" class="${same(arr)?'on':''}">${t}</button>`).join('')}</div>
@@ -1620,6 +1636,8 @@ function openChipPop(anchor){
   const ec=$('#epsCustom');if(ec)ec.onchange=()=>{f.episodes=clamp(+ec.value||80,10,150);render()};
   if(k==='setting'){const u=()=>{f.setting.role=$('#sRole').value.trim();f.setting.cheat=$('#sCheat').value.trim();f.setting.world=$('#sWorld').value};['sRole','sCheat'].forEach(i=>$('#'+i).oninput=u);$('#sWorld').onchange=u}
   const dn=p.querySelector('[data-done]');if(dn)dn.onclick=()=>render();
+  const tt=$('#tTitle');if(tt){tt.oninput=()=>{f.title=tt.value.trim();save()};tt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();render()}};setTimeout(()=>tt.focus(),30);
+    p.querySelector('[data-tclear]').onclick=()=>{f.title='';save();render()}}
   const sf=$('#skillFile');if(sf)sf.onchange=()=>readFile(sf,(file,t)=>uploadSkill(file,t));
 }
 function readFile(el,cb){const file=el.files[0];if(!file)return;const r=new FileReader();r.onload=()=>cb(file,String(r.result));r.readAsText(file)}
@@ -1720,8 +1738,8 @@ function renderProject(){
   tree+='</nav>';
   const s=S.sel;
   const main=s==='parse'?renderParse(P):s==='plan'?renderPlan(P):s.startsWith('ia:')?renderIA(P,getArt(s)):s.startsWith('sc:')?renderScript(P,getArt(s)):s.startsWith('gm:')?renderGame(P,getArt(s)):renderOutline(P,P.arts[s]);
-  const top=`<header class="topbar solid"><button class="iconbtn" data-act="toLib" aria-label="返回剧本库">${ic('back')}</button><span class="ptitle" contenteditable="true" id="ptitle" spellcheck="false">${esc(P.title||'新项目')}</span>
-    ${stepsHTML(P)}<span class="sp"></span><span class="saved" id="saved">${ic('check')}已自动保存</span>${modelChip()}<button class="iconbtn asstbtn ${S.asstOpen?'on':''}" data-act="asst" aria-pressed="${S.asstOpen}" aria-controls="asst" aria-label="${S.asstOpen?'收起':'打开'} AI 助手" title="AI 助手">${ic('chat')}</button></header>`;
+  const top=`<header class="topbar solid"><button class="iconbtn" data-act="toLib" aria-label="返回剧本库">${ic('back')}</button><span class="ptwrap"><span class="ptitle" contenteditable="true" id="ptitle" spellcheck="false" title="点击修改剧名">${esc(P.title||'新项目')}</span><button class="iconbtn ptedit" data-act="renameTitle" aria-label="修改剧名" title="修改剧名">${ic('pen')}</button></span>
+    ${stepsHTML(P)}<span class="sp"></span><span class="saved" id="saved">${ic('check')}已自动保存</span>${modelChip()}<button class="iconbtn asstbtn ${S.asstOpen?'on':''} ${S.tip&&!S.asstOpen&&S.tip.page===S.sel?'dot':''}" data-act="asst" aria-pressed="${S.asstOpen}" aria-controls="asst" aria-label="${S.asstOpen?'收起':'打开'} AI 助手" title="AI 助手">${ic('chat')}</button></header>`;
   if(S.askPage!==S.sel){S.askPage=S.sel;S.askSkills=[];S.askDraft=''}
   const asst=S.asstOpen?`<aside class="asst" id="asst" aria-label="AI 助手"><header>${ic('spark')}<b>AI 助手</b><span class="sm muted">· ${esc(modelOf(S.model).name)}</span><span class="sp"></span><button class="iconbtn" data-act="asstClose" aria-label="收起 AI 助手" title="收起">${ic('x')}</button></header>
     <div class="msgs" id="msgs"></div>
@@ -1874,17 +1892,18 @@ function brainstorm(shown,text){
   addHist(P,`脑洞创意：${a.label}`,a.key,0,costOf(2),'ai');
   setTimeout(()=>{say(P,`「脑洞创意」给你 3 个方向：\n① ${list[0]}\n② ${list[1]}\n③ ${list[2]}\n挑一个，我按它来改「${a.label}」${scope?scope:''}。`,[['idea:0','用方向 ①'],['idea:1','用方向 ②'],['idea:2','用方向 ③'],['ideaMore','再来 3 个']]);save()},600)}
 // ---- 技能引导小卡片 ----
-const TIP_GAP=120000,TIP_MAX=3,TIP_DWELL=15000;
+const TIP_GAP=120000,TIP_MAX=3,TIP_DWELL=8000;
 const TIP={last:0,count:{},seen:new Set(),dismissed:new Set(),timer:null,typeT:null,lastType:0};
 const TIP_WORDS=[[/没灵感|卡住|想不出|不知道怎么|新意|脑洞|意外|出人意料|俗套|套路/,'sk9','你想换点新意'],[/拖|节奏|太慢|无聊|水/,'sk2','你在调整节奏'],[/台词|对白|说话|口语/,'sk8','你在改台词'],[/钩子|卡点|悬念|付费|留人/,'sk3','你在改钩子和卡点'],[/人物|人设|性格|动机|弧光/,'sk5','你在改人物'],[/开头|开篇|开场|第\s*1\s*集/,'sk1','你在改开篇'],[/海外|本土|外国|英文/,'sk6','你在做本土化'],[/选项|分支|选择|结局/,'sk7','你在改互动分支']];
-function tipAllowed(sk){const P=S.project;if(!P||S.tipOff||!S.asstOpen||S.view!=='project'||S.tip)return false;
+function tipAllowed(sk){const P=S.project;if(!P||S.tipOff||S.view!=='project'||S.tip)return false;
   const a=getArt(S.sel);if(!a||!has(a)||a.status==='generating'||a.status==='locked')return false;
   if(S.askSkills.includes(sk)||TIP.dismissed.has(sk))return false;
   if(S.tipFast)return true;
   return Date.now()-TIP.last>=TIP_GAP&&(TIP.count[P.id]||0)<TIP_MAX}
 function showTip(sk,title,body,prompt){
   if(!tipAllowed(sk))return;const P=S.project;
-  TIP.last=Date.now();TIP.count[P.id]=(TIP.count[P.id]||0)+1;S.tip={sk,title,body,prompt,page:S.sel};renderTip()}
+  TIP.last=Date.now();TIP.count[P.id]=(TIP.count[P.id]||0)+1;S.tip={sk,title,body,prompt,page:S.sel};
+  if(S.asstOpen)renderTip();else{const b=document.querySelector('.asstbtn');if(b){b.classList.add('dot');b.title='AI 助手有一条技能建议'}}}
 function hideTip(){S.tip=null;renderTip()}
 function renderTip(){
   const el=$('#sktip');if(!el)return;const t=S.tip;
@@ -1977,7 +1996,7 @@ function renderPlan(P){
     <div class="dh"><div><h2>${esc(d.title)}${stBadge(a)}</h2><div class="meta">${P.params.genres.map(g=>peLabel(g,P.params.market,P.params.audience)).join(' · ')} ｜ ${m.name} ｜ ${P.params.episodes} 集${d.skills.length?' ｜ Skill：'+d.skills.join('、'):''}</div></div>
       <div class="acts">${moreBtn([['doctor','剧本医生体检'],lockItem(a),verItem(a),['regenAll','全部重新生成']])}${confirmBtn(a)}<button class="btn pri" data-act="outlineNext">${P.outlineMode?'查看集纲':'下一步：生成集纲'} ${ic('arrow')}</button></div></div>
     ${notes(a)}${editHint(a)}
-    ${sec('title','剧名',`<div class="titles">${d.titles.map(t=>`<button class="${t===d.title?'on':''}" data-title="${esc(t)}" ${ro?'disabled':''}>${esc(t)}</button>`).join('')}</div><p ${ce} data-field="logline">${esc(d.logline)}</p>`)}
+    ${sec('title','剧名',`<div class="titles">${d.titles.map(t=>`<button class="${t===d.title?'on':''}" data-title="${esc(t)}" ${ro?'disabled':''}>${esc(t)}</button>`).join('')}${ro?'':S.titleEdit?`<span class="tcustom"><input id="customTitle" maxlength="30" placeholder="输入你的剧名" value="${esc(d.title)}" aria-label="自定义剧名"><button class="btn sm pri" data-act="titleCustomOk">确定</button><button class="btn sm ghost" data-act="titleCustomNo">取消</button></span>`:`<button class="tcbtn" data-act="titleCustom">${ic('pen')}自己起名</button>`}</div><p ${ce} data-field="logline">${esc(d.logline)}</p>`)}
     ${sec('synopsis','故事梗概',`<p ${ce} data-field="synopsis">${esc(d.synopsis)}</p>`)}
     ${sec('world','世界观',`<p ${ce} data-field="world">${esc(d.world)}</p>`)}
     ${sec('chars','人物小传',`<div class="chars">${d.chars.map((c,i)=>`<div class="char"><span class="role">${esc(c.r)}</span><b>${esc(c.n)}</b><div ${ce} data-char="${i}">${esc(c.d)}</div></div>`).join('')}</div>`)}
@@ -2550,7 +2569,7 @@ function bind(){
   if(S.view==='history'){A.querySelectorAll('[data-hopen]').forEach(b=>b.onclick=()=>{const[pid,key]=b.dataset.hopen.split('|');S.curId=pid;S.view='project';const P=S.project;S.sel=getArt(key,P)?key:'plan';render()});
     A.querySelectorAll('[data-hrestore]').forEach(b=>b.onclick=()=>{const[pid,key,v]=b.dataset.hrestore.split('|');restoreVer(pid,key,+v)})}
   if(S.view==='project'){bindMain();A.querySelectorAll('.tree [data-sel]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.sel;S.selNode=null;S.inline=null;render()});
-    const pt=$('#ptitle');if(pt){pt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();pt.blur()}};pt.onblur=()=>{const v=pt.innerText.trim();const P=S.project;if(v&&v!==P.title){P.title=v;save()}}}
+    const pt=$('#ptitle');if(pt){pt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();pt.blur()}};pt.onblur=()=>{const v=pt.innerText.trim();const P=S.project;if(!v){pt.innerText=P.title||'新项目';return}if(renameProject(P,v))render()}}
     const ask=$('#askInput');if(ask){ask.value=S.askDraft||'';ask.oninput=()=>{S.askDraft=ask.value;atCheck();tipTyping()};ask.onclick=atCheck;ask.onblur=()=>setTimeout(()=>{if(document.activeElement!==ask)closeAt()},150);
       ask.onkeydown=e=>{if(atKey(e))return;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAsk()}}}
     if(S.tip&&S.tip.page!==S.sel)S.tip=null;bindQuick();tipWatch()}
@@ -2599,6 +2618,7 @@ function bindMain(){
   const ie=$('#iEnds');if(ie)ie.onchange=()=>{S.inline.cfg.endings=clamp(+ie.value||3,2,5);renderMain()};
   if(S.sel==='plan'&&P.arts.plan.data){const a=P.arts.plan,d=a.data;
     M.querySelectorAll('[data-title]').forEach(b=>b.onclick=()=>{d.title=b.dataset.title;P.title=d.title;markEdited(P,a);render()});
+    const ct=$('#customTitle');if(ct)ct.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();act('titleCustomOk')}else if(e.key==='Escape')act('titleCustomNo')};
     M.querySelectorAll('[data-regen]').forEach(b=>b.onclick=()=>{const k=b.dataset.regen;const c=costOf(2);if(!cost(c))return;const fr=genPlan(P.params,P);
       if(k==='title')d.titles=[...new Set([...fr.titles.slice(1),...T.titles._])].slice(0,3);else if(k==='chars')d.chars=fr.chars;else d[k]=fr[k];
       S.credits-=c;a.versions++;pushVer(P,a,'局部重新生成',modelOf(S.model).name);markEdited(P,a);render();toast('已重新生成这一部分')})}
@@ -2680,6 +2700,10 @@ function act(x){
     case'asstClose':S.asstOpen=false;render();break;
     case'doctor':{const a=getArt(S.sel);if(!a||!has(a)){toast('这一页还没有内容，先生成再来体检');break}if(a.status==='generating'){toast('还在生成中，等写完再体检');break}if(!['plan','outline','segment','script','interactive','game'].includes(a.kind)){toast('这一页还不支持剧本医生');break}openDoctor();break}
     case'ask':sendAsk();break;
+    case'renameTitle':{const pt=$('#ptitle');if(pt){pt.focus();const r=document.createRange();r.selectNodeContents(pt);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}break}
+    case'titleCustom':S.titleEdit=true;renderMain();setTimeout(()=>{const i=$('#customTitle');if(i)i.focus()},20);break;
+    case'titleCustomOk':{const i=$('#customTitle');S.titleEdit=false;if(i&&renameProject(P,i.value)){markEdited(P,P.arts.plan);render()}else renderMain();break}
+    case'titleCustomNo':S.titleEdit=false;renderMain();break;
     case'atOpen':{const ta=askTa();if(!ta)break;const p=ta.selectionStart??ta.value.length;const pre=ta.value.slice(0,p);const ins=(pre&&!/\s$/.test(pre)?' ':'')+'@';ta.value=pre+ins+ta.value.slice(p);ta.focus();ta.setSelectionRange(p+ins.length,p+ins.length);S.askDraft=ta.value;atCheck();break}
   }
 }
