@@ -355,6 +355,23 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-widt
 .asst{border-left:1px solid var(--line);display:flex;flex-direction:column;height:calc(100vh - var(--tbh,59px));position:sticky;top:var(--tbh,59px);background:color-mix(in srgb,var(--bg2) 60%,transparent)}
 .asst header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
 .asst header b{font-size:14px}
+.ask{position:relative}
+.atbtn{font-family:var(--f-mono);font-weight:700;width:28px;padding:0;justify-content:center}
+.atpop{position:absolute;left:0;right:0;bottom:calc(100% + 6px);z-index:5;background:var(--surface);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:grid;gap:2px;max-height:300px;overflow:auto}
+.atpop[hidden]{display:none}
+.atpop .ath{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);padding:4px 8px 6px}
+.atpop button{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;text-align:left;padding:7px 10px;border-radius:8px;color:var(--fg2);font-size:12px}
+.atpop button b{color:var(--fg);font-size:13px}.atpop button small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atpop button.on,.atpop button:hover{background:var(--accent-dim)}
+.atpop .ok{font-size:11px;color:var(--accent)}
+.sktip{margin:0 14px 10px;border:1px solid color-mix(in srgb,var(--accent) 60%,var(--line));border-radius:14px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));padding:10px 12px;display:grid;gap:6px;animation:tipin .28s cubic-bezier(.2,.9,.3,1.2);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+@keyframes tipin{from{opacity:0;transform:translateY(10px)}}
+.sktip .t{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.sktip .t svg.i{width:14px;height:14px;color:var(--accent)}
+.sktip .t .iconbtn{width:24px;height:24px}
+.sktip p{margin:0;font-size:12px;line-height:1.6;color:var(--fg2)}
+.sktip .acts{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sktip label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer}
 .chatcard{border:1px solid var(--line);background:var(--surface);border-radius:14px;overflow:hidden;font-size:13px}
 .chatcard .cc-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
 .chatcard .cc-h[data-ctog]{cursor:pointer}
@@ -688,7 +705,8 @@ const BUILTIN_SKILLS=[
   {id:'sk1',name:'黄金三秒开篇',desc:'第 1 集前 3 秒出冲突'},{id:'sk2',name:'爽点密度控制',desc:'每 90 秒一个爽点'},
   {id:'sk3',name:'付费卡点钩子',desc:'卡点集强化悬念'},{id:'sk4',name:'反转设计',desc:'身份 / 关系 / 真相反转'},
   {id:'sk5',name:'人物弧光',desc:'从被压制到反杀'},{id:'sk6',name:'海外本土化',desc:'文化、禁忌、人名'},
-  {id:'sk7',name:'互动分支设计',desc:'有效选择与收束'},{id:'sk8',name:'台词口语化',desc:'短句、强情绪'}];
+  {id:'sk7',name:'互动分支设计',desc:'有效选择与收束'},{id:'sk8',name:'台词口语化',desc:'短句、强情绪'},
+  {id:'sk9',name:'脑洞创意',desc:'给出 3 个意想不到的展开方向'}];
 const IDEAS=[['重生复仇','重生回到订婚宴前一天，这一次我要让害我的人亲手揭开自己的伪装。'],['豪门逆袭','被豪门退婚的女主，三年后带着神秘身份回归，让所有看不起她的人追悔莫及。'],
   ['赘婿翻身','入赘三年受尽白眼，丈母娘寿宴上，全城首富跪在我面前喊少主。'],['狼人出海','落魄女孩被误认成 Alpha 的命定伴侣，她却发现自己才是失落的狼族公主。'],
   ['末世基建','末世降临前七天我觉醒了囤货系统，这一次我要建一座谁也攻不破的城。'],['规则怪谈','入职第一天我收到一份员工守则，第七条写着：不要相信你的主管。']];
@@ -778,8 +796,8 @@ const modelOf=k=>MODELS.find(m=>m.k===k)||MODELS[0];
 const costOf=base=>Math.max(1,Math.round(base*modelOf(S.model).m));
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2400)}
 function log(){/* 内部事件不展示给用户 */}
-let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('lanmu-v3',JSON.stringify({projects:S.projects,userSkills:S.userSkills,form:S.form,mode:S.mode,fine:S.fine,credits:S.credits,model:S.model,skin:S.skin,auto:S.auto,history:S.history,novels:S.novels}))}catch(e){}},200);const sv=$('#saved');if(sv)sv.innerHTML=`${ic('check')}已自动保存`}
-function load(){try{const d=JSON.parse(localStorage.getItem('lanmu-v3')||localStorage.getItem('jingmu-v3')||'null');if(d){Object.assign(S,{projects:d.projects||[],userSkills:d.userSkills||[],mode:d.mode||'original',fine:!!d.fine,credits:d.credits??300,model:d.model||'auto',skin:d.skin||'dark',auto:!!d.auto,history:d.history||[],novels:d.novels||[]});S.form=Object.assign(defForm(),d.form||{});pePrune(S.form)}}catch(e){}}
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('lanmu-v3',JSON.stringify({projects:S.projects,userSkills:S.userSkills,form:S.form,mode:S.mode,fine:S.fine,credits:S.credits,model:S.model,skin:S.skin,auto:S.auto,history:S.history,novels:S.novels,tipOff:!!S.tipOff}))}catch(e){}},200);const sv=$('#saved');if(sv)sv.innerHTML=`${ic('check')}已自动保存`}
+function load(){try{const d=JSON.parse(localStorage.getItem('lanmu-v3')||localStorage.getItem('jingmu-v3')||'null');if(d){Object.assign(S,{projects:d.projects||[],userSkills:d.userSkills||[],mode:d.mode||'original',fine:!!d.fine,credits:d.credits??300,model:d.model||'auto',skin:d.skin||'dark',auto:!!d.auto,history:d.history||[],novels:d.novels||[],tipOff:!!d.tipOff});S.form=Object.assign(defForm(),d.form||{});pePrune(S.form)}}catch(e){}}
 function go(kind,obj,to){const from=obj.status;const def=SM[kind];if(from===to)return true;if(!def.tr[from]||!def.tr[from].includes(to))return false;obj.status=to;return true}
 function advanceStage(P,to){if(STAGE_ORDER.indexOf(to)>STAGE_ORDER.indexOf(P.stage)){const o={status:P.stage};if(go('project',o,to))P.stage=o.status}}
 const ST_LABEL=k=>{for(const d of Object.values(SM))if(d.states[k])return d.states[k];return k};
@@ -1709,9 +1727,8 @@ function renderProject(){
   if(S.askPage!==S.sel){S.askPage=S.sel;S.askSkills=[];S.askDraft=''}
   const asst=S.asstOpen?`<aside class="asst" id="asst" aria-label="AI 助手"><header>${ic('spark')}<b>AI 助手</b><span class="sm muted">· ${esc(modelOf(S.model).name)}</span><span class="sp"></span><button class="iconbtn" data-act="asstClose" aria-label="收起 AI 助手" title="收起">${ic('x')}</button></header>
     <div class="msgs" id="msgs"></div>
-    <div id="edtip"></div>
-    <div class="quick">${quickHTML(getArt(S.sel))}</div>
-    <div class="ask"><div class="chips" id="askSkills"></div><textarea id="askInput" placeholder="告诉 AI 怎么改，例如：第 5 集加一场打脸戏" aria-label="对 AI 说">${esc(S.askDraft||'')}</textarea><div class="row"><button class="btn sm ghost docbtn" data-act="doctor" title="让剧本医生检查这一页，给出打分报告和修改意见">${ic('doctor')}剧本医生</button><span class="sp"></span><span class="scope">作用于：${esc(getArt(S.sel)?.label||'当前页')}</span><span class="credits"><i></i>${costOf(2)}</span><button class="btn pri sq" data-act="ask" aria-label="发送">${ic('send')}</button></div></div></aside>`:'';
+    <div id="sktip"></div>
+    <div class="ask"><div class="atpop" id="atpop" role="listbox" aria-label="选择技能" hidden></div><div class="chips" id="askSkills"></div><textarea id="askInput" placeholder="告诉 AI 怎么改，输入 @ 调用技能。例如：第 5 集加一场打脸戏" aria-label="对 AI 说">${esc(S.askDraft||'')}</textarea><div class="row"><button class="btn sm ghost atbtn" data-act="atOpen" title="调用技能（也可以直接输入 @）" aria-label="调用技能">@</button><button class="btn sm ghost docbtn" data-act="doctor" title="让剧本医生检查这一页，给出打分报告和修改意见">${ic('doctor')}剧本医生</button><span class="sp"></span><span class="scope">作用于：${esc(getArt(S.sel)?.label||'当前页')}</span><span class="credits"><i></i>${costOf(2)}</span><button class="btn pri sq" data-act="ask" aria-label="发送">${ic('send')}</button></div></div></aside>`:'';
   return top+`<div class="ws ${S.asstOpen?'':'noasst'}">${tree}<section class="main" id="main">${autoBar(P)}${main}</section>${asst}</div>`;
 }
 function nodeBar(P){
@@ -1800,66 +1817,114 @@ function confirmArt(k){
   else if(a.kind==='segment'||a.kind==='outline'){const nx=nextSeg(P,a.key);acts=[['script:'+a.key,'写成短剧剧本']];if(nx&&!has(P.arts[nx.k]))acts.unshift(['outline:'+nx.k,`继续写${nx.label}集纲`])}
   else if(a.kind==='script')acts=[['export:'+a.key,'导出剧本'],['cont:'+a.src,'续写']];
   say(P,`「${a.label}」已确认定稿，之后上游改动也不会自动覆盖它。需要再改，点「继续编辑」。`,acts);save();render()}
-// ============ 编辑时的写作建议与 Skill 推荐 ============
-const GUIDE={
-  plan:{sk:['sk5','sk4','sk3'],tips:['人物小传写清主角「想要什么、害怕什么」，人物弧光才立得住。','反派的动机要能一句话说清，越合理越可恨。','核心冲突最好在前 3 集就亮出来，别让观众等。','付费卡点前 1–2 集先埋悬念，卡点集停在最想看下一集的瞬间。']},
-  outline:{sk:['sk3','sk2','sk1'],tips:['每集结尾都留一个钩子，卡点集的钩子要最强。','每 1–2 集安排一个爽点，避免连续两集只铺垫。','第 1 集前 3 秒就要有冲突或身份反差。','一集梗概写清「谁、做了什么、结果怎么反转」。']},
-  script:{sk:['sk8','sk2','sk4'],tips:['台词尽量用短句，一句只说一件事，演员好念、观众好记。','每场戏至少一个情绪转折，别让一场戏从头平到尾。','打脸戏先压后扬：压得越狠，扬得越爽。','动作描写只写镜头拍得到的，内心戏交给表情和台词。']},
-  interactive:{sk:['sk7','sk4'],tips:['好的选择是两难，两个选项都要有代价。','每个分支至少给一次即时反馈，让玩家感到选择有用。']},
-  game:{sk:['sk7','sk5'],tips:['对镜台词要像在对玩家本人说话，多用「你」。','QTE 放在情绪最高点，失败也要有剧情。']}};
-const SK_PROMPT={sk1:'用「黄金三秒开篇」让开场节奏再快一点，直接进冲突',sk2:'用「爽点密度控制」加一场打脸爽点',sk3:'用「付费卡点钩子」加强卡点悬念',sk4:'用「反转设计」让反派更狠，埋一个反转',sk5:'用「人物弧光」加一点感情线，写出主角的变化',sk6:'用「海外本土化」调整文化细节',sk7:'用「互动分支设计」让这个选择更难选',sk8:'用「台词口语化」把台词改得更口语'};
-const skOf=id=>BUILTIN_SKILLS.find(s=>s.id===id);
-function guideOf(a){if(!a)return null;return GUIDE[a.kind==='segment'||a.kind==='outline'?'outline':a.kind]||null}
-const tipOff={};
-const skText=id=>SK_PROMPT[id]||`用「${skOf(id)?.name||''}」优化这一页`;
+// ============ 技能：@ 调用 + 技能引导 ============
+// 侧边栏不再常驻推荐 Skill / 快捷修改 / 写作建议。用户输入 @ 调用技能；
+// 系统只在检测到明确场景时，偶尔弹一张小卡片引导用户试某个技能（有频率限制）。
+const SK_PROMPT={sk1:'用「黄金三秒开篇」让开场节奏再快一点，直接进冲突',sk2:'用「爽点密度控制」加一场打脸爽点',sk3:'用「付费卡点钩子」加强卡点悬念',sk4:'用「反转设计」让反派更狠，埋一个反转',sk5:'用「人物弧光」加一点感情线，写出主角的变化',sk6:'用「海外本土化」调整文化细节',sk7:'用「互动分支设计」让这个选择更难选',sk8:'用「台词口语化」把台词改得更口语',sk9:'给这一页想 3 个意想不到的反转方向'};
+const allSkills=()=>[...BUILTIN_SKILLS,...S.userSkills.filter(x=>x.status==='active')];
+const skOf=id=>allSkills().find(s=>s.id===id);
 function askTa(){return $('#askInput')}
 function renderAskBox(){
   const row=$('#askSkills');if(!row)return;
-  row.innerHTML=S.askSkills.map(id=>{const s=skOf(id);if(!s)return'';return`<span class="chip">${esc(s.name)}<button data-askx="${id}" aria-label="移除 ${esc(s.name)}">×</button></span>`}).join('');
-  row.querySelectorAll('[data-askx]').forEach(b=>safeClick(b,()=>toggleSkill(b.dataset.askx)));
-  document.querySelectorAll('.asst [data-qsk]').forEach(b=>b.classList.toggle('on',S.askSkills.includes(b.dataset.qsk)))}
+  row.innerHTML=S.askSkills.map(id=>{const s=skOf(id);if(!s)return'';return`<span class="chip">@${esc(s.name)}<button data-askx="${id}" aria-label="移除 ${esc(s.name)}">×</button></span>`}).join('');
+  row.querySelectorAll('[data-askx]').forEach(b=>safeClick(b,()=>toggleSkill(b.dataset.askx)))}
+// 加入 / 移除一个技能（对话框上方显示为 @标签）
 function toggleSkill(id){
-  if(!skOf(id))return;
-  const i=S.askSkills.indexOf(id),ta=askTa();
-  if(i>=0){S.askSkills.splice(i,1);
-    if(ta){const line=skText(id);ta.value=ta.value.split('\n').filter(x=>x.trim()!==line).join('\n').replace(/^\n+|\n+$/g,'')}}
-  else{S.askSkills.push(id);
-    if(ta){const cur=ta.value.replace(/\s+$/,'');ta.value=(cur?cur+'\n':'')+skText(id);ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}}
-  if(ta)S.askDraft=ta.value;
-  renderAskBox();renderEdTip()}
+  if(!skOf(id))return;const i=S.askSkills.indexOf(id);
+  if(i>=0)S.askSkills.splice(i,1);else{if(S.askSkills.length>=5){toast('一次最多调用 5 个技能');return}S.askSkills.push(id)}
+  renderAskBox();const ta=askTa();if(ta)ta.focus()}
 function mountAskSkills(){
   const P=S.project;if(!P)return;P.params.skills=P.params.skills||[];
   S.askSkills.forEach(id=>{if(!P.params.skills.includes(id)&&P.params.skills.length<5)P.params.skills.push(id)})}
 function sendAsk(){
-  const t=askTa();if(!t)return;const v=t.value.trim();
-  if(!v){toast('先说点什么，或者先选一个 Skill');return}
-  mountAskSkills();t.value='';S.askDraft='';S.askSkills=[];renderAskBox();aiEdit(v)}
-function quickHTML(a){
-  const q=quickFor(a).map(x=>`<button data-q="${esc(x)}">${esc(x)}</button>`).join('');const g=guideOf(a);if(!g||!has(a))return q;
-  const tip=g.tips[(S.advI||0)%g.tips.length];
-  return`<div class="advice">${ic('spark')}<span><b>写作建议</b>${esc(tip)}</span><button data-adv>换一条</button></div>
-    <div class="qrow"><span class="ql">推荐 Skill · 可多选</span>${g.sk.map(id=>`<button class="sk ${S.askSkills.includes(id)?'on':''}" data-qsk="${id}" title="${esc(skOf(id).desc)} · 点击加入对话框">${esc(skOf(id).name)}</button>`).join('')}</div>
-    <div class="qrow"><span class="ql">快捷修改</span>${q}</div>`}
-function bindQuick(){const el=document.querySelector('.asst .quick');if(!el)return;
-  el.querySelectorAll('[data-q]').forEach(b=>safeClick(b,()=>aiEdit(b.dataset.q)));
-  el.querySelectorAll('[data-qsk]').forEach(b=>safeClick(b,()=>toggleSkill(b.dataset.qsk)));
-  const adv=el.querySelector('[data-adv]');safeClick(adv,()=>{S.advI=(S.advI||0)+1;const q=document.querySelector('.asst .quick');if(q){q.innerHTML=quickHTML(getArt(S.sel));bindQuick()}});
-  renderAskBox()}
-function renderEdTip(){
-  const el=$('#edtip');if(!el)return;const a=S.edTip&&getArt(S.edTip);const g=guideOf(a);
-  if(!a||!g||a.key!==S.sel||tipOff[a.key]||a.status==='locked'){el.innerHTML='';return}
-  el.innerHTML=`<div class="edtip" role="status"><div class="t">${ic('pen')}正在编辑「${esc(a.label)}」<span class="sp"></span><button class="iconbtn" data-edx aria-label="关闭提醒">${ic('x')}</button></div>
-    <p>${esc(g.tips[0])}<br>可以多选下面的 Skill，它们会加进下方对话框，你可以改完再发送：</p>
-    <div class="sks">${g.sk.map(id=>{const s=skOf(id);return`<button class="${S.askSkills.includes(id)?'on':''}" data-qsk="${id}"><b>${esc(s.name)}</b><small>${esc(s.desc)}</small></button>`}).join('')}</div>
-    <div class="sm muted">选好后在下方对话框点发送；改完记得点右上角「确认」。</div></div>`;
-  el.querySelectorAll('[data-qsk]').forEach(b=>safeClick(b,()=>toggleSkill(b.dataset.qsk)));
-  safeClick(el.querySelector('[data-edx]'),()=>{tipOff[a.key]=1;S.edTip=null;renderEdTip()})}
-function onEditFocus(el){
-  const a=getArt(S.sel);if(!a||!guideOf(a)||tipOff[a.key]||a.status==='locked')return;
-  const box=$('#edtip');if(S.edTip===a.key&&S.asstOpen&&box&&box.innerHTML)return;
-  S.edTip=a.key;
-  if(!S.asstOpen)return;
-  renderEdTip()}
+  const t=askTa();if(!t)return;let v=t.value.trim();const sk=S.askSkills.slice();
+  if(!v&&!sk.length){toast('先说点什么，或者输入 @ 调用技能');return}
+  if(!v)v=sk.map(id=>SK_PROMPT[id]||`用「${skOf(id).name}」优化这一页`).join('；');
+  const shown=(sk.length?sk.map(id=>'@'+skOf(id).name).join(' ')+' ':'')+v;
+  mountAskSkills();t.value='';S.askDraft='';S.askSkills=[];renderAskBox();closeAt();hideTip();TIP.lastType=Date.now();
+  if(sk.includes('sk9'))brainstorm(shown,v);else aiEdit(shown)}
+// ---- @ 技能列表 ----
+let AT=null;
+function closeAt(){const el=$('#atpop');if(el){el.hidden=true;el.innerHTML=''}AT=null}
+function atCheck(){
+  const ta=askTa();if(!ta)return;const pre=ta.value.slice(0,ta.selectionStart);const m=/(^|\s)@([^\s@]{0,12})$/.exec(pre);
+  if(!m){closeAt();return}
+  const q=m[2];const list=allSkills().filter(x=>!q||x.name.includes(q)||(x.desc||'').includes(q));
+  AT={q,start:pre.length-q.length-1,list,i:AT&&AT.q===q?Math.min(AT.i,list.length-1):0};drawAt()}
+function drawAt(){
+  const el=$('#atpop');if(!el||!AT)return;el.hidden=false;
+  el.innerHTML=`<div class="ath">调用技能${AT.q?` · 搜索「${esc(AT.q)}」`:''}<span class="sp"></span><span class="sm muted">↑↓ 选择 · Enter 确认 · Esc 关闭</span></div>`+(AT.list.length?AT.list.map((x,i)=>`<button role="option" aria-selected="${i===AT.i}" class="${i===AT.i?'on':''} ${S.askSkills.includes(x.id)?'picked':''}" data-at="${x.id}"><b>@${esc(x.name)}</b><small>${esc(x.desc||'我上传的技能')}</small>${S.askSkills.includes(x.id)?'<span class="ok">已选</span>':''}</button>`).join(''):'<div class="sm muted" style="padding:8px 10px">没有匹配的技能，可以在素材库上传自己的 Skill</div>');
+  el.querySelectorAll('[data-at]').forEach(b=>safeClick(b,()=>pickAt(b.dataset.at)))}
+function pickAt(id){
+  const ta=askTa();if(ta&&AT){const v=ta.value;const end=AT.start+1+AT.q.length;ta.value=v.slice(0,AT.start)+v.slice(end).replace(/^\s?/,'');ta.setSelectionRange(AT.start,AT.start);S.askDraft=ta.value}
+  closeAt();if(!S.askSkills.includes(id))toggleSkill(id);else if(ta)ta.focus()}
+function atKey(e){
+  if(!AT)return false;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const n=AT.list.length;if(n){AT.i=(AT.i+(e.key==='ArrowDown'?1:n-1))%n;drawAt()}return true}
+  if((e.key==='Enter'||e.key==='Tab')&&AT.list.length){e.preventDefault();pickAt(AT.list[AT.i].id);return true}
+  if(e.key==='Escape'){e.preventDefault();closeAt();return true}
+  return false}
+// ---- 脑洞创意：先给 3 个方向，用户挑一个再改 ----
+const IDEA_POOL=['{X}其实一直在暗中保护{P}，当年的退婚是{X}亲手安排的，为了让{P}躲开一场灭门之祸。','{A}和{L}早就认识，两人之间有一笔见不得光的交易，{L}的接近另有目的。','{P}失去记忆的那三年里，留下了一个孩子，孩子的父亲身份会改写所有人的关系。','真正的幕后黑手是{P}身边最不起眼的助理，{A}只是被推到台前的替罪羊。','{L}的家族才是当年事件最大的受益者，{L}在真相和{P}之间被迫二选一。','{P}以为的复仇对象其实也是受害者，两人被迫联手对付同一个敌人。','{A}手里握着一份能让{P}身败名裂的录音，却在关键时刻选择交给警方。','一场意外让{P}和{A}互换了身份，{P}第一次看清{A}的处境。'];
+function brainstorm(shown,text){
+  const P=S.project;if(!P)return;const a=getArt(S.sel);const c=P.arts.plan.data?.cast;
+  P.chat.push({r:'me',t:shown,at:Date.now()});renderAsstMsgs();
+  if(!a||!a.data||!c){setTimeout(()=>{say(P,'先等内容生成出来，我再帮你想。');save()},400);return}
+  if(!cost(costOf(2)))return;S.credits-=costOf(2);
+  const k=(P.ideaSeed=(P.ideaSeed||0)+3);const list=[0,1,2].map(i=>fill(IDEA_POOL[(k+i)%IDEA_POOL.length],c));
+  const scope=(text.match(/第\s*\d+\s*集/)||[''])[0];P.ideas={list,scope};
+  addHist(P,`脑洞创意：${a.label}`,a.key,0,costOf(2),'ai');
+  setTimeout(()=>{say(P,`「脑洞创意」给你 3 个方向：\n① ${list[0]}\n② ${list[1]}\n③ ${list[2]}\n挑一个，我按它来改「${a.label}」${scope?scope:''}。`,[['idea:0','用方向 ①'],['idea:1','用方向 ②'],['idea:2','用方向 ③'],['ideaMore','再来 3 个']]);save()},600)}
+// ---- 技能引导小卡片 ----
+const TIP_GAP=120000,TIP_MAX=3,TIP_DWELL=15000;
+const TIP={last:0,count:{},seen:new Set(),dismissed:new Set(),timer:null,typeT:null,lastType:0};
+const TIP_WORDS=[[/没灵感|卡住|想不出|不知道怎么|新意|脑洞|意外|出人意料|俗套|套路/,'sk9','你想换点新意'],[/拖|节奏|太慢|无聊|水/,'sk2','你在调整节奏'],[/台词|对白|说话|口语/,'sk8','你在改台词'],[/钩子|卡点|悬念|付费|留人/,'sk3','你在改钩子和卡点'],[/人物|人设|性格|动机|弧光/,'sk5','你在改人物'],[/开头|开篇|开场|第\s*1\s*集/,'sk1','你在改开篇'],[/海外|本土|外国|英文/,'sk6','你在做本土化'],[/选项|分支|选择|结局/,'sk7','你在改互动分支']];
+function tipAllowed(sk){const P=S.project;if(!P||S.tipOff||!S.asstOpen||S.view!=='project'||S.tip)return false;
+  const a=getArt(S.sel);if(!a||!has(a)||a.status==='generating'||a.status==='locked')return false;
+  if(S.askSkills.includes(sk)||TIP.dismissed.has(sk))return false;
+  if(S.tipFast)return true;
+  return Date.now()-TIP.last>=TIP_GAP&&(TIP.count[P.id]||0)<TIP_MAX}
+function showTip(sk,title,body,prompt){
+  if(!tipAllowed(sk))return;const P=S.project;
+  TIP.last=Date.now();TIP.count[P.id]=(TIP.count[P.id]||0)+1;S.tip={sk,title,body,prompt,page:S.sel};renderTip()}
+function hideTip(){S.tip=null;renderTip()}
+function renderTip(){
+  const el=$('#sktip');if(!el)return;const t=S.tip;
+  if(!t||t.page!==S.sel){el.innerHTML='';return}const s=skOf(t.sk);
+  el.innerHTML=`<div class="sktip" role="status"><div class="t">${ic('spark')}检测到${esc(t.title)}<span class="sp"></span><button class="iconbtn" data-tipx aria-label="关闭">${ic('x')}</button></div>
+    <p>${esc(t.body)}</p><div class="acts"><button class="btn sm pri" data-tipuse>试试「${esc(s.name)}」</button><button class="btn sm ghost" data-tipno>不用了</button><span class="sp"></span><label><input type="checkbox" data-tipoff> 不再提示</label></div></div>`;
+  const no=()=>{TIP.dismissed.add(t.sk);hideTip()};
+  safeClick(el.querySelector('[data-tipx]'),no);safeClick(el.querySelector('[data-tipno]'),no);
+  el.querySelector('[data-tipoff]').onchange=()=>{S.tipOff=true;save();toast('之后不再弹技能引导，需要时输入 @ 调用技能');hideTip()};
+  safeClick(el.querySelector('[data-tipuse]'),()=>{const ta=askTa();hideTip();if(!S.askSkills.includes(t.sk))toggleSkill(t.sk);
+    if(ta&&t.prompt&&!ta.value.trim()){ta.value=t.prompt;S.askDraft=t.prompt}if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}})}
+// 看内容时：在同一页停留一段时间、没在打字，按页面内容判断该推荐什么
+function tipWatch(){
+  clearTimeout(TIP.timer);const P=S.project;if(!P||S.view!=='project')return;const key=S.sel;
+  if(TIP.seen.has(P.id+key))return;
+  TIP.timer=setTimeout(()=>{if(S.sel!==key||S.view!=='project'||(!S.tipFast&&Date.now()-TIP.lastType<10000))return;
+    const a=getArt(key);if(!a||!has(a))return;const pick=tipForPage(a);if(!pick)return;
+    if(!tipAllowed(pick[0]))return;TIP.seen.add(P.id+key);showTip(...pick)},S.tipFast?2000:TIP_DWELL)}
+function tipForPage(a){
+  const d=a.data;
+  if(a.kind==='script'){const long=[];(d.eps||[]).forEach(e=>e.scenes.forEach(sc=>sc.lines.forEach(l=>{if(l.t==='dlg'&&l.x.length>16)long.push(e.no)})));
+    if(long.length)return['sk8',`你在看「${a.label}」，第 ${[...new Set(long)].slice(0,3).join('、')} 集有 ${long.length} 句台词偏长`,'短剧台词越短越好念、越好剪切片。需要用「台词口语化」把它们改短吗？','把偏长的台词改成短句'];
+    return['sk9',`你在看「${a.label}」`,'想让后面的剧情更出人意料吗？「脑洞创意」可以先给你 3 个反转方向，挑一个再改。','给这一段想 3 个反转方向']}
+  if(a.kind==='outline'||a.kind==='segment'){const r=rangeOf(S.project,a.key);
+    return['sk9',`你在看「${a.label}」`,`需要我们的「脑洞创意」给第 ${r.from}–${r.to} 集想 3 个意想不到的反转吗？挑一个，我再按它改集纲。`,`给第 ${r.from}–${r.to} 集想 3 个反转方向`]}
+  if(a.kind==='plan')return['sk9','你在看策划案','主线还可以更出人意料。要不要用「脑洞创意」先给主线想 3 个反转方向？','给主线想 3 个意想不到的反转方向'];
+  if(a.kind==='interactive')return['sk7',`你在看「${a.label}」`,'有的选择可能一边倒。需要用「互动分支设计」让选项更两难吗？','让选择更难选，两个选项都要有代价'];
+  return null}
+// 打字时：输入停下 0.8 秒后按关键词判断
+function tipTyping(){
+  TIP.lastType=Date.now();clearTimeout(TIP.typeT);
+  TIP.typeT=setTimeout(()=>{const ta=askTa();if(!ta)return;const v=ta.value;if(v.trim().length<4)return;
+    const hit=TIP_WORDS.find(([re,sk])=>re.test(v)&&!S.askSkills.includes(sk));if(!hit)return;const s=skOf(hit[1]);
+    showTip(hit[1],hit[2],`可以调用「${s.name}」（${s.desc}）来做这件事，点一下加到对话框，你的话会保留。`,'')},800)}
+// 旧接口：编辑时不再弹写作建议
+function renderEdTip(){}
+function onEditFocus(){}
+function bindQuick(){renderAskBox();renderTip()}
 function verItem(a){return['versions:'+a.key,'版本记录']}
 
 function renderParse(P){
@@ -2101,6 +2166,8 @@ function doAction(k){
   else if(cmd==='scriptcur'){S.sel=arg;openInline('script',arg,'cur');render()}
   else if(cmd==='ia'){S.sel=arg;openInline('ia',arg,'full');render()}
   else if(cmd==='view'){S.sel=arg;render()}
+  else if(cmd==='idea'){const I=P.ideas;if(!I)return;aiEdit(`${I.scope?I.scope+'：':''}按脑洞方向改写——${I.list[+arg]}`)}
+  else if(cmd==='ideaMore'){const I=P.ideas;brainstorm('@脑洞创意 再来 3 个',I&&I.scope||'')}
   else if(cmd==='cmp'){const j=arg.lastIndexOf(':');const key=arg.slice(0,j),no=+arg.slice(j+1);S.sel=key;openCmp(key,no);render();const el=document.getElementById('ep-'+no);if(el)el.scrollIntoView({block:'start'})}
   else if(cmd==='cont')continueScript(P,arg);
   else if(cmd==='extend')openExtend(P,arg);
@@ -2454,8 +2521,9 @@ function renderDbg(){
   el.innerHTML=`<div class="dbg"><div style="display:flex;align-items:center"><b>内部调试</b><span class="sp"></span><button class="iconbtn" id="dbgX" aria-label="关闭">${ic('x')}</button></div>
     ${rows?`<table>${rows}</table>`:'<div class="muted">当前没有打开的项目</div>'}
     <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="failNext" ${S.failNext?'checked':''}> 模拟下一次生成失败</label>
+    <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="tipFast" ${S.tipFast?'checked':''}> 技能引导：忽略频率限制（演示用）</label>
     <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" id="addCr">积分 +100</button><button class="btn sm" id="dbgReset" style="color:var(--red)">清空全部数据</button></div></div>`;
-  $('#dbgX').onclick=()=>{S.debug=false;renderDbg()};$('#failNext').onchange=e=>{S.failNext=e.target.checked};
+  $('#dbgX').onclick=()=>{S.debug=false;renderDbg()};$('#failNext').onchange=e=>{S.failNext=e.target.checked};$('#tipFast').onchange=e=>{S.tipFast=e.target.checked;if(S.tipFast){S.tipOff=false;TIP.seen.clear();TIP.dismissed.clear()}};
   $('#addCr').onclick=()=>{S.credits+=100;save();render()};$('#dbgReset').onclick=()=>{try{localStorage.removeItem('lanmu-v3');localStorage.removeItem('jingmu-v3')}catch(e){}location.reload()};
 }
 
@@ -2485,8 +2553,9 @@ function bind(){
     A.querySelectorAll('[data-hrestore]').forEach(b=>b.onclick=()=>{const[pid,key,v]=b.dataset.hrestore.split('|');restoreVer(pid,key,+v)})}
   if(S.view==='project'){bindMain();A.querySelectorAll('.tree [data-sel]').forEach(b=>b.onclick=()=>{S.sel=b.dataset.sel;S.selNode=null;S.inline=null;render()});
     const pt=$('#ptitle');if(pt){pt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();pt.blur()}};pt.onblur=()=>{const v=pt.innerText.trim();const P=S.project;if(v&&v!==P.title){P.title=v;save()}}}
-    const ask=$('#askInput');if(ask){ask.value=S.askDraft||'';ask.oninput=()=>{S.askDraft=ask.value};ask.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAsk()}}}
-    bindQuick();renderEdTip();renderAskBox()}
+    const ask=$('#askInput');if(ask){ask.value=S.askDraft||'';ask.oninput=()=>{S.askDraft=ask.value;atCheck();tipTyping()};ask.onclick=atCheck;ask.onblur=()=>setTimeout(()=>{if(document.activeElement!==ask)closeAt()},150);
+      ask.onkeydown=e=>{if(atKey(e))return;if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAsk()}}}
+    if(S.tip&&S.tip.page!==S.sel)S.tip=null;bindQuick();tipWatch()}
 }
 function stepGo(k){
   const P=S.project;S.inline=null;
@@ -2613,6 +2682,7 @@ function act(x){
     case'asstClose':S.asstOpen=false;render();break;
     case'doctor':{const a=getArt(S.sel);if(!a||!has(a)){toast('这一页还没有内容，先生成再来体检');break}if(a.status==='generating'){toast('还在生成中，等写完再体检');break}if(!['plan','outline','segment','script','interactive','game'].includes(a.kind)){toast('这一页还不支持剧本医生');break}openDoctor();break}
     case'ask':sendAsk();break;
+    case'atOpen':{const ta=askTa();if(!ta)break;const p=ta.selectionStart??ta.value.length;const pre=ta.value.slice(0,p);const ins=(pre&&!/\s$/.test(pre)?' ':'')+'@';ta.value=pre+ins+ta.value.slice(p);ta.focus();ta.setSelectionRange(p+ins.length,p+ins.length);S.askDraft=ta.value;atCheck();break}
   }
 }
 
