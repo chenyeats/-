@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>澜幕 · 精细生成 · 停留推荐</title>
+<style>
+/* 精细生成工作台：目录 / 文档 / AI 助手。重点演示「用户停留时，AI 助手弹出技能推荐」的交互 */
+:root{
+  color-scheme:dark;
+  --bg:#061320;--bg2:#0A1B2A;--surface:#0D2132;--surface2:#12293C;--hover:#183449;--line:#1B3346;--line2:#27465E;
+  --fg:#E5F0F5;--fg2:#A6BFCC;--muted:#6C8899;
+  --accent:#3FD6C9;--accent-dim:rgba(63,214,201,.14);--on-accent:#032220;--accent2:#4BA3FF;
+  --coral:#FF8E6E;--coral-dim:rgba(255,142,110,.15);--red:#FF6B6B;--violet:#9D8CFF;--green:#6EDB9A;--amber:#F5C36B;
+  --shadow:0 18px 50px rgba(0,0,0,.4);
+  --f-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --f-serif:"Noto Serif SC","Songti SC","STSong",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(1100px 520px at 50% -8%,rgba(63,214,201,.12),transparent 65%),var(--bg);background-attachment:fixed;color:var(--fg);font:14px/1.6 var(--f-body);overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sp{flex:1}.muted{color:var(--muted)}.sm{font-size:12px}.mono{font-family:var(--f-mono)}
+.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--fg);font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--fg2)}.btn.ghost:hover{color:var(--fg);background:var(--hover)}
+.btn.sm{height:28px;padding:0 10px;font-size:12px;border-radius:8px}
+.btn.ok{border-color:color-mix(in srgb,var(--green) 60%,var(--line2));color:var(--green)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.iconbtn{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--fg2)}
+.iconbtn:hover{background:var(--hover);color:var(--fg)}
+
+/* 顶栏 */
+.app{display:grid;grid-template-rows:auto minmax(0,1fr);height:100vh}
+.top{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(10px)}
+.logo{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(150deg,var(--accent),var(--accent2));color:var(--on-accent)}
+.logo svg{width:20px;height:20px;fill:currentColor;stroke:none}
+.ptitle{font-weight:700;font-size:15px;padding:2px 6px;border-radius:6px;outline:none}
+.ptitle:hover,.ptitle:focus{background:var(--surface2)}
+.badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--accent-dim);color:var(--accent)}
+.steps{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px}
+.steps b{color:var(--fg2);font-weight:500}.steps .on{color:var(--accent)}
+.steps i{width:14px;height:1px;background:var(--line2)}
+.asstbtn{position:relative;width:36px;height:36px;border:1px solid var(--line);border-radius:10px}
+.asstbtn.on{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:var(--accent-dim)}
+.asstbtn.dot::after{content:'';position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 2px var(--bg);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{transform:scale(1.4)}}
+
+/* 三栏 */
+.ws{display:grid;grid-template-columns:200px minmax(0,1fr) 340px;min-height:0}
+.ws.noasst{grid-template-columns:200px minmax(0,1fr)}
+.ws.noasst .asst{display:none}
+.tree{border-right:1px solid var(--line);padding:12px 10px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.tree h4{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.08em;margin:14px 10px 4px}
+.tree a{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;color:var(--fg2);font-size:13px}
+.tree a:hover{background:var(--hover);color:var(--fg)}
+.tree a.on{background:var(--surface2);color:var(--fg);font-weight:500}
+.tree a.dim{opacity:.45}
+.tree a .r{margin-left:auto;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.tree .kind{font-size:10px;padding:0 5px;border-radius:4px;background:var(--surface2);color:var(--muted)}
+.tree .tipdot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--accent);animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.main{overflow:auto;position:relative;scroll-behavior:smooth}
+.doc{max-width:860px;margin:0 auto;padding:20px 32px 50vh;display:grid;gap:16px}
+.dh{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.dh h2{margin:0;font-size:24px;font-weight:900;display:flex;align-items:center;gap:10px}
+.dh .meta{color:var(--muted);font-size:12px;margin-top:4px}
+.dh .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.st{font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--green)}
+.st.locked{color:var(--fg)}
+.hint{font-size:12px;color:var(--fg2);border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:12px;padding:10px 14px}
+.ep{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:2px 14px;padding:14px 10px;border-radius:12px;border:1px solid transparent;transition:background .3s,border-color .3s}
+.ep+.ep{border-top-color:var(--line);border-radius:0}
+.ep .no{font-family:var(--f-mono);font-size:12px;color:var(--muted);grid-row:span 3}
+.ep .no b{display:block;font-size:20px;color:var(--fg);font-weight:600}
+.ep .t{font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ep .s{color:var(--fg2);font-size:13px;outline:none;border-radius:6px}
+.ep .s:focus{background:var(--surface)}
+.ep .h{color:var(--muted);font-size:12px}
+.ep.card .no b{color:var(--coral)}
+.cardtag{font-size:11px;font-weight:700;color:var(--coral);border:1px solid var(--coral);padding:0 6px;border-radius:5px}
+.revtag{font-size:11px;font-weight:700;color:var(--violet);border:1px solid color-mix(in srgb,var(--violet) 60%,transparent);background:color-mix(in srgb,var(--violet) 12%,transparent);padding:0 6px;border-radius:5px}
+.ep.reading{background:color-mix(in srgb,var(--fg) 3%,transparent)}
+.ep.tipfocus{background:color-mix(in srgb,var(--accent) 7%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)!important;border-radius:12px!important}
+.ep .tippill{position:absolute;right:10px;top:12px;display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--on-accent);background:var(--accent);border-radius:999px;padding:2px 9px;box-shadow:0 4px 14px rgba(63,214,201,.35);animation:popin .3s cubic-bezier(.2,.9,.3,1.3)}
+.ep .tippill svg.i{width:12px;height:12px}
+@keyframes popin{from{opacity:0;transform:scale(.8)}}
+.ep .old{grid-column:2;font-size:12px;color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--red) 60%,transparent)}
+.ep.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{background:color-mix(in srgb,var(--violet) 22%,transparent)}}
+.scene{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;display:grid;gap:4px;font-size:13.5px;margin-top:6px}
+.scene .hd{font-family:var(--f-mono);font-size:12px;font-weight:600}
+.ln{color:var(--fg2)}.ln.dlg b{color:var(--fg)}.ln .par{color:var(--muted)}.ln.hook{color:var(--coral);font-weight:600}
+.ln.act::before{content:"△ ";color:var(--muted)}
+.empty{display:grid;place-items:center;gap:12px;padding:70px 20px;color:var(--muted);border:1px dashed var(--line2);border-radius:16px;text-align:center}
+.gen{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:16px 18px;display:grid;gap:10px}
+.tank{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden}.tank i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+.plan p{color:var(--fg2);margin:4px 0 0;white-space:pre-wrap}
+.plan h3{margin:14px 0 0;font-size:15px}
+.chars{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:8px}
+.char{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--fg2)}
+.char b{display:block;color:var(--fg);font-size:15px}.char span{font-size:11px;color:var(--accent)}
+
+/* AI 助手 */
+.asst{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:color-mix(in srgb,var(--bg2) 60%,transparent)}
+.asst header{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.msgs{flex:1;min-height:0;overflow:auto;padding:14px;display:grid;gap:12px;align-content:start}
+.msg{display:grid;gap:6px}
+.msg .who{font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.msg .bub{padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.65;white-space:pre-wrap}
+.msg.ai .bub{background:var(--surface);border:1px solid var(--line);border-top-left-radius:4px}
+.msg.me{justify-items:end}.msg.me .bub{background:var(--accent-dim);border-top-right-radius:4px}
+.msg .acts{display:flex;gap:6px;flex-wrap:wrap}
+#tipslot{padding:0 14px}
+.tip{border:1px solid color-mix(in srgb,var(--accent) 60%,var(--line));border-radius:16px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));padding:12px;display:grid;gap:8px;margin-bottom:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:tipin .32s cubic-bezier(.2,.9,.3,1.25)}
+@keyframes tipin{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.tip .t{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.tip .t svg.i{color:var(--accent)}
+.tip .t .iconbtn{width:24px;height:24px}
+.tip .why{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg2);flex-wrap:wrap}
+.tip .meter{flex:1;min-width:90px;height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.tip .meter i{display:block;height:100%;background:var(--amber)}
+.tip p{margin:0;font-size:12.5px;line-height:1.65;color:var(--fg2)}
+.tip .sk{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--accent);background:var(--accent-dim);border-radius:6px;padding:1px 7px;font-size:12px}
+.tip .acts{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tip .more{font-size:11px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.tip .diff{display:grid;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:12.5px}
+.tip .diff .k{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.tip .diff .o{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--red) 60%,transparent)}
+.tip .diff .n{color:var(--fg);background:color-mix(in srgb,var(--violet) 14%,transparent);border-radius:6px;padding:2px 6px}
+.tip .opts{display:grid;gap:6px}
+.tip .opts button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;font-size:12.5px;color:var(--fg2)}
+.tip .opts button:hover,.tip .opts button.on{border-color:var(--accent);color:var(--fg);background:var(--accent-dim)}
+.tipchip{display:flex;align-items:center;gap:8px;margin-bottom:10px;border:1px dashed color-mix(in srgb,var(--accent) 55%,var(--line));border-radius:12px;padding:8px 10px;font-size:12px;color:var(--fg2);cursor:pointer}
+.tipchip:hover{background:var(--accent-dim)}
+.ask{margin:0 14px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:8px;display:grid;gap:6px}
+.ask:focus-within{border-color:var(--accent)}
+.ask textarea{border:0;background:transparent;resize:none;outline:none;min-height:54px;font:13px/1.6 var(--f-body);color:var(--fg)}
+.ask .row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.floatpill{position:fixed;right:18px;top:68px;z-index:30;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--accent);color:var(--fg);border-radius:999px;padding:6px 12px;font-size:12px;box-shadow:var(--shadow);animation:tipin .3s}
+.floatpill svg.i{color:var(--accent);width:14px;height:14px}
+
+/* 演示面板（只在 Demo 里有） */
+.demo{position:fixed;left:14px;bottom:14px;z-index:40;width:300px;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(8px);border:1px solid var(--line2);border-radius:14px;box-shadow:var(--shadow);font-size:12px;display:grid}
+.demo.min .bd{display:none}
+.demo .hd{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-weight:700}
+.demo .hd .lv{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.demo .bd{padding:8px 10px;display:grid;gap:6px}
+.demo .row{display:flex;align-items:center;gap:6px;color:var(--fg2)}
+.demo .row .k{width:64px;flex:none;color:var(--muted)}
+.demo .bar{flex:1;height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}.demo .bar i{display:block;height:100%;background:var(--accent);transition:width .2s linear}
+.demo .bar.cd i{background:var(--amber)}
+.demo .log{max-height:110px;overflow:auto;display:grid;gap:2px;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:6px}
+.demo .log div b{color:var(--fg2);font-weight:500}
+.demo label{display:flex;align-items:center;gap:6px;color:var(--fg2);cursor:pointer}
+.demo .btns{display:flex;gap:6px;flex-wrap:wrap}
+.readline{position:fixed;left:200px;right:340px;height:0;border-top:1px dashed color-mix(in srgb,var(--coral) 70%,transparent);pointer-events:none;z-index:5}
+.readline span{position:absolute;right:6px;top:-9px;font-size:10px;color:var(--coral);background:var(--bg);padding:0 4px}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:10px;font-size:13px;z-index:90}
+@media (max-width:1100px){.ws{grid-template-columns:160px minmax(0,1fr) 300px}.readline{left:160px;right:300px}.steps{display:none}}
+@media (max-width:760px){body{overflow:auto}.ws,.ws.noasst{grid-template-columns:1fr}.tree{display:none}.asst{position:fixed;inset:56px 0 0 0;z-index:35;background:var(--bg)}.demo{width:calc(100% - 28px)}.readline{left:0;right:0}.doc{padding:16px 16px 50vh}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top" id="top"></header>
+  <div class="ws" id="ws">
+    <nav class="tree" id="tree" aria-label="目录"></nav>
+    <main class="main" id="main"><div class="doc" id="doc"></div></main>
+    <aside class="asst" id="asst" aria-label="AI 助手">
+      <header><svg class="i" viewBox="0 0 24 24"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></svg><b>AI 助手</b><span class="sm muted">· 自动选择</span><span class="sp"></span><button class="iconbtn" data-act="asst" aria-label="收起 AI 助手"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+      <div class="msgs" id="msgs"></div>
+      <div id="tipslot"></div>
+      <div class="ask"><textarea id="ask" placeholder="告诉 AI 怎么改，输入 @ 调用技能。例如：第 5 集加一场打脸戏" aria-label="对 AI 说"></textarea><div class="row"><span>作用于：<b id="scope" style="font-weight:500;color:var(--fg2)"></b></span><span class="sp"></span><button class="btn pri sm" data-act="send">发送</button></div></div>
+    </aside>
+  </div>
+</div>
+<div id="float"></div>
+<div class="readline" id="readline" hidden><span>阅读线</span></div>
+<div class="demo" id="demo"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+// ================= 图标 =================
+const IC={spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',chat:'<path d="M4 5h16v11H9l-5 4z"/>',check:'<path d="M5 12l5 5 9-10"/>',eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',back:'<path d="M15 6l-6 6 6 6"/>',lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0012 3z"/>'};
+const ic=(k,c='i')=>`<svg class="${c}" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+const LOGO='<svg viewBox="0 0 24 24"><path d="M2 15.5c2.2 0 2.8-2.5 5-2.5s2.8 2.5 5 2.5 2.8-2.5 5-2.5 2.8 2.5 5 2.5V19c-2.2 0-2.8-2.5-5-2.5s-2.8 2.5-5 2.5-2.8-2.5-5-2.5S4.2 19 2 19z"/></svg>';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2200)}
+const now=()=>Date.now();
+const hm=()=>new Date().toTimeString().slice(0,8);
+
+// ================= 示例项目（精细生成进行中） =================
+const C={P:'林晚',L:'顾承砚',A:'苏婉柔',X:'林父'};
+const fill=s=>s.replace(/\{(\w)\}/g,(_,k)=>C[k]);
+const SEGS=[{k:'c1',label:'一卡',from:1,to:9},{k:'c2',label:'二卡',from:10,to:26},{k:'c3',label:'三卡',from:27,to:45},{k:'end',label:'结局段',from:46,to:60}];
+const CARDS={9:'一卡',26:'二卡',45:'三卡'};
+// 每集：标题、梗概、钩子。第 1 集开场慢、第 5–6 集没有爽点、卡点集钩子偏弱 —— 用来演示「检测到…」
+const EP0={
+ 1:['订婚宴','林家筹备订婚宴，宾客陆续到场，{P}在后台换礼服，{A}端着酒杯走了进来，两人寒暄几句，{A}忽然当众指认{P}偷了传家玉佩。','{L}看着{P}，没有替她说话。'],
+ 2:['被逐出门','{X}当众宣布与{P}断绝关系，{P}被赶出林家，雨夜里只剩一只行李箱。','一辆黑色轿车停在了{P}面前。'],
+ 3:['神秘来电','{P}接到一个陌生号码：「大小姐，三年之约到了。」','电话那头报出了一个让她发抖的名字。'],
+ 4:['三年后','三年后，{P}以海外集团代表的身份回到江城，第一站就是{A}的新品发布会。','她摘下墨镜，台下有人认出了她。'],
+ 5:['旧宅','{P}回到林家老宅，翻看母亲留下的旧物，想起小时候的事。','她在相册夹层里看到一张旧照片。'],
+ 6:['日常','{P}整理新公司的人事，和助理讨论接下来半年的计划。','助理欲言又止。'],
+ 7:['当众打脸','发布会上{A}抄袭的设计被{P}当众拆穿，全场哗然。','{A}咬着牙说：你等着。'],
+ 8:['身份线索','{L}查到{P}这三年的行踪，发现她和海外财团有关。','{L}拨通了一个三年没打过的电话。'],
+ 9:['马甲将掉','慈善晚宴上，{P}的真实身份即将揭晓，{A}准备了最后一击。','门被推开的瞬间，所有人都愣住了。'],
+ 10:['身份揭晓','{P}正是海外财团继承人，{A}的脸色一点点变白。','{X}在人群后面，脸色复杂。'],
+ 11:['退婚真相','{L}私下找到{P}，想解释当年的退婚。','{P}只回了一句：晚了。'],
+ 12:['设局','{A}联合董事会设局，想把{P}挤出江城市场。','合同最后一页，签名被人换过。'],
+ 13:['反将一军','{P}提前识破陷阱，反手收购了{A}最大的供应商。','{A}第一次慌了。'],
+ 14:['旧人归来','一个本该死去的旧人出现在江城，局势再次反转。','监控画面里出现了一个不该出现的人。'],
+ 15:['以退为进','{P}故意示弱，引蛇出洞。','{A}以为自己赢了。'],
+ 16:['误会冷战','{P}与{L}产生误会，冷战开始，{A}趁虚而入。','{L}的手机里多了一条匿名短信。'],
+ 17:['挡下危机','{L}替{P}挡下一场车祸，两人关系第一次升温。','急救室的灯一直亮着。'],
+ 18:['家族阻挠','{L}的家族出面阻挠，{P}被迫做出取舍。','{L}的母亲递来一张支票。'],
+ 19:['一鸣惊人','{P}在商业峰会上一鸣惊人，众人开始重新审视她。','{A}在台下攥紧了拳头。'],
+ 20:['无心之言','{X}的一句无心之言，让{P}意识到幕后另有其人。','{X}说完就后悔了。'],
+ 21:['暗查旧案','{P}暗中调查当年真相，发现{X}藏起了一份关键文件。','保险柜的密码是她的生日。'],
+ 22:['当众打脸','{P}拿出证据当众打脸，{A}的伪装被撕开一角。','闪光灯此起彼伏。'],
+ 23:['反击','{A}买通媒体抹黑{P}，舆论一夜翻转。','热搜第一挂着{P}的名字。'],
+ 24:['澄清','{P}一条视频澄清全部谣言，顺手曝光了{A}的黑料。','{A}的手机响个不停。'],
+ 25:['摊牌','{L}向{P}坦白当年被迫退婚的原因。','{P}第一次在他面前红了眼。'],
+ 26:['二选一','{L}被{A}设计陷入危险，{P}必须在真相和{L}之间做出选择。','{P}挂断电话，转身走进了雨里。']};
+function mkEp(no){const e=EP0[no];return{no,title:e[0],summary:fill(e[1]),hook:fill(e[2]),card:CARDS[no]||''}}
+const C3=[['救人','{P}放弃证据赶去救{L}，两人在废弃仓库里被困。','火光映着两张脸。'],['脱险','{L}受伤，{P}第一次承认自己的心意。','{L}昏迷前抓住了她的手。'],['证据被毁','{A}趁乱销毁了关键证据，{P}前功尽弃。','只剩一张烧了一半的照片。'],['新线索','照片背后的地址把{P}带回了老宅。','地下室的门锁是新的。'],['地下室','{P}在地下室找到母亲当年的日记。','日记最后一页被撕掉了。'],['母亲的秘密','日记揭开母亲当年的死因并非意外。','她看到了凶手的名字缩写。'],['怀疑','{P}开始怀疑身边每一个人，包括{X}。','{X}的书房灯亮到深夜。'],['试探','{P}设局试探{X}，{X}却主动交出了一份文件。','文件上盖着二十年前的公章。'],['真相一角','原来{X}当年被人胁迫，退婚是为了保护{P}。','胁迫他的人，至今还在江城。'],['幕后浮现','{A}背后的人第一次露面，是江城首富。','他看着{P}笑了：你和你母亲很像。'],['正面交锋','{P}与首富正面交锋，被反将一军。','{P}名下的公司一夜被冻结。'],['低谷','{P}失去一切，{L}出现在她门口。','他手里拿着一份股权转让书。'],['联手','{P}与{L}联手，制定反击计划。','计划的第一步，是让{A}倒戈。'],['策反','{P}找到{A}的软肋，{A}动摇了。','{A}说：我要见我妈。'],['倒戈','{A}交出首富的账本，条件是保她家人平安。','账本的最后一页写着{P}母亲的名字。'],['最后的准备','{P}召集所有证人，准备在股东大会上摊牌。','会场里多了一排陌生人。'],['股东大会','股东大会上，{P}当众揭开首富的罪行。','首富的律师站了起来。'],['反转','首富拿出一份遗嘱，声称{P}母亲把一切都留给了他。','遗嘱的签名日期，是母亲去世之后。'],['最信任的人','{P}终于拿到幕后黑手的证据，却发现对方竟是最信任的人。','照片上的人，正是她的助理。']];
+const CAST_LINES=[['{A}','冷笑','你以为你还是三年前那个林家大小姐？在这里，你什么都不是，识相的就自己走，别让大家难堪。'],['{P}','平静','这份文件，你应该很眼熟吧？'],['{L}','沉声','够了。'],['{X}','叹气','有些事，是时候告诉你了，当年的事情远比你想象的要复杂得多，我一直没有说，是因为我答应过你母亲。'],['{P}','抬眼','三年前你们欠我的，今天连本带利还回来。'],['{A}','假装委屈','姐姐，我都是为了你好呀，你怎么能这样误会我呢，大家都看着呢，你这样让我以后在江城怎么做人？']];
+function mkScene(e,i){const L=CAST_LINES;const a=L[(e.no+i)%L.length],b=L[(e.no+i+1)%L.length],c=L[(e.no+i+4)%L.length];
+  const lines=[{t:'act',x:i===0?e.summary:'宾客们窃窃私语，目光齐刷刷落在'+C.P+'身上。'},{t:'dlg',w:fill(a[0]),p:a[1],x:fill(a[2])},{t:'dlg',w:fill(b[0]),p:b[1],x:fill(b[2])},{t:'dlg',w:fill(c[0]),p:c[1],x:fill(c[2])}];
+  if(i===1)lines.push({t:'hook',x:(e.card?`【${e.card}】`:'【钩子】')+e.hook});
+  return{hd:`${e.no}-${i+1}  ${(e.no+i)%3?'日':'夜'}  内  ${['酒店宴会厅','林家老宅客厅','集团顶层会议室','街角咖啡馆','医院走廊'][(e.no+i)%5]}`,lines}}
+const S={sel:'c2',asstOpen:innerWidth>760,P:{
+  title:'豪门千金归来',
+  plan:{logline:'被豪门退婚的女主，三年后带着神秘身份回归，让所有看不起她的人追悔莫及。',synopsis:fill('{P}在订婚宴上被{A}设计陷害，被逐出家门。三年后，{P}以海外财团继承人的身份回到江城，一边揭开当年陷害的真相，一边与{L}在误会与守护中重新靠近。'),chars:[[C.P,'主角','清醒、狠、护短'],[C.L,'男主 / 盟友','当年被迫退婚，内心有愧'],[C.A,'反派','靠伪装上位，擅长示弱'],[C.X,'关键配角','掌握当年真相']],pacing:'总集数 60。一卡第 9 集（身份悬念），二卡第 26 集（情感两难），三卡第 45 集（幕后黑手反转）。',status:'locked'},
+  segs:{c1:{status:'locked',eps:Array.from({length:9},(_,i)=>mkEp(i+1))},c2:{status:'ready',eps:Array.from({length:17},(_,i)=>mkEp(i+10))},c3:{status:'empty',eps:[]},end:{status:'blocked',eps:[]}},
+  sc:{c1:{status:'ready',eps:null}},
+  chat:[]}};
+S.P.sc.c1.eps=S.P.segs.c1.eps.map(e=>({...clone(e),scenes:[0,1].map(i=>mkScene(e,i))}));
+S.P.chat=[{r:'me',t:'重生回到订婚宴前一天，这一次我要让害我的人亲手揭开自己的伪装。'},
+  {r:'ai',t:'精细生成：每一步写完都会停下来等你确认。策划案已确认；一卡集纲已确认，二卡集纲写好了（第 10–26 集），一卡的短剧剧本也写好了。'},
+  {r:'ai',t:'接下来可以继续写三卡集纲，也可以先看看已经写好的内容。',acts:[['gen:c3','继续写三卡集纲'],['view:c2','先看二卡集纲']]}];
+
+// ================= 停留推荐：参数 =================
+// 正式参数（PRD 里的默认值）与演示参数（为了在 Demo 里快速看到效果）
+const PROD={dwell:8,idle:30,cooldown:90,max:3,entryQuiet:10,typeQuiet:10,select:1.5,collapse:45,rereadN:2,rereadWin:60};
+const DEMO={dwell:4,idle:30,cooldown:15,max:5,entryQuiet:2,typeQuiet:5,select:1.2,collapse:25,rereadN:2,rereadWin:60};
+let CFG=DEMO;
+const T={
+  enterAt:now(),lastAct:now(),lastType:0,lastShown:0,shown:0,dismissStreak:0,muted:false,off:false,
+  focus:null,focusSince:0,dwell:0,seenEp:new Set(),mutedSkill:new Set(),passed:{},rereads:{},
+  tip:null,log:[]};
+const SKILLS={sk1:['黄金三秒开篇','第 1 集前 3 秒出冲突'],sk2:['爽点密度控制','每 90 秒一个爽点'],sk3:['付费卡点钩子','卡点集强化悬念'],sk8:['台词口语化','短句、强情绪'],sk9:['脑洞创意','给出 3 个意想不到的方向']};
+function log(m){T.log.unshift(`<div>${hm()} <b>${esc(m)}</b></div>`);T.log=T.log.slice(0,30);drawDemo()}
+
+// ================= 检测：这一集有没有值得推荐的点 =================
+const HOOK_STRONG=/(枪|血|死|倒|只有|最后|竟|DNA|亲生|名字|十分钟|消失)/;
+const SLAP=/(打脸|拆穿|反击|反将|曝光|哗然|收购|揭开|摊牌|识破|倒戈)/;
+function hookScore(h){return Math.min(95,38+(HOOK_STRONG.test(h)?34:0)+Math.min(16,h.length))}
+// 返回 {sk, why, meter, body, preview} 或 null
+function detect(kind,e,list){
+  if(kind==='outline'){
+    if(e.card){const s=hookScore(e.hook);if(s<75)return{sk:'sk3',why:`第 ${e.no} 集是${e.card}付费卡点`,meter:['钩子强度',s],body:`结尾「${e.hook}」悬念偏弱，观众不一定愿意付费看下一集。`}}
+    if(e.no===1&&!/^[^，。]{0,12}(当众|陷害|指认|泼|打)/.test(e.summary))return{sk:'sk1',why:'第 1 集开场冲突来得慢',meter:['开场冲突',40],body:'前 3 秒还在交代背景（筹备、到场、换礼服），冲突在第 4 句才出现。'};
+    const i=list.indexOf(e);const prev=list[i-1],next=list[i+1];
+    const dry=x=>x&&!SLAP.test(x.summary)&&!x.card;
+    if(dry(e)&&(dry(prev)||dry(next))){const pair=dry(prev)?[prev.no,e.no]:[e.no,next.no];return{sk:'sk2',why:`第 ${pair[0]}–${pair[1]} 集连续两集没有爽点`,meter:['爽点',0],body:'连续两集只有铺垫，短剧观众容易在这里划走。'}}
+    return null}
+  if(kind==='script'){const long=e.scenes.flatMap(s=>s.lines.filter(l=>l.t==='dlg'&&l.x.length>24));
+    if(long.length)return{sk:'sk8',why:`第 ${e.no} 集有 ${long.length} 句台词偏长`,meter:['最长一句',Math.max(...long.map(l=>l.x.length))],unit:'字',body:`比如「${long[0].x.slice(0,22)}…」，演员不好念，也不好剪成切片。`};
+    return null}
+  return null}
+
+// ================= 推荐卡片 =================
+function canShow(){
+  if(T.off||T.muted)return'已关闭推荐';
+  if(T.tip)return'已有一张推荐';
+  if(S.gen)return'生成中，静默';
+  if(isEditing())return'正在编辑，静默';
+  const t=now();
+  if(t-T.enterAt<CFG.entryQuiet*1000)return'刚进入页面，静默';
+  if(t-T.lastType<CFG.typeQuiet*1000)return'刚在打字，静默';
+  if(T.shown>=CFG.max)return`本次已推荐 ${T.shown} 次（上限）`;
+  const cd=cooldownLeft();if(cd>0)return`冷却中，还剩 ${cd}s`;
+  return''}
+function cooldownLeft(){const base=CFG.cooldown*(T.dismissStreak>=2?2:1);return Math.max(0,Math.ceil((T.lastShown+base*1000-now())/1000))}
+function isEditing(){const a=document.activeElement;return !!(a&&a.isContentEditable)}
+function showTip(t,trigger){
+  const why=canShow();if(why){log(`${trigger} → 不推荐（${why}）`);return false}
+  if(T.mutedSkill.has(t.sk)){log(`${trigger} → 不推荐（「${SKILLS[t.sk][0]}」本次已拒绝）`);return false}
+  T.tip={...t,trigger,stage:'ask',page:S.sel,at:now()};T.lastShown=now();T.shown++;
+  log(`${trigger} → 推荐「${SKILLS[t.sk][0]}」`);
+  drawTip();drawDoc();drawTop();drawTree();return true}
+function closeTip(reason){if(!T.tip)return;const t=T.tip;T.tip=null;
+  if(reason==='no'){T.dismissStreak++;T.mutedSkill.add(t.sk);if(T.dismissStreak>=3){T.muted=true;log('连续拒绝 3 次 → 本次不再推荐')}else if(T.dismissStreak>=2)log('连续拒绝 2 次 → 冷却时间加倍')}
+  if(reason==='use')T.dismissStreak=0;
+  log(`推荐关闭（${{no:'不用了',use:'已采用',away:'离开页面',off:'不再提示',undo:'放弃修改'}[reason]||reason}）`);
+  drawTip();drawDoc();drawTop();drawTree()}
+function collapseTip(){if(T.tip&&T.tip.stage==='ask'){T.tip.stage='chip';log('用户没理会 → 收起成小条');drawTip();drawDoc()}}
+function tipTarget(){const t=T.tip;if(!t||t.page!==S.sel)return null;return t.ep}
+function drawTip(){
+  const el=$('#tipslot');const t=T.tip;
+  $('#float').innerHTML=t&&!S.asstOpen&&t.page===S.sel?`<button class="floatpill" data-act="tipOpen">${ic('bulb')}AI 有一条写作建议</button>`:'';bindActs($('#float'));
+  if(!t||t.page!==S.sel){el.innerHTML='';return}
+  const sk=SKILLS[t.sk];
+  if(t.stage==='chip'){el.innerHTML=`<div class="tipchip" data-act="tipOpen">${ic('bulb')}<span>第 ${t.ep} 集有一条建议：${esc(t.why)}</span><span class="sp"></span><span class="muted">展开</span></div>`;return}
+  const head=`<div class="t">${ic('spark')}检测到 · ${esc(t.trigger==='停留'?`你在第 ${t.ep} 集停留了一会儿`:t.trigger==='反复阅读'?`你来回看了第 ${t.ep} 集`:t.trigger==='选中文字'?'你选中了一段文字':t.trigger==='打字'?`你在对话框里提到「${t.word}」`:`你在第 ${t.ep} 集`)}<span class="sp"></span><button class="iconbtn" data-act="tipNo" aria-label="不用了">${ic('x')}</button></div>`;
+  const meter=t.meter?`<div class="why"><b style="color:var(--fg)">${esc(t.why)}</b></div><div class="why"><span>${esc(t.meter[0])}</span><span class="meter"><i style="width:${t.unit?Math.min(100,t.meter[1]*2):t.meter[1]}%;${t.meter[1]>=75&&!t.unit?'background:var(--green)':''}"></i></span><b class="mono">${t.meter[1]}${t.unit||(t.meter[0]==='爽点'?' 个':'/100')}</b></div>`:`<div class="why"><b style="color:var(--fg)">${esc(t.why)}</b></div>`;
+  let body='',acts='';
+  if(t.stage==='ask'){
+    body=`<p>${esc(t.body)}</p><p>要不要用 <span class="sk">@${esc(sk[0])}</span> ${t.sk==='sk9'?'给你 3 个方向挑一个':'先改一版给你看看'}？不满意可以不采用。</p>`;
+    acts=`<button class="btn pri sm" data-act="tipPreview">${ic('eye')}${t.sk==='sk9'?'给我 3 个方向':'先看看改成什么样'}</button><button class="btn ghost sm" data-act="tipNo">不用了</button><span class="sp"></span><button class="more" data-act="tipOff">不再提示</button>`}
+  else if(t.stage==='loading'){body=`<div class="why"><span class="spin"></span>正在用「${esc(sk[0])}」改第 ${t.ep} 集…</div>`}
+  else if(t.stage==='preview'){
+    if(t.sk==='sk9')body=`<div class="opts">${t.opts.map((o,i)=>`<button class="${t.pick===i?'on':''}" data-pick="${i}">${'①②③'[i]} ${esc(o)}</button>`).join('')}</div>`;
+    else body=`<div class="diff"><span class="k">${esc(t.field)} · 修改前</span><div class="o">${esc(t.before)}</div><span class="k">修改后</span><div class="n">${esc(t.after)}</div></div>`;
+    acts=`<button class="btn pri sm" data-act="tipApply" ${t.sk==='sk9'&&t.pick==null?'disabled':''}>${ic('check')}采用到正文</button><button class="btn sm" data-act="tipAgain">换一版</button><button class="btn ghost sm" data-act="tipNo">放弃</button>`}
+  el.innerHTML=`<div class="tip" role="status" aria-live="polite">${head}${meter}${body}<div class="acts">${acts}</div></div>`;
+  el.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{t.pick=+b.dataset.pick;drawTip()});
+  bindActs(el)}
+// 生成预览（模拟 AI：正式版由模型按技能改写这一集）
+const STRONG=['{A}把一份 DNA 报告拍在桌上：你确定，你是林家的女儿？','灯突然全灭，一声枪响，{L}倒在了{P}面前。','门被推开，站在门口的是本该死去的母亲。','大屏幕亮起，播放的是三年前那场火灾的监控。'];
+const IDEAS=['{X}其实一直在暗中保护{P}，当年的退婚是他亲手安排的。','{A}和{L}早就认识，两人有一笔见不得光的交易。','真正的幕后黑手是{P}身边最不起眼的助理。','{L}的家族才是当年事件最大的受益者。','{P}失去记忆的那三年里，留下了一个孩子。'];
+// 台词改短：保留前两小句，去掉语气词
+const shorten=x=>{const p=x.split(/[，,]/).filter(Boolean);return p.slice(0,2).join('，').replace(/[呀呢啊]/g,'').replace(/[。！？!?]$/,'')+(/[？?]$/.test(x)&&p.length<=2?'？':'。')};
+function preview(){const t=T.tip;const ep=findEp(t.ep);t.v=(t.v||0)+1;
+  if(t.sk==='sk3'){t.field='结尾钩子';t.before=ep.hook;t.after=fill(STRONG[(t.ep+t.v)%STRONG.length])}
+  if(t.sk==='sk1'){t.field='梗概';t.before=ep.summary;t.after=fill(['订婚宴上，{A}当众指认{P}偷了传家玉佩，满堂宾客哗然——{P}还没开口，{L}已经别过了脸。','一杯红酒泼在{P}的礼服上，{A}笑着说：小偷也配穿这件衣服？订婚宴当场变成审判。'][t.v%2])}
+  if(t.sk==='sk2'){t.field='梗概';t.before=ep.summary;t.after=ep.summary.replace(/。$/,'')+fill(['。{A}派人上门挑衅，{P}一句话让对方当场下不来台。','。旧宅门口，{A}的人想抢走旧物，被{P}当众反制。'][t.v%2])}
+  if(t.sk==='sk8'){const l=ep.scenes.flatMap(s=>s.lines).find(l=>l.t==='dlg'&&l.x.length>24)||ep.scenes[0].lines[1];t.field=`${l.w}的台词`;t.before=l.x;t.line=l;
+    t.after=shorten(l.x)}
+  if(t.sk==='sk9'){t.opts=[0,1,2].map(i=>fill(IDEAS[(t.v+i)%IDEAS.length]));t.pick=null}
+  if(t.sel){t.field='选中的文字';t.before=t.sel;t.after=t.sk==='sk8'?shorten(t.sel):t.sel.replace(/。$/,'')+'——话没说完，门开了。'}
+  t.stage='preview';drawTip()}
+function findEp(no){const a=page();return a.eps.find(e=>e.no===no)}
+function apply(){const t=T.tip;const a=page();const ep=findEp(t.ep);const snap=clone(ep);
+  if(t.sk==='sk3')ep.hook=t.after;
+  else if(t.sk==='sk8'&&t.line){const ln=ep.scenes.flatMap(s=>s.lines).find(l=>l.t==='dlg'&&l.x===t.before);if(ln)ln.x=t.after}
+  else if(t.sk==='sk9'){ep.summary=ep.summary.replace(/。$/,'')+'。'+t.opts[t.pick]}
+  else if(t.sel){if(a.kind==='script'){const ln=ep.scenes.flatMap(s=>s.lines).find(l=>l.x.includes(t.sel));if(ln)ln.x=ln.x.replace(t.sel,t.after)}else ep.summary=ep.summary.replace(t.sel,t.after)}
+  else ep.summary=t.after;
+  ep.rev={before:snap};S.undo={page:S.sel,no:ep.no,data:snap};a.status=a.status==='locked'?'locked':'edited';
+  const sk=SKILLS[t.sk][0];closeTip('use');
+  say(`已用「${sk}」改了第 ${ep.no} 集，正文里这一集标了「修改版」。`,[['undo','撤销'],['cmp:'+ep.no,'对比修改前']]);
+  drawDoc();flash(ep.no)}
+function flash(no){const el=document.getElementById('ep-'+no);if(el){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');el.scrollIntoView({block:'center'})}}
+
+// ================= 信号采集 =================
+// 停留：阅读线（文档区 40% 高度）落在哪一集，就算在读哪一集；
+// 页面可见、最近 30 秒有操作（鼠标 / 滚动 / 键盘）才累计，离开就暂停。
+function readingEp(){const m=$('#main');const r=m.getBoundingClientRect();const y=r.top+r.height*.4;
+  for(const el of document.querySelectorAll('#doc .ep')){const b=el.getBoundingClientRect();if(b.top<=y&&b.bottom>=y)return+el.dataset.no}return null}
+function tick(){
+  const t=now();const active=!document.hidden&&t-T.lastAct<CFG.idle*1000;const a=page();
+  const no=a&&a.eps&&a.eps.length&&!S.gen?readingEp():null;
+  if(no!==T.focus){
+    if(T.focus!=null){T.passed[T.focus]=t}
+    if(no!=null&&T.passed[no]&&t-T.passed[no]<CFG.rereadWin*1000){T.rereads[no]=(T.rereads[no]||0)+1;if(T.rereads[no]>=CFG.rereadN){log(`第 ${no} 集被来回看了 ${T.rereads[no]} 次`);T.rereads[no]=0;rereadTip(no)}}
+    T.focus=no;T.dwell=0;markReading()}
+  if(no!=null&&active&&!isEditing())T.dwell+=.25;
+  if(no!=null&&T.dwell>=CFG.dwell){const key=S.sel+':'+no;
+    if(!T.seenEp.has(key)){const ep=findEp(no);const d=a.status==='locked'?null:detect(a.kind,ep,a.eps);
+      if(a.status==='locked'){T.seenEp.add(key);log(`停留 第 ${no} 集 ${CFG.dwell}s → 不推荐（已确认定稿）`)}
+      else if(!d){T.seenEp.add(key);log(`停留 第 ${no} 集 ${CFG.dwell}s → 没检测到问题，不打扰`)}
+      else{const why=canShow();
+        // 被频率挡住时不记为「已推荐过」：冷却结束后用户还停在这一集，会再推荐
+        if(why){if(T.blocked!==key+why.replace(/\d+/g,'')){T.blocked=key+why.replace(/\d+/g,'');log(`停留 第 ${no} 集 → 有建议但先不推荐（${why}）`)}}
+        else{T.seenEp.add(key);showTip({...d,ep:no},'停留')}}}}
+  // 推荐卡片：用户离开这一集太远或一直不理会 → 收成小条
+  if(T.tip&&T.tip.stage==='ask'){const far=no!=null&&Math.abs(no-T.tip.ep)>=3;if(far||t-T.tip.at>CFG.collapse*1000)collapseTip()}
+  drawDemo()}
+function rereadTip(no){const a=page();if(a.status==='locked')return;showTip({sk:'sk9',ep:no,why:`第 ${no} 集你来回看了几遍`,body:'是不是觉得这里不够出彩？可以换个角度。'},'反复阅读')}
+function markReading(){document.querySelectorAll('#doc .ep').forEach(el=>el.classList.toggle('reading',+el.dataset.no===T.focus))}
+['mousemove','keydown','wheel','touchstart'].forEach(ev=>addEventListener(ev,()=>{T.lastAct=now()},{passive:true}));
+document.addEventListener('visibilitychange',()=>log(document.hidden?'页面切到后台 → 停留暂停':'回到页面'));
+// 选中文字：在正文里选中 ≥ 4 个字并停住
+let selT=null;
+document.addEventListener('selectionchange',()=>{clearTimeout(selT);const sel=getSelection();const txt=String(sel||'').trim().replace(/^[：:，。\s]+/,'');if(txt.length<4)return;
+  const node=sel.anchorNode&&sel.anchorNode.parentElement;const epEl=node&&node.closest('#doc .ep');if(!epEl)return;
+  selT=setTimeout(()=>{const a=page();if(a.status==='locked')return;const no=+epEl.dataset.no;const isDlg=node.closest('.ln.dlg');
+    showTip({sk:isDlg?'sk8':'sk9',ep:no,sel:txt.slice(0,60),why:`选中了「${txt.slice(0,14)}${txt.length>14?'…':''}」`,body:isDlg?'这句台词可以更短、更有冲击力。':'这里可以换一个更出人意料的写法。'},'选中文字')},CFG.select*1000)});
+// 打字：在 AI 助手里打字，按关键词判断
+const WORDS=[[/没灵感|卡住|想不出|俗套|套路|新意/,'sk9','你想换点新意'],[/拖|节奏|太慢|无聊/,'sk2','你在调整节奏'],[/台词|对白|口语/,'sk8','你在改台词'],[/钩子|卡点|悬念|付费/,'sk3','你在改钩子']];
+let typeT=null;
+function onType(){T.lastType=now();clearTimeout(typeT);typeT=setTimeout(()=>{const v=$('#ask').value;const hit=WORDS.find(w=>w[0].test(v));if(!hit)return;
+  T.lastType=0;const no=T.focus||page().eps?.[0]?.no;showTip({sk:hit[1],ep:no,word:v.match(hit[0])[0],why:hit[2],body:`可以调用「${SKILLS[hit[1]][0]}」（${SKILLS[hit[1]][1]}）来做这件事。`},'打字')},800)}
+
+// ================= 页面 =================
+function page(){const P=S.P;if(S.sel==='plan')return{kind:'plan',status:P.plan.status,label:'策划案'};
+  if(S.sel.startsWith('sc:')){const a=P.sc.c1;return{kind:'script',label:'短剧剧本 · 一卡',get eps(){return a.eps},get status(){return a.status},set status(v){a.status=v}}}
+  const g=SEGS.find(x=>x.k===S.sel);const a=P.segs[S.sel];return{kind:'outline',label:g.label+'集纲',seg:g,get eps(){return a.eps},get status(){return a.status},set status(v){a.status=v}}}
+function drawTop(){
+  const P=S.P;const done=SEGS.filter(g=>P.segs[g.k].eps.length).length;
+  $('#top').innerHTML=`<div class="logo">${LOGO}</div><button class="iconbtn" aria-label="返回">${ic('back')}</button><span class="ptitle" contenteditable="true" id="ptitle" spellcheck="false" title="点击修改剧名">${esc(P.title)}</span><span class="badge">精细生成</span>
+    <div class="steps"><b>策划案 ✓</b><i></i><b class="${done<4?'on':''}">集纲 ${done}/4 段</b><i></i><b>剧本 1 段</b><i></i><b>导出</b></div><span class="sp"></span>
+    <button class="btn sm ghost" data-act="demo">演示面板</button>
+    <button class="iconbtn asstbtn ${S.asstOpen?'on':''} ${T.tip&&!S.asstOpen&&T.tip.page===S.sel?'dot':''}" data-act="asst" aria-label="AI 助手" title="AI 助手">${ic('chat')}</button>`;
+  const pt=$('#ptitle');pt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();pt.blur()}};pt.onblur=()=>{const v=pt.innerText.trim();if(v){P.title=v;toast(`剧名已改为《${v}》`)}else pt.innerText=P.title};
+  bindActs($('#top'))}
+function drawTree(){const P=S.P;const it=(k,l,r,cls='',ic2='')=>`<a class="${S.sel===k?'on':''} ${cls}" data-sel="${k}">${l}<span class="r">${r}</span>${ic2}</a>`;
+  const dot=k=>T.tip&&T.tip.page===k&&S.sel!==k?'<span class="tipdot" title="有一条建议"></span>':'';
+  $('#tree').innerHTML=it('plan','策划案','',P.plan.status==='locked'?'':'',ic('lock'))+'<h4>集纲</h4>'+SEGS.map(g=>{const a=P.segs[g.k];return it(g.k,g.label,`${g.from}–${g.to}`,a.status==='blocked'?'dim':'',S.gen===g.k?'<span class="spin"></span>':a.status==='locked'?ic('lock'):dot(g.k))}).join('')+'<h4>剧本</h4>'+it('sc:c1','<span class="kind">短剧</span>一卡','1–9','',dot('sc:c1'));
+  $('#tree').querySelectorAll('[data-sel]').forEach(b=>b.onclick=()=>go(b.dataset.sel))}
+function go(k){if(S.sel===k)return;if(T.tip&&T.tip.page!==k)closeTip('away');S.sel=k;T.enterAt=now();T.focus=null;T.dwell=0;log(`打开「${page().label}」`);drawAll();$('#main').scrollTop=0}
+function drawDoc(){
+  const a=page();const P=S.P;const tgt=tipTarget();
+  const tags=e=>`${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}${e.rev?'<span class="revtag">修改版</span>':''}`;
+  const pill=e=>tgt===e.no&&T.tip.stage!=='loading'?`<button class="tippill" data-act="tipOpen">${ic('spark')}AI 建议</button>`:'';
+  const old=e=>e.rev&&S.cmp===e.no?`<div class="old">修改前：${esc(e.rev.before.summary)} ｜ 钩子：${esc(e.rev.before.hook)}</div>`:'';
+  const head=(h,meta,acts)=>`<div class="dh"><div><h2>${h}${a.status==='locked'?`<span class="st locked">${ic('lock')} 已确认</span>`:a.status==='edited'?'<span class="st" style="color:var(--accent)">已编辑</span>':a.status==='ready'?'<span class="st">已生成</span>':''}</h2><div class="meta">${meta}</div></div><div class="acts">${acts}</div></div>`;
+  let h='';
+  if(a.kind==='plan'){const d=P.plan;h=head(esc(P.title),'女频复仇 ｜ 国内 ｜ 60 集',`<button class="btn pri" data-sel2="c1">查看集纲</button>`)+`<div class="plan"><h3>一句话梗概</h3><p>${esc(d.logline)}</p><h3>故事梗概</h3><p>${esc(d.synopsis)}</p><h3>人物小传</h3><div class="chars">${d.chars.map(c=>`<div class="char"><span>${c[1]}</span><b>${c[0]}</b>${c[2]}</div>`).join('')}</div><h3>节奏与付费卡点</h3><p>${esc(d.pacing)}</p></div><div class="hint">策划案已确认定稿。停留推荐只在可编辑的页面出现（Demo 里请去「二卡集纲」或「短剧剧本 · 一卡」试试）。</div>`}
+  else if(a.kind==='outline'){const g=a.seg;
+    const acts=a.status==='locked'?`<button class="btn" data-act="unlock">${ic('pen')}继续编辑</button>`:a.eps.length?`<button class="btn ok" data-act="lock">${ic('check')}确认</button><button class="btn pri">生成短剧剧本</button>`:'';
+    h=head(`${g.label}集纲`,`第 ${g.from}–${g.to} 集 · ${g.to-g.from+1} 集${g.k!=='end'?` · 第 ${g.to} 集是付费卡点`:''}`,acts);
+    if(S.gen===g.k)h+=`<div class="gen"><div style="display:flex;gap:8px;align-items:center"><span class="spin"></span><b>正在生成${g.label}集纲</b><span class="sp"></span><span class="sm muted">生成中不推荐，避免打扰</span></div><div class="tank"><i style="width:${Math.round(a.eps.length/(g.to-g.from+1)*100)}%"></i></div><div class="sm muted">正在写第 ${g.from+a.eps.length} 集…</div></div>`;
+    else if(a.status==='blocked')h+=`<div class="empty">${ic('lock')}「三卡」写完后，这一段会接着往下写</div>`;
+    else if(!a.eps.length)h+=`<div class="empty"><div>这一段还没有生成</div><button class="btn pri" data-act="gen:${g.k}">生成${g.label}集纲</button></div>`;
+    if(a.eps.length&&!S.gen)h+=`<div class="hint">${a.status==='locked'?'已确认定稿：停留时不会推荐修改。':'点任意梗概可以直接改。慢慢看，AI 会在你停下来时提示可以加强的地方（每次最多几条，不会一直打扰）。'}</div>`;
+    h+=a.eps.map(e=>`<div class="ep ${e.card?'card':''} ${tgt===e.no?'tipfocus':''} ${T.focus===e.no?'reading':''}" id="ep-${e.no}" data-no="${e.no}"><div class="no">EP<b>${String(e.no).padStart(2,'0')}</b></div><div class="t">${esc(e.title)}${tags(e)}</div><div class="s" ${a.status==='locked'?'':'contenteditable="true"'} data-sum="${e.no}">${esc(e.summary)}</div><div class="h">钩子：${esc(e.hook)}</div>${old(e)}${pill(e)}</div>`).join('')}
+  else{h=head('短剧剧本 · 一卡','第 1–9 集 · 18 场 · 带镜头提示',`<button class="btn ok" data-act="lock">${ic('check')}确认</button><button class="btn pri">续写二卡</button>`)+`<div class="hint">慢慢看，选中一句台词停一下，AI 会给出更短更狠的写法。</div>`;
+    h+=a.eps.map(e=>`<div class="ep ${tgt===e.no?'tipfocus':''}" id="ep-${e.no}" data-no="${e.no}" style="grid-template-columns:1fr"><div class="t" style="font-family:var(--f-serif);font-size:18px"><span class="mono" style="color:var(--accent);font-size:13px">EP${String(e.no).padStart(2,'0')}</span>${esc(e.title)}${tags(e)}</div>${e.scenes.map(sc=>`<div class="scene"><div class="hd">${esc(sc.hd)}</div>${sc.lines.map(l=>`<div class="ln ${l.t}">${l.t==='dlg'?`<b>${esc(l.w)}</b><span class="par">（${esc(l.p)}）</span>：`:''}${esc(l.x)}</div>`).join('')}</div>`).join('')}${pill(e)}</div>`).join('')}
+  $('#doc').innerHTML=h;bindActs($('#doc'));
+  $('#doc').querySelectorAll('[data-sel2]').forEach(b=>b.onclick=()=>go(b.dataset.sel2));
+  $('#doc').querySelectorAll('[data-sum]').forEach(el=>el.onblur=()=>{const e=findEp(+el.dataset.sum);const v=el.innerText.trim();if(v&&v!==e.summary){e.summary=v;page().status='edited';drawDoc()}});
+  $('#scope').textContent=a.label}
+function drawMsgs(){const el=$('#msgs');const last=S.P.chat.map((m,i)=>m.r==='ai'?i:-1).filter(i=>i>=0).pop();
+  el.innerHTML=S.P.chat.map((m,i)=>`<div class="msg ${m.r}"><div class="who">${m.r==='ai'?ic('spark')+'AI 助手':'我'}</div><div class="bub">${esc(m.t)}</div>${m.acts&&i===last?`<div class="acts">${m.acts.map(([k,t],j)=>`<button class="btn sm ${j===0?'pri':''}" data-act="${k}">${t}</button>`).join('')}</div>`:''}</div>`).join('');
+  el.scrollTop=el.scrollHeight;bindActs(el)}
+function say(t,acts){S.P.chat.push({r:'ai',t,acts});drawMsgs()}
+function drawAll(){$('#ws').classList.toggle('noasst',!S.asstOpen);drawTop();drawTree();drawDoc();drawMsgs();drawTip();drawDemo()}
+
+// ================= 演示面板 =================
+let DM={min:innerWidth<=760,line:false};
+function drawDemo(){const el=$('#demo');const P=PROD===CFG;const cd=cooldownLeft();const why=canShow();
+  const a=page();
+  el.className='demo'+(DM.min?' min':'');
+  el.innerHTML=`<div class="hd" data-dm="tog"><span class="lv" style="${why?'background:var(--amber)':''}"></span>演示面板 · 停留推荐<span class="sp"></span><span class="muted">${DM.min?'展开':'收起'}</span></div>
+  <div class="bd">
+    <div class="row"><span class="k">正在读</span>${T.focus!=null?`第 ${T.focus} 集${findEp(T.focus)?.card?'（'+findEp(T.focus).card+'卡点）':''}`:'<span class="muted">—</span>'}</div>
+    <div class="row"><span class="k">停留</span><span class="bar"><i style="width:${Math.min(100,T.dwell/CFG.dwell*100)}%"></i></span><span class="mono">${T.dwell.toFixed(1)}/${CFG.dwell}s</span></div>
+    <div class="row"><span class="k">状态</span>${S.gen?'生成中（静默）':isEditing()?'编辑中（静默）':document.hidden?'页面在后台':now()-T.lastAct>CFG.idle*1000?'离开（停留暂停）':'阅读中'}${a.status==='locked'?' · 已定稿':''}</div>
+    <div class="row"><span class="k">能否推荐</span>${why?`<span style="color:var(--amber)">${esc(why)}</span>`:'<span style="color:var(--green)">可以</span>'}</div>
+    <div class="row"><span class="k">冷却</span><span class="bar cd"><i style="width:${cd/(CFG.cooldown*(T.dismissStreak>=2?2:1))*100}%"></i></span><span class="mono">${cd}s</span></div>
+    <div class="row"><span class="k">本次推荐</span>${T.shown}/${CFG.max} · 连续拒绝 ${T.dismissStreak}${T.mutedSkill.size?` · 已拒绝：${[...T.mutedSkill].map(k=>SKILLS[k][0]).join('、')}`:''}</div>
+    <label><input type="checkbox" data-dm="prod" ${P?'checked':''}> 用正式参数（停留 ${PROD.dwell}s · 冷却 ${PROD.cooldown}s · 上限 ${PROD.max}）</label>
+    <label><input type="checkbox" data-dm="line" ${DM.line?'checked':''}> 显示阅读线</label>
+    <div class="btns"><button class="btn sm" data-dm="reset">重置频率</button><button class="btn sm" data-dm="jump">跳到第 26 集（卡点）</button></div>
+    <div class="log">${T.log.join('')||'<div>还没有信号。滚动正文，停在某一集看看。</div>'}</div>
+  </div>`;
+  el.querySelectorAll('[data-dm]').forEach(b=>{const k=b.dataset.dm;const f=()=>{
+    if(k==='tog')DM.min=!DM.min;
+    if(k==='prod'){CFG=b.checked?PROD:DEMO;log(`切换到${b.checked?'正式':'演示'}参数`)}
+    if(k==='line'){DM.line=b.checked;const r=$('#readline');r.hidden=!DM.line;placeLine()}
+    if(k==='reset'){Object.assign(T,{lastShown:0,shown:0,dismissStreak:0,muted:false,off:false,enterAt:0});T.seenEp.clear();T.mutedSkill.clear();log('已重置频率限制')}
+    if(k==='jump'){if(S.sel!=='c2')go('c2');const el2=document.getElementById('ep-26');if(el2)toReadLine(el2)}
+    drawDemo()};if(b.tagName==='INPUT')b.onchange=f;else b.onclick=f})}
+// 把某一集滚到阅读线位置
+function toReadLine(el){const m=$('#main');m.style.scrollBehavior='auto';m.scrollTop=el.offsetTop-m.clientHeight*.36;m.style.scrollBehavior=''}
+function placeLine(){const m=$('#main').getBoundingClientRect();$('#readline').style.top=(m.top+m.height*.4)+'px'}
+
+// ================= 交互 =================
+function bindActs(root){root.querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.stopPropagation();act(b.dataset.act)})}
+function act(k){const i=k.indexOf(':');const cmd=i<0?k:k.slice(0,i),arg=i<0?'':k.slice(i+1);
+  if(cmd==='asst'){S.asstOpen=!S.asstOpen;if(S.asstOpen&&T.tip&&T.tip.stage==='chip')T.tip.stage='ask';drawAll()}
+  if(cmd==='demo'){DM.min=!DM.min;drawDemo()}
+  if(cmd==='tipOpen'){if(!S.asstOpen)S.asstOpen=true;if(T.tip){T.tip.stage=T.tip.stage==='chip'?'ask':T.tip.stage;T.tip.at=now()}drawAll();const el=T.tip&&document.getElementById('ep-'+T.tip.ep);if(el)toReadLine(el)}
+  if(cmd==='tipNo')closeTip(T.tip&&T.tip.stage==='preview'?'undo':'no');
+  if(cmd==='tipOff'){T.off=true;closeTip('off');toast('之后不再主动推荐，需要时在 AI 助手里输入 @ 调用技能')}
+  if(cmd==='tipPreview'||cmd==='tipAgain'){T.tip.stage='loading';drawTip();setTimeout(()=>{if(T.tip)preview()},700)}
+  if(cmd==='tipApply')apply();
+  if(cmd==='undo'){const u=S.undo;if(!u)return;go(u.page);const ep=findEp(u.no);Object.keys(ep).forEach(x=>delete ep[x]);Object.assign(ep,u.data);S.undo=null;say(`已撤销，第 ${u.no} 集恢复到修改前。`);drawDoc()}
+  if(cmd==='cmp'){S.cmp=S.cmp===+arg?null:+arg;drawDoc();flash(+arg)}
+  if(cmd==='view')go(arg);
+  if(cmd==='gen')genSeg(arg);
+  if(cmd==='lock'){page().status='locked';if(T.tip&&T.tip.page===S.sel)closeTip('away');say(`「${page().label}」已确认定稿。定稿后停留时不会再推荐修改。`);drawAll()}
+  if(cmd==='unlock'){page().status='ready';drawAll()}
+  if(cmd==='send'){const ta=$('#ask');const v=ta.value.trim();if(!v)return;S.P.chat.push({r:'me',t:v});ta.value='';drawMsgs();setTimeout(()=>say('好的，已按你的要求调整了当前页（演示）。'),500)}}
+// 精细生成：逐段生成，写完停下来等用户
+function genSeg(k){const g=SEGS.find(x=>x.k===k);const a=S.P.segs[k];if(S.gen)return;go(k);S.gen=k;a.eps=[];a.status='generating';
+  if(T.tip&&T.tip.stage==='ask')collapseTip();log(`开始生成${g.label}集纲 → 推荐静默`);drawAll();
+  let n=0;const total=g.to-g.from+1;const iv=setInterval(()=>{const no=g.from+n;const c=C3[n%C3.length];a.eps.push({no,title:c[0],summary:fill(c[1]),hook:fill(c[2]),card:CARDS[no]||''});n++;drawDoc();
+    if(n>=total){clearInterval(iv);S.gen=null;a.status='ready';if(k==='c3')S.P.segs.end.status='empty';T.enterAt=now();
+      say(`${g.label}集纲写好了（第 ${g.from}–${g.to} 集）。卡点落在第 ${g.to} 集「${a.eps[a.eps.length-1].title}」。`,[['gen:end','继续写结局段'],['view:'+k,'我先看看']]);log(`${g.label}集纲生成完成 → 开始检测停留`);drawAll()}},180)}
+
+// ================= 启动 =================
+$('#ask').oninput=onType;bindActs($('#asst header'));
+$('#main').addEventListener('scroll',()=>{T.lastAct=now()},{passive:true});
+addEventListener('resize',placeLine);
+drawAll();log('打开「二卡集纲」');
+setInterval(tick,250);
+if(location.hash==='#c2')go('c2');
+})();
+</script>
+</body>
+</html>
