@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>澜幕 · 卡点分段</title>
+<style>
+/* 卡点分段：一卡 / 二卡 / 三卡 / 结局段 每段集数任意（可以是 0），0 集的段不生成 */
+:root{color-scheme:dark;--bg:#061320;--bg2:#0A1B2A;--surface:#0D2132;--surface2:#12293C;--hover:#183449;--line:#1B3346;--line2:#27465E;--fg:#E5F0F5;--fg2:#A6BFCC;--muted:#6C8899;--accent:#3FD6C9;--accent-dim:rgba(63,214,201,.14);--on-accent:#032220;--amber:#F5C36B;--red:#FF6B6B;
+/* 四段的身份色：参考色板的深色档，已通过色盲安全校验；始终配文字标签 */
+--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;
+--shadow:0 18px 50px rgba(0,0,0,.45);--f-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;--f-mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.6 var(--f-body)}
+button,input{font:inherit;color:inherit}button{background:none;border:0;cursor:pointer}
+.sp{flex:1}.muted{color:var(--muted)}.sm{font-size:12px}.mono{font-family:var(--f-mono)}
+.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}.btn.ghost{border-color:transparent;background:transparent;color:var(--fg2)}.btn.sm{height:28px;padding:0 10px;font-size:12px}.btn:disabled{opacity:.4;cursor:not-allowed}
+/* 背景：工作台 */
+.ws{display:grid;grid-template-columns:220px minmax(0,1fr);height:100vh}
+.tree{border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.tree h4{font-size:11px;color:var(--muted);font-weight:500;margin:14px 10px 4px}
+.tree a{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;color:var(--fg2)}.tree a.on{background:var(--surface2);color:var(--fg)}
+.tree a .r{margin-left:auto;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.tree a i{width:8px;height:8px;border-radius:2px;flex:none}
+.tree a.off{opacity:.5}.tree a.off .r{font-style:normal}
+.tree .add{font-size:11px;color:var(--accent);margin-left:auto}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--accent);animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.main{padding:24px 40px;overflow:auto}
+.main h2{margin:0 0 4px;font-size:24px}.main .meta{color:var(--muted);font-size:12px}
+.msg{max-width:720px;margin-top:16px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;color:var(--fg2);font-size:13px;white-space:pre-wrap}
+/* 弹窗 */
+.mask{position:fixed;inset:0;background:rgba(2,10,16,.6);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{width:min(820px,100%);max-height:calc(100vh - 32px);background:var(--surface);border:1px solid var(--line2);border-radius:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.mh{padding:18px 22px 6px;display:flex;gap:10px;align-items:flex-start}.mh h3{margin:0;font-size:18px}.mh p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.mb{padding:10px 22px 16px;overflow:auto;display:grid;gap:16px}
+.mf{padding:12px 22px 16px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.choose{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choose button{text-align:left;border:1px solid var(--line2);border-radius:14px;padding:12px 14px;display:grid;gap:2px}.choose button.on{border-color:var(--accent);background:var(--accent-dim)}
+.choose b{font-size:14px}.choose span{font-size:12px;color:var(--muted)}
+.lbl{font-size:12px;color:var(--muted)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.presets button{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:12px;color:var(--fg2)}.presets button.on{border-color:var(--accent);color:var(--fg);background:var(--accent-dim)}
+/* 结构条：每段一个色块，块内写名称和集数；拖块右边的把手改这一段的集数 */
+.strip{position:relative;height:58px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);user-select:none;touch-action:none}
+.blk{position:absolute;top:6px;bottom:6px;border-radius:6px;display:flex;flex-direction:column;justify-content:center;padding:0 8px;overflow:hidden;color:#fff;font-size:12px;line-height:1.3;white-space:nowrap}
+.blk b{font-size:12px}.blk small{opacity:.9;font-family:var(--f-mono);font-size:11px}
+.zero{position:absolute;top:4px;bottom:4px;width:0;border-left:2px dashed var(--muted)}
+.zero span{position:absolute;top:-22px;left:-60px;width:120px;text-align:center;font-size:10px;color:var(--muted)}
+.hdl{position:absolute;top:0;bottom:0;width:18px;margin-left:-9px;cursor:ew-resize;display:grid;place-items:center;z-index:2}
+.hdl::before{content:'';width:6px;height:34px;border-radius:3px;background:var(--fg);box-shadow:0 0 0 3px var(--bg2)}
+.hdl:focus-visible::before{box-shadow:0 0 0 3px var(--accent)}
+.hdl .tip{position:absolute;bottom:calc(100% + 6px);background:var(--fg);color:var(--bg);font-size:11px;padding:2px 7px;border-radius:6px;white-space:nowrap;display:none}
+.hdl:hover .tip,.hdl.drag .tip{display:block}
+.ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--f-mono);margin-top:4px}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--fg2);flex-wrap:wrap}.legend span{display:inline-flex;gap:5px;align-items:center}.legend i{width:10px;height:10px;border-radius:3px}
+.segs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.seg{border:1px solid var(--line);border-radius:14px;padding:10px;display:grid;gap:6px;background:var(--bg2);transition:opacity .2s}
+.seg.off{opacity:.65;border-style:dashed}
+.seg .t{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}.seg .t i{width:10px;height:10px;border-radius:3px}
+.stepper{display:flex;align-items:center;border:1px solid var(--line2);border-radius:10px;overflow:hidden;height:32px}
+.stepper button{width:30px;height:100%;color:var(--fg2)}.stepper button:hover{background:var(--hover)}
+.stepper input{width:100%;min-width:0;border:0;background:transparent;text-align:center;font-family:var(--f-mono);font-size:15px;font-weight:700;outline:0}
+.stepper input::-webkit-inner-spin-button{appearance:none}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg .r{font-size:12px;color:var(--fg2)}.seg .r.no{color:var(--muted)}
+.seg .tg{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer}
+.sum{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:4px;font-size:13px;background:var(--bg2)}
+.sum .row{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.sum .row i{width:8px;height:8px;border-radius:2px;flex:none;align-self:center}
+.warn{font-size:12px;color:var(--amber)}.err{font-size:12px;color:var(--red)}
+.auto{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.auto .segc{display:inline-flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}.auto .segc button{padding:4px 12px;font-size:12px;color:var(--fg2)}.auto .segc button.on{background:var(--surface2);color:var(--fg);font-weight:700}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:10px;z-index:90}
+@media (max-width:760px){.segs{grid-template-columns:1fr 1fr}.choose{grid-template-columns:1fr}.ws{grid-template-columns:1fr}.tree{display:none}}
+</style>
+</head>
+<body>
+<div class="ws"><nav class="tree" id="tree"></nav><main class="main" id="main"></main></div>
+<div id="modal"></div><div class="toast" id="toast" hidden></div>
+<script>
+(function(){'use strict';
+const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2400)}
+const SEG=[['c1','一卡','var(--c1)'],['c2','二卡','var(--c2)'],['c3','三卡','var(--c3)'],['end','结局段','var(--c4)']];
+const MAX=150,SEGMAX=100;
+const PRESETS=[['std','标准四段',[12,23,25,20]],['one','只写一卡',[15,0,0,0]],['two','写到二卡',[12,23,0,0]],['noend','三卡就结局',[12,23,25,0]],['even','四段平均',[20,20,20,20]]];
+const S={mode:'cards',n:[12,23,25,20],last:[12,23,25,20],auto:false,applied:null,open:true};
+const total=()=>S.n.reduce((a,b)=>a+b,0);
+function ranges(n=S.n){let f=1;return SEG.map((s,i)=>{const r={k:s[0],name:s[1],c:s[2],n:n[i],from:n[i]?f:null,to:n[i]?f+n[i]-1:null};f+=n[i];return r})}
+function setN(i,v){v=Math.max(0,Math.min(SEGMAX,Math.round(+v||0)));const others=total()-S.n[i];if(others+v>MAX)v=MAX-others;if(v>0)S.last[i]=v;S.n[i]=v}
+// ---------- 弹窗 ----------
+function draw(){if(!S.open){$('#modal').innerHTML='';return}
+  const T=total(),R=ranges(),on=R.filter(r=>r.n>0),off=R.filter(r=>r.n===0);
+  const preset=PRESETS.find(p=>p[2].every((v,i)=>v===S.n[i]));
+  const short=on.filter(r=>r.k!=='end'&&r.n<3);
+  const err=!on.length?'至少要有一段大于 0 集':T>MAX?`总集数不能超过 ${MAX}`:'';
+  const scale=Math.max(T,40);const pct=v=>v/scale*100;
+  let x=0;const strip=R.map((r,i)=>{const left=pct(x);x+=r.n;const w=pct(r.n);
+    return(r.n?`<div class="blk" style="left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:${r.c}" title="${r.name} · 第 ${r.from}–${r.to} 集"><b>${w>9?r.name:''}</b><small>${w>9?r.n+' 集':r.n}</small></div>`:(i&&!R[i-1].n?'':`<div class="zero" style="left:${left}%"><span>${R.slice(i).filter((q,j)=>R.slice(i,i+j+1).every(z=>!z.n)).map(z=>z.name).join('、')} 0 集</span></div>`))+`<div class="hdl" data-h="${i}" style="left:${pct(x)}%;z-index:${10-i}" role="slider" tabindex="0" aria-label="${r.name}集数" aria-valuenow="${r.n}" aria-valuemin="0" aria-valuemax="${SEGMAX}"><span class="tip">${r.name} · ${r.n} 集${r.n&&r.k!=='end'?' · 卡点第 '+r.to+' 集':''}</span></div>`}).join('');
+  $('#modal').innerHTML=`<div class="mask"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="mh"><div><h3 id="mt">策划案写好了，接下来生成集纲</h3><p>每一段写多少集由你定，可以是 0：0 集的段不生成，之后需要时再补。</p></div><span class="sp"></span><button class="btn ghost sm" data-x aria-label="关闭">✕</button></div>
+  <div class="mb">
+    <div class="choose"><button class="${S.mode==='all'?'on':''}" data-mode="all"><b>直接生成全部集纲</b><span>不分段，一次写完第 1–${T||'N'} 集</span></button><button class="${S.mode==='cards'?'on':''}" data-mode="cards"><b>按卡点分段（推荐）</b><span>每段写完给你确认；可以只写其中几段</span></button></div>
+    <div class="presets"><span class="lbl">快速选择</span>${PRESETS.map(p=>`<button class="${preset&&preset[0]===p[0]?'on':''}" data-p="${p[0]}">${p[1]}</button>`).join('')}</div>
+    <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:24px"><span class="lbl">拖动每段右边的把手改这一段的集数；拖到和左边重合就是 0 集</span><span class="sp"></span><span class="mono" style="font-weight:700">共 ${T} 集</span></div>
+      <div class="strip" id="strip">${strip}</div><div class="ticks"><span>第 1 集</span><span>${scale>T?'（余量）':''}第 ${scale} 集</span></div></div>
+    <div class="segs">${R.map((r,i)=>`<div class="seg ${r.n?'':'off'}"><div class="t"><i style="background:${r.c}"></i>${r.name}<span class="sp"></span><label class="tg"><input type="checkbox" data-skip="${i}" ${r.n?'':'checked'}>不写</label></div>
+      <div class="stepper"><button data-d="${i}|-1" aria-label="${r.name}减少一集">−</button><input type="number" min="0" max="${SEGMAX}" value="${r.n}" data-in="${i}" aria-label="${r.name}集数"><button data-d="${i}|1" aria-label="${r.name}增加一集">+</button></div>
+      <input type="range" min="0" max="40" value="${Math.min(40,r.n)}" data-rg="${i}" aria-label="${r.name}集数滑杆">
+      <div class="r ${r.n?'':'no'}">${r.n?`第 ${r.from}–${r.to} 集 · ${r.k==='end'?'大结局在第 '+r.to+' 集':'卡点在第 '+r.to+' 集'}`:'0 集 · 不生成'}</div></div>`).join('')}</div>
+    <div class="sum"><b>将生成</b>${on.map(r=>`<div class="row"><i style="background:${r.c}"></i><b>${r.name}</b><span>第 ${r.from}–${r.to} 集（${r.n} 集）</span><span class="muted sm">${r.k==='end'?'大结局':'付费卡点'}：第 ${r.to} 集</span></div>`).join('')||'<div class="muted">还没有要生成的段</div>'}
+      ${off.length&&on.length?`<div class="sm muted">${off.map(r=>r.name).join('、')}：0 集，不生成。之后可以在左侧目录点「＋ 启用」补上。</div>`:''}
+      ${on.length===1&&on[0].k!=='end'?`<div class="sm muted">只写${on[0].name}：剧本也只会写这 ${on[0].n} 集；第 ${on[0].to} 集作为本次的最后一集，结尾停在卡点悬念上。</div>`:''}
+      ${short.length?`<div class="warn">⚠ ${short.map(r=>r.name).join('、')}少于 3 集，卡点太密，观众付费意愿可能下降（可以继续）。</div>`:''}
+      ${err?`<div class="err">✕ ${err}</div>`:''}</div>
+    ${S.mode==='cards'&&on.length>1?`<div class="auto"><span class="lbl">每段写完后</span><span class="segc"><button class="${S.auto?'':'on'}" data-auto="0">停下来让我确认</button><button class="${S.auto?'on':''}" data-auto="1">自动接着写</button></span></div>`:''}
+    <div class="legend">${SEG.map(s=>`<span><i style="background:${s[2]}"></i>${s[1]}</span>`).join('')}<span><i style="border:1px dashed var(--muted);background:none"></i>0 集（不生成）</span></div>
+  </div>
+  <div class="mf"><span class="sm muted">● 自动选择 · 预计 ${on.reduce((t,r)=>t+Math.max(4,Math.ceil(r.n/4)),0)} 积分（只按要生成的段计算）</span><span class="sp"></span><button class="btn ghost" data-x>稍后再说</button><button class="btn pri" data-go ${err?'disabled':''}>${S.mode==='all'?`生成 ${T} 集集纲`:on.length===1?`只生成${on[0].name}集纲`:`生成 ${on.length} 段集纲`}</button></div></div></div>`;
+  bindM()}
+function bindM(){const M=$('#modal');
+  M.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{S.open=false;draw();drawPage()});
+  M.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;draw()});
+  M.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{S.n=PRESETS.find(p=>p[0]===b.dataset.p)[2].slice();S.n.forEach((v,i)=>{if(v)S.last[i]=v});draw()});
+  M.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const[i,d]=b.dataset.d.split('|').map(Number);setN(i,S.n[i]+d);draw()});
+  M.querySelectorAll('[data-in]').forEach(el=>el.onchange=()=>{setN(+el.dataset.in,el.value);draw()});
+  M.querySelectorAll('[data-rg]').forEach(el=>el.oninput=()=>{setN(+el.dataset.rg,el.value);draw();const n=M.querySelector(`[data-rg="${el.dataset.rg}"]`);n&&n.focus()});
+  M.querySelectorAll('[data-skip]').forEach(el=>el.onchange=()=>{const i=+el.dataset.skip;if(el.checked)S.n[i]=0;else S.n[i]=S.last[i]||10;draw()});
+  M.querySelectorAll('[data-auto]').forEach(b=>b.onclick=()=>{S.auto=b.dataset.auto==='1';draw()});
+  const go=M.querySelector('[data-go]');go.onclick=()=>{S.applied=S.n.slice();S.open=false;draw();startGen()};
+  // 拖动把手：只改这一段的集数，后面的段整体后移（总集数随之变化）
+  const strip=$('#strip');M.querySelectorAll('[data-h]').forEach(h=>{const i=+h.dataset.h;
+    h.onpointerdown=e=>{e.preventDefault();h.setPointerCapture(e.pointerId);h.classList.add('drag');const r=strip.getBoundingClientRect();const scale=Math.max(total(),40);const before=S.n.slice(0,i).reduce((a,b)=>a+b,0);
+      h.onpointermove=ev=>{const ep=(ev.clientX-r.left)/r.width*scale;setN(i,ep-before);draw();const nh=$('#modal').querySelector(`[data-h="${i}"]`);if(nh){nh.classList.add('drag');nh.setPointerCapture(ev.pointerId);nh.onpointermove=h.onpointermove;nh.onpointerup=h.onpointerup}};
+      h.onpointerup=()=>{h.onpointermove=null;draw()}};
+    h.onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();setN(i,S.n[i]+(e.key==='ArrowRight'?1:-1));draw();const nh=$('#modal').querySelector(`[data-h="${i}"]`);nh&&nh.focus()}}})}
+// ---------- 背景页：目录和生成过程 ----------
+const G={cur:-1,done:[]};
+function drawPage(){const R=ranges(S.applied||S.n);const ap=!!S.applied;
+  $('#tree').innerHTML=`<a>策划案<span class="r">✓</span></a><h4>集纲</h4>${R.map((r,i)=>ap&&!r.n?`<a class="off"><i style="background:${r.c}"></i>${r.name}<span class="r">0 集</span><button class="add" data-en="${i}">＋ 启用</button></a>`:`<a class="${G.cur===i?'on':''}"><i style="background:${r.c}"></i>${r.name}<span class="r">${ap?r.from+'–'+r.to:'—'}</span>${G.cur===i?'<span class="spin"></span>':G.done.includes(i)?'✓':''}</a>`).join('')}<h4>剧本</h4>${ap&&G.done.length?R.filter((r,i)=>G.done.includes(i)).map(r=>`<a class="off" style="opacity:.8"><i style="background:${r.c}"></i>短剧 · ${r.name}<span class="r">待写</span></a>`).join(''):'<a class="off">—</a>'}`;
+  $('#tree').querySelectorAll('[data-en]').forEach(b=>b.onclick=()=>{S.open=true;const i=+b.dataset.en;S.n=S.applied.slice();S.n[i]=S.last[i]||10;draw();toast(`已把${SEG[i][1]}设为 ${S.n[i]} 集，确认后会接着生成`)});
+  const on=R.filter(r=>r.n);
+  $('#main').innerHTML=`<h2>豪门千金归来 · 策划案</h2><div class="meta">女频复仇 ｜ 国内 ｜ ${ap?on.reduce((t,r)=>t+r.n,0)+' 集':'待定集数'}</div>
+    ${!ap?`<div class="msg">策划案写好了。点下面的按钮设置每段写多少集。</div><p><button class="btn pri" data-open>设置卡点分段</button></p>`:
+    `<div class="msg">${esc(G.log)}</div><p><button class="btn" data-open>重新设置分段（演示）</button></p>`}`;
+  const o=$('#main [data-open]');if(o)o.onclick=()=>{S.open=true;if(S.applied)S.n=S.applied.slice();draw()}}
+function startGen(){const R=ranges(S.applied);const on=R.map((r,i)=>[r,i]).filter(([r])=>r.n);G.done=[];
+  const off=R.filter(r=>!r.n).map(r=>r.name);
+  let k=0;const next=()=>{if(k>=on.length){G.cur=-1;G.log=`${on.map(([r])=>r.name).join('、')}集纲写好了（共 ${on.reduce((t,[r])=>t+r.n,0)} 集）。${off.length?off.join('、')+' 为 0 集，没有生成；剧本也只会按这几段来写。':''}\n接下来可以写短剧剧本。`;drawPage();return}
+    const[r,i]=on[k];G.cur=i;G.log=`按你的分段生成：正在写${r.name}集纲（第 ${r.from}–${r.to} 集）…${off.length?`\n${off.join('、')}为 0 集，跳过。`:''}`;drawPage();
+    setTimeout(()=>{G.done.push(i);k++;if(!S.auto&&k<on.length){G.cur=-1;G.log=`${r.name}集纲写好了（第 ${r.from}–${r.to} 集），卡点在第 ${r.to} 集。\n精细生成：停下来等你确认，下一段是${on[k][0].name}。`;drawPage();setTimeout(next,1800)}else next()},1400)};next()}
+drawPage();draw();
+})();
+</script>
+</body>
+</html>

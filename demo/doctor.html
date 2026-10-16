@@ -23,7 +23,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .logo{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(150deg,var(--accent),var(--accent2));color:var(--on-accent)}.logo svg{width:20px;height:20px;fill:currentColor;stroke:none}
 .steps{display:flex;gap:6px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 10px}
 /* 右上角剧本医生入口 */
-.docbtn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 6px 0 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--accent) 60%,var(--line2));background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),var(--surface));font-weight:700}
+.docbtn{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 6px 0 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--accent) 60%,var(--line2));background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),var(--surface));font-weight:700}
 .docbtn:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}.docbtn.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 .docbtn svg.i{width:18px;height:18px;color:var(--accent)}.docbtn.on svg.i{color:var(--on-accent)}
 .docbtn .score{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-mono);font-size:12px;padding:2px 8px;border-radius:8px;background:var(--bg2);color:var(--fg)}
@@ -167,17 +167,19 @@ function check(){const per=eps.map(e=>({no:e.no,s:scoreEp(e)}));const dim={};DIM
 // ---------- 状态 ----------
 const S={side:'asst',tab:'overview',rep:null,prev:null,hist:[],scanning:0,mark:true,focus:null,preview:null,stale:false,ver:1};
 function grade(v){return v>=85?['优秀','good']:v>=70?['良好','good']:v>=60?['及格','warn']:['待加强','bad']}
+function docBtn(){const r=S.rep;return`<button class="docbtn ${S.side==='doctor'?'on':''}" data-act="doctor" title="剧本医生：给当前页打分、标出问题">${ic('doctor')}剧本医生${r?`<span class="score ${S.stale?'stale':''}"><i style="background:var(--st-${grade(r.total)[1]})"></i>${r.total}${S.stale?' · 已改动':''}</span>`:'<span class="score">未体检</span>'}</button>`}
 function drawTop(){const r=S.rep;
   $('#top').innerHTML=`<div class="logo">${LOGO}</div><b style="font-size:15px">豪门千金归来</b><span class="steps">策划案 ✓ — 集纲 2/4 段 — <b style="color:var(--accent);font-weight:500">剧本 1 段</b> — 导出</span><span class="sp"></span>
-  <button class="docbtn ${S.side==='doctor'?'on':''}" data-act="doctor" title="剧本医生：给当前页打分、标出问题">${ic('doctor')}剧本医生${r?`<span class="score ${S.stale?'stale':''}"><i style="background:var(--st-${grade(r.total)[1]})"></i>${r.total}${S.stale?' · 已改动':''}</span>`:'<span class="score">未体检</span>'}</button>
+
   <button class="iconbtn" data-act="asst" title="AI 助手" style="border:1px solid var(--line);${S.side==='asst'?'color:var(--accent);background:var(--accent-dim)':''}">${ic('chat')}</button>`;bind($('#top'))}
 function issueAt(no,si,li){return S.rep&&S.mark&&S.rep.iss.find(x=>x.no===no&&x.si===si&&x.li===li&&!x.done)}
 function drawDoc(){const r=S.rep;
-  $('#doc').innerHTML=`<div class="dh"><div><h2>短剧剧本 · 一卡</h2><div class="meta">第 1–9 集 · 18 场 · v${S.ver}</div></div><div class="acts"><button class="btn">导出</button><button class="btn pri">续写二卡</button></div></div>
+  $('#doc').innerHTML=`<div class="dh"><div><h2>短剧剧本 · 一卡</h2><div class="meta">第 1–9 集 · 18 场 · v${S.ver}</div></div><div class="acts">${docBtn()}<button class="btn">导出</button><button class="btn pri">续写二卡</button></div></div>
   <nav class="jump">${eps.map(e=>{const p=r&&r.per[e.no-1];return`<button data-jump="${e.no}" style="${e.card?'border-color:var(--coral);color:var(--coral)':''}" title="${p?'第 '+e.no+' 集 · '+p.total+' 分':''}">${e.no}${p&&S.mark?`<i style="background:var(--st-${band(p.total)})"></i>`:''}</button>`}).join('')}</nav>
   ${eps.map(e=>{const p=r&&r.per[e.no-1];return`<section class="ep ${S.scanning===e.no?'scan':''}" id="ep-${e.no}"><header><span class="no">EP${String(e.no).padStart(2,'0')}</span><b>${esc(e.title)}</b>${e.card?`<span class="cardtag">${e.card} · 付费卡点</span>`:''}${p&&S.mark?`<span class="eps" title="这一集的体检分"><i style="background:var(--st-${band(p.total)})"></i>${p.total} 分</span>`:''}</header>
     ${e.scenes.map((sc,si)=>`<div class="scene"><div class="hd">${esc(sc.hd)}</div>${sc.lines.map((l,li)=>{const is=issueAt(e.no,si,li);const fx=r&&r.iss.find(x=>x.done&&x.no===e.no&&x.si===si&&x.li===li);
       return`<div class="ln ${l.t} ${is?'mk '+is.sev:''} ${S.focus&&is&&S.focus===is.id?'focus':''} ${fx?'fixed':''}" ${is?`data-iss="${is.id}" title="${esc(is.dim)}：${esc(is.why)}"`:''} id="ln-${e.no}-${si}-${li}">${l.t==='dlg'?`<b>${esc(l.w)}</b><span class="par">（${esc(l.p)}）</span>：`:''}${esc(l.x)}${is?`<span class="num">${is.n}</span>`:''}</div>`}).join('')}</div>`).join('')}</section>`}).join('')}`;
+  bind($('#doc'));
   $('#doc').querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>scrollEp(+b.dataset.jump));
   $('#doc').querySelectorAll('[data-iss]').forEach(b=>b.onclick=()=>{openIssue(b.dataset.iss)})}
 function scrollEp(no){const el=document.getElementById('ep-'+no);if(el)$('#main').scrollTo({top:el.offsetTop-56,behavior:'smooth'})}
