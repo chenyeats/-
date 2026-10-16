@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>澜幕 · 首页 · 上传与技能</title>
+<style>
+/* 首页创作框：上传小说或剧本（自动识别）+ 技能选项栏（@ 添加技能） */
+:root{color-scheme:dark;--bg:#061320;--bg2:#0A1B2A;--surface:#0D2132;--surface2:#12293C;--hover:#183449;--line:#1B3346;--line2:#27465E;--fg:#E5F0F5;--fg2:#A6BFCC;--muted:#6C8899;--accent:#3FD6C9;--accent-dim:rgba(63,214,201,.14);--on-accent:#032220;--accent2:#4BA3FF;--coral:#FF8E6E;--violet:#9D8CFF;--amber:#F5C36B;--green:#6EDB9A;--shadow:0 18px 50px rgba(0,0,0,.4);--f-body:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;--f-serif:"Noto Serif SC","Songti SC",serif;--f-mono:ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1100px 520px at 50% -8%,rgba(63,214,201,.16),transparent 65%),var(--bg);color:var(--fg);font:14px/1.6 var(--f-body)}
+button,input,textarea{font:inherit;color:inherit}button{background:none;border:0;cursor:pointer}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sp{flex:1}.muted{color:var(--muted)}.sm{font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}.btn.ghost{border-color:transparent;background:transparent;color:var(--fg2)}.btn.sm{height:28px;padding:0 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+main{max-width:980px;margin:0 auto;padding:56px 20px 120px}
+.intro{text-align:center;margin-bottom:26px}.intro .e{font-family:var(--f-mono);letter-spacing:.3em;font-size:11px;color:var(--accent)}
+.intro h1{font-family:var(--f-serif);font-size:42px;margin:8px 0 6px}.intro h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.intro p{color:var(--fg2);margin:0}
+.box{background:var(--surface);border:1px solid var(--line2);border-radius:22px;padding:16px;box-shadow:var(--shadow);display:grid;gap:12px}
+.ctop{display:flex;align-items:center;gap:10px}
+.modes{display:flex;gap:4px;background:var(--surface2);border-radius:12px;padding:4px}
+.modes button{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:9px;color:var(--fg2)}.modes button.on{background:var(--bg2);color:var(--fg);font-weight:700}
+.switch{display:flex;align-items:center;gap:8px;color:var(--fg2);font-size:13px}.switch i{width:32px;height:18px;border-radius:9px;background:var(--line2);position:relative;transition:.2s}.switch i::after{content:'';position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--fg);transition:.2s}.switch.on i{background:var(--accent)}.switch.on i::after{left:16px;background:var(--on-accent)}
+.hint{font-size:12px;color:var(--muted)}
+.cin{display:grid;grid-template-columns:200px minmax(0,1fr);gap:12px}
+.up{border:1.5px dashed var(--line2);border-radius:16px;display:grid;place-items:center;align-content:center;gap:6px;padding:14px;text-align:center;min-height:156px;transition:.2s;position:relative}
+.up:hover,.up.drag{border-color:var(--accent);background:var(--accent-dim)}
+.up .pc{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);color:var(--accent)}
+.up b{font-size:14px}.up small{font-size:11px;color:var(--muted)}
+.up .tipw{position:relative;font-size:11px;color:var(--muted);text-decoration:underline dotted;cursor:help}
+.up .tipw span{display:none;position:absolute;left:50%;bottom:130%;transform:translateX(-50%);width:230px;background:var(--fg);color:var(--bg);text-align:left;padding:8px 10px;border-radius:8px;font-size:11px;line-height:1.6;z-index:5}.up .tipw:hover span{display:block}
+.right{display:grid;gap:10px;align-content:start}
+textarea{width:100%;min-height:96px;border:0;outline:0;resize:none;background:transparent;font-size:14px;line-height:1.7}
+.file{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line2);background:var(--bg2);border-radius:14px;padding:10px 12px;animation:in .25s}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.file .ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--accent-dim);color:var(--accent)}.file.script .ico{background:color-mix(in srgb,var(--violet) 18%,transparent);color:var(--violet)}
+.file b{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.file .meta{font-size:12px;color:var(--fg2)}.file .why{font-size:11px;color:var(--muted)}
+.kind{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden;font-size:12px;font-weight:500}.kind button{padding:1px 9px;color:var(--fg2)}.kind button.on{background:var(--accent);color:var(--on-accent)}
+.purpose{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.purpose .l{font-size:12px;color:var(--muted)}
+.purpose button{border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:12px;color:var(--fg2)}.purpose button.on{border-color:var(--accent);color:var(--fg);background:var(--accent-dim)}
+/* 技能选项栏 */
+.skbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}
+.skbar .l{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 4px 3px 10px;border-radius:999px;background:color-mix(in srgb,var(--accent) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));animation:in .2s}
+.chip button{width:18px;height:18px;border-radius:50%;color:var(--fg2)}.chip button:hover{background:var(--hover);color:var(--fg)}
+.addsk{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 10px;border-radius:999px;border:1px dashed var(--line2);color:var(--fg2)}.addsk:hover{border-color:var(--accent);color:var(--fg)}
+.skcount{font-size:11px;color:var(--muted)}
+.cbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pc2{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);font-size:12px;color:var(--fg2)}
+.send{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--on-accent)}.send:disabled{background:var(--line2);color:var(--muted);cursor:not-allowed}
+/* 弹层 */
+.pop{position:absolute;z-index:30;background:var(--surface);border:1px solid var(--line2);border-radius:16px;box-shadow:var(--shadow);padding:10px;animation:in .18s}
+.menu{width:300px;display:grid;gap:2px}.menu button{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;padding:8px 10px;border-radius:10px}.menu button:hover{background:var(--hover)}.menu small{display:block;font-size:11px;color:var(--muted)}
+.skp{width:560px;display:grid;gap:10px}
+.skp .hd{display:flex;align-items:center;gap:8px}.skp input{flex:1;height:34px;border:1px solid var(--line2);border-radius:10px;background:var(--bg2);padding:0 12px;outline:0}.skp input:focus{border-color:var(--accent)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}.tabs button{font-size:12px;padding:3px 10px;border-radius:8px;color:var(--fg2)}.tabs button.on{background:var(--surface2);color:var(--fg);font-weight:700}
+.skgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:300px;overflow:auto}
+.sk{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.sk:hover{border-color:var(--accent)}.sk.on{border-color:var(--accent);background:var(--accent-dim)}
+.sk b{font-size:13px}.sk small{grid-column:1/-1;font-size:11px;color:var(--muted)}.sk .c{font-size:10px;color:var(--muted);align-self:center}.sk.on .c{color:var(--accent);font-weight:700}
+.skp .ft{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:8px}
+.atl{width:340px;display:grid;gap:2px}.atl .h{font-size:11px;color:var(--muted);padding:2px 8px 6px;display:flex}.atl button{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;text-align:left;padding:6px 10px;border-radius:8px;font-size:12px;color:var(--fg2)}.atl button b{color:var(--fg);font-size:13px}.atl button.on{background:var(--accent-dim)}.atl small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.mask{position:fixed;inset:0;background:rgba(2,10,16,.6);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:var(--surface);border:1px solid var(--line2);border-radius:20px;width:min(560px,100%);padding:20px;display:grid;gap:12px;animation:in .2s}
+.modal h3{margin:0}.modal table{width:100%;border-collapse:collapse;font-size:13px}.modal td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}.modal td:first-child{color:var(--muted);width:84px}
+.flow{display:flex;gap:6px;flex-wrap:wrap;font-size:12px}.flow span{padding:2px 8px;border-radius:6px;background:var(--surface2)}.flow i{color:var(--muted);font-style:normal}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:10px;z-index:90}
+@media (max-width:760px){.cin{grid-template-columns:1fr}.up{min-height:auto;grid-auto-flow:column}.skp{width:calc(100vw - 32px)}.skgrid{grid-template-columns:1fr}.intro h1{font-size:30px}}
+</style>
+</head>
+<body>
+<main>
+  <section class="intro"><div class="e">LANMU · AI SCRIPT STUDIO</div><h1>让故事像<em>浪潮</em>一样推进</h1><p>从一个想法、一本小说或一份剧本，写到可以开拍的短剧剧本</p></section>
+  <section class="box" id="box"></section>
+</main>
+<input type="file" id="file" accept=".txt,.md,.docx,text/plain" hidden>
+<div id="pop"></div><div id="modal"></div><div class="toast" id="toast" hidden></div>
+<script>
+(function(){'use strict';
+const IC={plus:'<path d="M12 5v14M5 12h14"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',book:'<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2z"/><path d="M4 19V5"/>',doc:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',up:'<path d="M12 19V5M5 12l7-7 7 7"/>',upload:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',spark:'<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',paste:'<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9z"/>',search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/>',check:'<path d="M5 12l5 5 9-10"/>',film:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14"/>',branch:'<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8M8 6c6 0 8 1 8 3"/>'};
+const ic=k=>`<svg class="i" viewBox="0 0 24 24">${IC[k]}</svg>`;
+const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2400)}
+// 技能库：按用途分组；改编类是这次新增的
+const SK=[
+ ['a1','名场面保留','改编','原著里的高光场面优先保留成独立一集'],['a2','章节压缩','改编','按节奏把 2–3 章压成 1 集，删掉过渡'],['a3','原著台词保留','改编','经典台词原样保留，只改口语化'],['a4','视角改写','改编','长篇心理描写改成能拍的动作和对白'],
+ ['s1','黄金三秒开篇','结构节奏','第 1 集前 3 秒出冲突'],['s2','爽点密度控制','结构节奏','每 90 秒一个爽点'],['s3','付费卡点钩子','结构节奏','卡点集强化悬念'],['s4','反转设计','结构节奏','身份 / 关系 / 真相反转'],
+ ['d1','台词口语化','台词','短句、强情绪'],['d2','口播金句','台词','每集留一句能剪成切片的话'],
+ ['c1','人物弧光','人物','从被压制到反杀'],['c2','反派立体化','人物','给反派一个说得通的动机'],
+ ['i1','脑洞创意','创意','给出 3 个意想不到的方向'],['i2','互动分支设计','创意','有效选择与收束'],
+ ['l1','海外本土化','本土化','文化、禁忌、人名'],
+ ['u1','我的爽文公式','我的','我上传的 · 每集 3 段式：压 → 扬 → 钩']];
+const CATS=['全部','改编','结构节奏','台词','人物','创意','本土化','我的'];
+const skOf=id=>SK.find(s=>s[0]===id);
+const SAMPLE_NOVEL=`第一章 退婚\n订婚宴上，苏婉柔挽着顾承砚的手臂，笑着把一纸退婚书推到林晚面前。满堂宾客窃窃私语，林父沉默不语。\n第二章 三年\n三年后，一架私人飞机降落在江城。走下舷梯的女人，正是当年被赶出家门的林晚。\n第三章 重逢\n商业峰会上，顾承砚看见台上主讲人的瞬间，手里的酒杯落在了地上。\n第四章 交锋\n苏婉柔故技重施，却不知道林晚早已掌握了当年的全部证据。\n第五章 真相\n林父终于说出当年的隐情：退婚，是为了保护她。`;
+const SAMPLE_SCRIPT=`《心动合租屋》\n第1集 雨夜重逢\n△ 暴雨夜，便利店门口。你浑身湿透，一把伞忽然撑在你头顶。\n沈慕白：（低头看你）这么大的雨，不要命了？\n第2集 合租室友\n△ 你搬进新公寓，发现室友是三个性格完全不同的男生。\n陆子昂：（挑眉）新来的？先说好，厨房归我。\n第3集 公司危机【一卡】\n△ 你负责的项目被人恶意举报，全公司都在看你笑话。\n苏婉柔：（冷笑）这种人也配当组长？`;
+const S={tab:'short',fine:false,src:null,text:'',skills:[],cat:'全部',q:'',pop:null,at:null};
+// 自动识别：有「第 N 集」标题或「人名：（动作）台词」格式 → 剧本；有「第 N 章」→ 小说
+function detect(name,t){
+  const eps=(t.match(/第\s*\d+\s*集/g)||[]).length,dl=(t.match(/^[^\s：:]{2,4}[：:]\s*[（(]/gm)||[]).length,ch=(t.match(/第[一二三四五六七八九十百千0-9]+[章回节]/g)||[]).length;
+  const kind=eps>=2||dl>=3?'script':'novel';
+  const names=[...new Set((t.match(/^([^\s△（(：:]{2,4})[：:]/gm)||[]).map(x=>x.slice(0,-1)))].slice(0,4);
+  const cast=names.length?names:['林晚','顾承砚','苏婉柔','林父'].filter(n=>t.includes(n));
+  return{name,kind,words:t.replace(/\s/g,'').length,eps,ch,cast,why:kind==='script'?`检测到 ${eps} 个「第 N 集」标题${dl?`和 ${dl} 句对白`:''}，识别为剧本`:`按「第 N 章」识别出 ${ch||1} 章，识别为小说`}}
+function load(name,t){S.text=t;S.src=detect(name,t);S.purpose=S.src.kind==='script'?'polish':(S.tab==='game'?'game':'adapt');render();toast(`已识别为${S.src.kind==='script'?'剧本':'小说'}，识别错了可以手动切换`)}
+const PURPOSE={novel:[['adapt','改编成短剧剧本'],['game','改编成互动影游']],script:[['polish','精修成短剧节奏'],['cont','续写后面的集'],['game','转互动影游'],['doctor','先让剧本医生体检']]};
+function render(){
+  const s=S.src;const n=x=>x>=10000?(x/10000).toFixed(1)+' 万字':x+' 字';
+  const placeholder=s?(s.kind==='script'?'补充要求（选填）：比如「节奏再快一点，第 3 集加强卡点」。输入 @ 添加技能':'补充改编要求（选填）：比如「保留退婚和重逢两场名场面，男主戏份加重」。输入 @ 添加技能'):'输入一句话创意，或者点左边上传小说 / 剧本。输入 @ 添加技能';
+  const hint=s?(s.kind==='script'?{polish:'剧本精修：保留剧情，按短剧节奏重写分场、台词和钩子。',cont:'续写：读懂已有剧情和人物，接着写后面的集。',game:'转互动影游：解析分集后加入选项、数值和多结局。',doctor:'剧本医生：先给这份剧本打分、标出问题，再决定怎么改。'}[S.purpose]:{adapt:'小说改编：先解析章节、人物和主线，再写策划案、集纲和剧本。',game:'改编成互动影游：解析小说后写成带选项和多结局的互动剧本。'}[S.purpose]):(S.fine?'精细生成：每一步写完停下来，你可以逐段确认。':'一句话生成：一站直出策划案、全部集纲和全文剧本。');
+  $('#box').innerHTML=`<div class="ctop"><div class="modes"><button class="${S.tab==='short'?'on':''}" data-tab="short">${ic('film')}短剧剧本</button><button class="${S.tab==='game'?'on':''}" data-tab="game">${ic('branch')}互动影游</button></div><span class="sp"></span><button class="switch ${S.fine?'on':''}" data-act="fine">精细生成<i></i></button></div>
+  <div class="hint">${esc(hint)}</div>
+  <div class="cin">
+    <button class="up" id="up" data-act="upmenu" aria-haspopup="true"><span class="pc">${ic('plus')}</span><b>上传小说 / 剧本</b><small>拖进来，或点击选择文件</small><span class="tipw">格式要求<span>支持 .txt / .md / .docx，单文件不超过 20MB。<br>上传后自动识别是小说还是剧本：<br>· 有「第 N 章」→ 小说<br>· 有「第 N 集」或「人名：台词」→ 剧本<br>识别错了可以手动切换。上传即表示你拥有改编权。</span></span></button>
+    <div class="right">
+      ${s?`<div class="file ${s.kind}"><span class="ico">${ic(s.kind==='script'?'doc':'book')}</span><div><b>${esc(s.name)}<span class="kind" role="group" aria-label="识别结果"><button class="${s.kind==='novel'?'on':''}" data-kind="novel">小说</button><button class="${s.kind==='script'?'on':''}" data-kind="script">剧本</button></span></b><div class="meta">${n(s.words)} · ${s.kind==='script'?`${s.eps||'?'} 集`:`${s.ch||1} 章`}${s.cast.length?' · 人物：'+esc(s.cast.join('、')):''}</div><div class="why">${esc(s.why)}</div></div><button class="btn ghost sm" data-act="clear" aria-label="移除文件">${ic('x')}</button></div>
+      <div class="purpose"><span class="l">用来</span>${PURPOSE[s.kind].map(([k,t])=>`<button class="${S.purpose===k?'on':''}" data-pur="${k}">${t}</button>`).join('')}</div>`:''}
+      <textarea id="ta" placeholder="${esc(placeholder)}" aria-label="输入"></textarea>
+    </div>
+  </div>
+  <div class="skbar"><span class="l">${ic('spark')}技能</span>${S.skills.map(id=>`<span class="chip" title="${esc(skOf(id)[3])}">@${esc(skOf(id)[1])}<button data-rm="${id}" aria-label="移除">×</button></span>`).join('')}<button class="addsk" data-act="skpanel">${ic('plus')}添加技能</button><span class="skcount">${S.skills.length?`已选 ${S.skills.length}/5 · `:''}也可以在输入框里输入 @</span></div>
+  <div class="cbar"><span class="pc2">${s&&s.kind==='script'?(s.eps||'?')+' 集（按剧本）':'80 集'}</span><span class="pc2">目标市场</span><span class="pc2">风格类型</span><span class="sp"></span><span class="pc2">● 自动选择</span><button class="send" data-act="send" aria-label="开始">${ic('up')}</button></div>`;
+  const ta=$('#ta');ta.value=S.draft||'';ta.oninput=()=>{S.draft=ta.value;atCheck()};ta.onkeydown=atKey;ta.onblur=()=>setTimeout(()=>{if(S.pop==='at')closePop()},150);
+  bind($('#box'));
+  const up=$('#up');['dragenter','dragover'].forEach(e=>up.addEventListener(e,ev=>{ev.preventDefault();up.classList.add('drag')}));['dragleave','drop'].forEach(e=>up.addEventListener(e,()=>up.classList.remove('drag')));
+  up.addEventListener('drop',ev=>{ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)readF(f)});
+  $('#box').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;render()});
+  $('#box').querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{S.src.kind=b.dataset.kind;S.src.why='已手动切换为'+(S.src.kind==='script'?'剧本':'小说');S.purpose=PURPOSE[S.src.kind][0][0];render()});
+  $('#box').querySelectorAll('[data-pur]').forEach(b=>b.onclick=()=>{S.purpose=b.dataset.pur;render()});
+  $('#box').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{S.skills=S.skills.filter(x=>x!==b.dataset.rm);render()});
+}
+function readF(f){if(f.size>20*1024*1024){toast('文件超过 20MB');return}if(/\.docx$/i.test(f.name)){load(f.name.replace(/\.\w+$/,''),SAMPLE_NOVEL);toast('.docx 在演示里用示例内容代替');return}const r=new FileReader();r.onload=()=>load(f.name.replace(/\.\w+$/,''),String(r.result));r.readAsText(f)}
+function bind(root){root.querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.stopPropagation();act(b.dataset.act,b)})}
+function place(el,anchor,up){const r=anchor.getBoundingClientRect();el.style.left=Math.max(12,Math.min(r.left+scrollX,innerWidth-el.offsetWidth-12))+'px';el.style.top=(up?r.top+scrollY-el.offsetHeight-8:r.bottom+scrollY+8)+'px'}
+function closePop(){$('#pop').innerHTML='';S.pop=null}
+function act(k,el){
+  if(k==='fine'){S.fine=!S.fine;render()}
+  if(k==='clear'){S.src=null;S.text='';render()}
+  if(k==='upmenu'){if(S.pop==='up')return closePop();S.pop='up';$('#pop').innerHTML=`<div class="pop menu" id="pp"><button data-u="file">${ic('upload')}<span>上传文件<small>.txt / .md / .docx，自动识别小说或剧本</small></span></button><button data-u="paste">${ic('paste')}<span>粘贴文本<small>直接粘贴到右边输入框，同样会识别</small></span></button><button data-u="novel">${ic('book')}<span>示例小说<small>《重生之千金归来》5 章</small></span></button><button data-u="script">${ic('doc')}<span>示例剧本<small>《心动合租屋》3 集</small></span></button></div>`;
+    place($('#pp'),el);$('#pp').querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{const u=b.dataset.u;closePop();if(u==='file')$('#file').click();if(u==='novel')load('重生之千金归来',SAMPLE_NOVEL);if(u==='script')load('心动合租屋',SAMPLE_SCRIPT);if(u==='paste'){$('#ta').focus();toast('粘贴超过 200 字会自动识别为小说或剧本')}})}
+  if(k==='skpanel'){openSk(el)}
+  if(k==='send'){const t=($('#ta').value||'').trim();if(!S.src&&t.length<15){toast('输入至少 15 字的创意，或上传小说 / 剧本');return}summary()}
+}
+// 技能面板
+function openSk(anchor){S.pop='sk';const draw=()=>{const list=SK.filter(s=>(S.cat==='全部'||s[2]===S.cat)&&(!S.q||s[1].includes(S.q)||s[3].includes(S.q)));
+  $('#pop').innerHTML=`<div class="pop skp" id="pp" role="dialog" aria-label="添加技能"><div class="hd">${ic('search')}<input id="skq" placeholder="搜索技能，比如「台词」「卡点」" value="${esc(S.q)}"><button class="btn ghost sm" data-x>${ic('x')}</button></div>
+    <div class="tabs">${CATS.map(c=>`<button class="${S.cat===c?'on':''}" data-cat="${c}">${c}${c==='改编'?' · 新':''}</button>`).join('')}</div>
+    <div class="skgrid">${list.map(s=>{const on=S.skills.includes(s[0]);return`<button class="sk ${on?'on':''}" data-sk="${s[0]}"><b>@${esc(s[1])}</b><span class="c">${on?'✓ 已选':s[2]}</span><small>${esc(s[3])}</small></button>`}).join('')||'<div class="muted sm">没有找到，可以上传自己的 Skill</div>'}</div>
+    <div class="ft"><span class="sm muted">已选 ${S.skills.length}/5 · 生成和修改时都会按这些技能来写</span><span class="sp"></span><button class="btn sm ghost">${ic('upload')}上传我的 Skill</button><button class="btn sm pri" data-x>完成</button></div></div>`;
+  place($('#pp'),document.querySelector('[data-act=skpanel]')||anchor,true);
+  const q=$('#skq');q.oninput=()=>{S.q=q.value;draw();const n=$('#skq');n.focus();n.setSelectionRange(n.value.length,n.value.length)};
+  $('#pp').querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{S.cat=b.dataset.cat;draw()});
+  $('#pp').querySelectorAll('[data-sk]').forEach(b=>b.onclick=()=>{toggle(b.dataset.sk);draw()});
+  $('#pp').querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{closePop();render()})};draw()}
+function toggle(id){if(S.skills.includes(id))S.skills=S.skills.filter(x=>x!==id);else if(S.skills.length>=5){toast('一次最多 5 个技能');return false}else S.skills.push(id);rerenderBar();return true}
+function rerenderBar(){const keep=$('#ta')&&$('#ta').value;const pop=$('#pop').innerHTML;render();if(keep!=null)$('#ta').value=keep;$('#pop').innerHTML=pop}
+// @ 添加技能
+function atCheck(){const ta=$('#ta');const pre=ta.value.slice(0,ta.selectionStart);const m=/(^|\s)@([^\s@]{0,10})$/.exec(pre);
+  if(!m){if(S.pop==='at')closePop();return}
+  const q=m[2];const list=SK.filter(s=>!q||s[1].includes(q)||s[2].includes(q));S.at={q,start:pre.length-q.length-1,list,i:0};S.pop='at';drawAt()}
+function drawAt(){const A=S.at;$('#pop').innerHTML=`<div class="pop atl" id="pp" role="listbox"><div class="h">添加技能${A.q?' · 「'+esc(A.q)+'」':''}<span class="sp"></span>↑↓ Enter</div>${A.list.slice(0,8).map((s,i)=>`<button class="${i===A.i?'on':''}" data-at="${s[0]}"><b>@${esc(s[1])}</b><small>${esc(s[3])}</small><span>${S.skills.includes(s[0])?'✓':''}</span></button>`).join('')||'<div class="sm muted" style="padding:6px 8px">没有匹配的技能</div>'}</div>`;
+  place($('#pp'),$('#ta'),false);$('#pp').querySelectorAll('[data-at]').forEach(b=>b.onmousedown=e=>{e.preventDefault();pickAt(b.dataset.at)})}
+function pickAt(id){const ta=$('#ta');const A=S.at;const v=ta.value;ta.value=v.slice(0,A.start)+v.slice(A.start+1+A.q.length);S.draft=ta.value;closePop();if(!S.skills.includes(id))toggle(id);const t=$('#ta');t.value=S.draft;t.focus();t.setSelectionRange(A.start,A.start)}
+function atKey(e){if(S.pop!=='at')return;const A=S.at,n=Math.min(8,A.list.length);
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();A.i=(A.i+(e.key==='ArrowDown'?1:n-1))%n;drawAt()}
+  else if((e.key==='Enter'||e.key==='Tab')&&n){e.preventDefault();pickAt(A.list[A.i][0])}else if(e.key==='Escape')closePop()}
+// 粘贴长文本自动识别
+document.addEventListener('paste',e=>{if(e.target.id!=='ta')return;const t=(e.clipboardData||window.clipboardData).getData('text');if(t&&t.length>200){e.preventDefault();load('粘贴的'+(detect('',t).kind==='script'?'剧本':'小说'),t)}});
+document.addEventListener('pointerdown',e=>{if(S.pop&&!e.target.closest('#pp')&&!e.target.closest('[data-act=upmenu],[data-act=skpanel],#ta'))closePop()});
+$('#file').onchange=e=>{const f=e.target.files[0];if(f)readF(f);e.target.value=''};
+function summary(){const s=S.src;const P=s?Object.fromEntries(PURPOSE[s.kind])[S.purpose]:'原创';
+  const flow=!s?['策划案','集纲','全文剧本']:s.kind==='novel'?['小说解析','策划案','集纲','剧本']:{polish:['剧本解析','逐集精修'],cont:['剧本解析','续写集纲','续写剧本'],game:['剧本解析','互动影游剧本'],doctor:['剧本解析','剧本医生体检报告']}[S.purpose];
+  $('#modal').innerHTML=`<div class="mask"><div class="modal" role="dialog" aria-modal="true"><h3>准备开始</h3><table>
+    <tr><td>来源</td><td>${s?`${s.kind==='script'?'剧本':'小说'}《${esc(s.name)}》· ${s.words} 字`:'一句话创意'}</td></tr><tr><td>用来</td><td>${esc(P)}</td></tr>
+    <tr><td>技能</td><td>${S.skills.length?S.skills.map(id=>'@'+esc(skOf(id)[1])).join('、'):'<span class="muted">未添加（可以生成后再 @）</span>'}</td></tr>
+    <tr><td>生成方式</td><td>${S.fine?'精细生成：每一步停下来确认':'一句话生成：一站直出'}</td></tr>
+    <tr><td>流程</td><td><div class="flow">${flow.map((x,i)=>`${i?'<i>→</i>':''}<span>${x}</span>`).join('')}</div></td></tr></table>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn ghost" data-m="x">返回修改</button><button class="btn pri" data-m="go">开始</button></div></div></div>`;
+  $('#modal').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{$('#modal').innerHTML='';if(b.dataset.m==='go')toast('演示到此为止：接下来会进入工作台')})}
+render();
+})();
+</script>
+</body>
+</html>
