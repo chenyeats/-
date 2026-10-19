@@ -47,7 +47,9 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .tb{position:relative;width:36px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--ink2)}.tb:hover{background:var(--s2);color:var(--teal)}
 .tb.act{color:var(--teal)}.tb.act.has{background:var(--redbg);color:var(--red)}
 .tb .c{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 3px}
-.tb.dis{opacity:.8}
+.tools .tb{width:auto;height:34px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700}.tb.act.got{background:var(--tealbg)}.tb.act.has.open{background:var(--redbg)}.tools .tb .c{position:static;margin-left:0}
+.rp{background:var(--surface);border:1.5px solid color-mix(in srgb,var(--teal) 45%,var(--line));border-radius:18px;padding:14px;display:grid;gap:12px}.rph{display:flex;align-items:center;gap:10px}.rph b{font-size:15px}.rpx{margin-left:auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--mut)}.rpx:hover{background:var(--s2)}
+.rp .hero{grid-template-columns:auto auto minmax(0,1fr);gap:18px}.dims{display:grid;gap:8px}.isg{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px}
 .txt{background:#F2F6F8;border-radius:10px;padding:12px 14px;display:grid;gap:3px;font-size:14.5px;position:relative}
 .p b{font-weight:700}.p.act::before{content:"△ ";color:var(--mut)}.p.hd{font-weight:700;margin-top:4px}.p.meta{font-size:12.5px;color:var(--mut)}.p.dg .par{color:var(--mut)}
@@ -159,7 +161,7 @@ B.sc2.iss=[I('清禾，我们谈谈，我可以解释当年发生的一切，你
 B.sc3.iss=[I('她感到一阵释然，仿佛终于等到了这一刻。','warn','动作可拍','内心活动无法拍摄','“感到”“仿佛”都是心理描写。请写成她做的事：抬眼看镜头、嘴角微扬。','她抬眼望向暗处的镜头，嘴角微微扬起。')];
 const TXT=id=>B[id].paras.map(p=>(p.l||'')+(p.w||'')+(p.t||'')).join('\n');
 // ---------- 状态 ----------
-const S={stale:{},w:380,view:'cre',side:false,mode:'chat',rep:{},cur:null,prev:{},msgs:[['ai','你好，我是 AI 助手。可以直接对话，或补充后续创作要求。区块右上角有「评估」和「重写」。']],pop:null,rw:null};
+const S={open:{},scan:{},stale:{},w:380,view:'cre',side:false,mode:'chat',rep:{},cur:null,prev:{},msgs:[['ai','你好，我是 AI 助手。可以直接对话，或补充后续创作要求。区块右上角有「评估」和「重写」。']],pop:null,rw:null};
 const mq=matchMedia('(min-width:1280px)');let WIDE=mq.matches;S.side=WIDE;
 const VIEWS=[['cre','创意生成'],['plan','策划案'],['ol','集纲 · 一卡','1-10'],['sc','剧本 · 短剧','1-9']];
 const blocksOf=v=>v==='cre'?['cre']:v==='plan'?['plan1','plan2']:v==='ol'?['ol1','ol2','ol3','ol4']:['sc1','sc2','sc3'];
@@ -180,39 +182,38 @@ function paraHtml(p,rep){let t=esc(p.t||'');const raw=p.t||'';
   if(p.k==='dlg')return`<div class="p dg"><b>${esc(p.w)}</b> <span class="par">（${esc(p.p)}）</span>：${t}</div>`;
   return`<div class="p">${p.l?`<b>${esc(p.l)}</b>`:''}${t}</div>`}
 function toolsHtml(id){const r=S.rep[id];const n=r?r.issues.length:0;
-  return`<div class="tools"><button class="tb act ${n?'has':''}" data-tip="评估${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="eval" data-id="${id}">${ic('check')}${n?`<span class="c">${n}</span>`:''}</button><button class="tb" data-tip="重写${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="rw" data-id="${id}">${ic('redo')}</button></div>`}
+  return`<div class="tools"><button class="tb act ${r?'got':''} ${n?'has':''} ${r&&S.open[id]?'open':''}" data-act="eval" data-id="${id}">${ic('check')}<span>${r?'评估报告':'评估'}</span>${n?`<span class="c">${n}</span>`:''}</button><button class="tb" data-act="rw" data-id="${id}">${ic('redo')}<span>重写</span></button></div>`}
 function blockHtml(id){const b=B[id],r=S.rep[id];id=id;b.iss.forEach((i,k)=>i.id=i.id||id+'_'+k);
   const head=b.no?`<span class="no">${b.no}</span><h3>${esc(b.title)}</h3>`:`<h3>${esc(b.title)}</h3>`;
-  return`<section class="blk" id="blk-${id}"><div class="bh">${head}${toolsHtml(id)}</div>${S.stale[id]?`<div class="rwtag stale">⚠ 上游内容已改动，本区块可能需要同步 <button data-act="rw" data-id="${id}">去重写</button></div>`:''}${S.prev[id]?`<div class="rwtag">✓ 已重写 · 红标已清除，可再点「评估」复查 <button data-act="undo" data-id="${id}">撤销重写</button></div>`:''}<div class="card"><div class="txt">${b.paras.map(p=>paraHtml(p,r)).join('')}</div></div></section>`}
+  return`<section class="blk" id="blk-${id}"><div class="bh">${head}${toolsHtml(id)}</div>${S.stale[id]?`<div class="rwtag stale">⚠ 上游内容已改动，本区块可能需要同步 <button data-act="rw" data-id="${id}">去重写</button></div>`:''}${S.prev[id]?`<div class="rwtag">✓ 已重写 · 红标已清除，可再点「评估」复查 <button data-act="undo" data-id="${id}">撤销重写</button></div>`:''}${S.scan[id]?scanHtml(id):(r&&S.open[id]?reportHtml(id):'')}<div class="card"><div class="txt">${b.paras.map(p=>paraHtml(p,S.open[id]?r:null)).join('')}</div></div></section>`}
 function renderMain(keep){const m=$('#main');const st=m.scrollTop;const v=S.view;
   const title=v==='cre'?'创意生成':v==='plan'?'策划案':v==='ol'?'集纲 · 一卡':'短剧剧本';
   m.innerHTML=`<div class="doc"><div class="dh"><h2>她的第二张脸</h2><span class="badge">${v==='sc'?'已生成':'已编辑 · v2'}</span><span class="mut">身份博弈流 | 80 集</span></div><div class="hint">✎ 正文支持整块自由编辑，修改后会自动保存；按 Esc 可撤销当前正在编辑的一处。每个区块右上角可「评估」「重写」。</div>${blocksOf(v).map(blockHtml).join('')}</div>`;
   if(keep)m.scrollTop=st}
 function renderSide(){const sd=$('#side');sd.classList.toggle('open',S.side);$('#fab').classList.toggle('show',!S.side);
-  $('#fab').innerHTML=ic('bot');const hasRep=S.cur&&S.rep[S.cur];
-  const tabs=`<div class="stabs"><button data-mode="chat" class="${S.mode==='chat'?'on':''}">AI 助手</button>${S.mode!=='chat'||hasRep?`<button data-mode="rep" class="${S.mode!=='chat'?'on':''}">评估报告</button>`:''}</div>`;
-  let body='';
-  if(S.mode==='chat'){body=`<div class="sbody" id="sb">${S.msgs.map(m=>`<div class="msg ${m[0]==='me'?'me':''}">${esc(m[1])}</div>`).join('')}</div><div class="compose"><textarea id="inp" placeholder="和 AI 助手对话，或补充后续创作要求"></textarea><div class="r"><span>作用于：${esc(scopeName())}</span><span class="sp"></span><button class="send" data-act="send">${ic('send')}</button></div></div>`}
-  else if(S.mode==='scan'){body=`<div class="sbody"><div class="scan"><div class="pulse">${ic('pulse')}</div><b>正在评估「${esc(label(S.cur))}」…</b><div class="prog"><i id="pg"></i></div><span class="mut" style="font-size:12px">评估只出报告，不改动原文</span></div></div>`}
-  else{const r=S.rep[S.cur];const b=band(r.score);const col={good:'var(--green)',warn:'var(--amber)',bad:'var(--red)'};
-    body=`<div class="sbody"><div class="hero"><div class="ring" style="--p:${r.score};--rc:${col[b]}"><b>${r.score}</b></div><div style="display:grid;gap:4px"><b>${esc(label(S.cur))}</b>${stt(r.score)}<span class="mut" style="font-size:12px">共 ${r.issues.length} 处意见 · ${r.issues.filter(i=>i.sev==='bad').length} 处需修改</span></div></div>
-    <div class="sec">分项</div><div style="display:grid;gap:8px">${r.dims.map(d=>`<div class="dim"><span>${d[0]}</span><span class="tr"><i style="width:${d[1]}%;background:${col[band(d[1])]}"></i></span><span class="v">${d[1]} ${stt(d[1])}</span></div>`).join('')}</div>
-    <div class="sec">修改意见（点击跳转到原文）</div>${r.issues.length?r.issues.map(i=>`<div class="it ${i.sev}" id="it-${i.id}" data-it="${i.id}"><div class="t"><span class="n">${i.n}</span>${esc(i.title)}<span class="st ${i.sev}" style="margin-left:auto">${i.sev==='bad'?'✕ 需修改':'! 建议'}</span></div><q>${esc(i.q.length>38?i.q.slice(0,38)+'…':i.q)}</q><div class="op">${esc(i.op)}</div><div class="go">↗ 定位到原文</div></div>`).join(''):`<div class="msg">✓ 没有发现需要修改的问题。</div>`}
-    <div class="note">评估只给意见，不改动、不重写原文。需要修改请点该区块右上角的「重写」。</div></div>`}
-  sd.innerHTML=`<div class="grip" data-grip title="拖动调整宽度，双击恢复默认"></div><div class="sh">${tabs}<button class="x" data-act="side" aria-label="关闭">${ic('x')}</button></div>${body}`}
+  $('#fab').innerHTML=ic('bot');
+  const body=`<div class="sbody" id="sb">${S.msgs.map(m=>`<div class="msg ${m[0]==='me'?'me':''}">${esc(m[1])}</div>`).join('')}</div><div class="compose"><textarea id="inp" placeholder="和 AI 助手对话，或补充后续创作要求"></textarea><div class="r"><span>作用于：${esc(scopeName())}</span><span class="sp"></span><button class="send" data-act="send">${ic('send')}</button></div></div>`;
+  sd.innerHTML=`<div class="grip" data-grip title="拖动调整宽度，双击恢复默认"></div><div class="sh"><div class="stabs"><button class="on">AI 助手</button></div><button class="x" data-act="side" aria-label="关闭">${ic('x')}</button></div>${body}`}
+function reportHtml(id){const r=S.rep[id];const b=band(r.score);const col={good:'var(--green)',warn:'var(--amber)',bad:'var(--red)'};
+  return`<div class="rp"><div class="rph"><b>评估报告</b><span class="mut" style="font-size:12px">${esc(label(id))} · 只给意见，不改原文</span><button class="rpx" data-act="rpclose" data-id="${id}" aria-label="关闭报告">${ic('x')}</button></div>
+  <div class="hero"><div class="ring" style="--p:${r.score};--rc:${col[b]}"><b>${r.score}</b></div><div style="display:grid;gap:4px;align-content:center"><div>${stt(r.score)} <span class="mut" style="font-size:12px;margin-left:6px">共 ${r.issues.length} 处意见 · ${r.issues.filter(i=>i.sev==='bad').length} 处需修改</span></div></div><div class="dims">${r.dims.map(d=>`<div class="dim"><span>${d[0]}</span><span class="tr"><i style="width:${d[1]}%;background:${col[band(d[1])]}"></i></span><span class="v">${d[1]} ${stt(d[1])}</span></div>`).join('')}</div></div>
+  <div class="sec">修改意见（点击跳转到下方原文对应位置）</div><div class="isg">${r.issues.length?r.issues.map(i=>`<div class="it ${i.sev}" id="it-${i.id}" data-it="${i.id}"><div class="t"><span class="n">${i.n}</span>${esc(i.title)}<span class="st ${i.sev}" style="margin-left:auto">${i.sev==='bad'?'✕ 需修改':'! 建议'}</span></div><q>${esc(i.q.length>38?i.q.slice(0,38)+'…':i.q)}</q><div class="op">${esc(i.op)}</div><div class="go">↗ 定位到原文</div></div>`).join(''):`<div class="msg">✓ 没有发现需要修改的问题。</div>`}</div>
+  <div class="note">评估只给意见，不改动、不重写原文。需要修改请点右上角的「重写」；关闭后再点「评估报告」可随时重新查看，不会重复评估。</div></div>`}
+function scanHtml(id){return`<div class="rp"><div class="scan"><div class="pulse">${ic('pulse')}</div><b>正在评估「${esc(label(id))}」…</b><div class="prog"><i id="pg-${id}"></i></div></div></div>`}
 const ALL=['plan1','plan2','ol1','ol2','ol3','ol4','sc1','sc2','sc3'];
 function deps(id){const n=B[id].node;if(n==='cre')return ALL;if(n==='plan')return ALL.filter(x=>/^(ol|sc)/.test(x));if(n==='ol'){const k='sc'+id.slice(2);return B[k]?[k]:[]}return[]}
 const label=id=>{const b=B[id];return b.no?`${NODE[b.node]} · ${b.no}`:b.title};
 const scopeName=()=>({cre:'创意生成',plan:'策划案',ol:'集纲 · 一卡',sc:'短剧剧本'})[S.view];
 function renderAll(){renderTop();renderTree();renderMain();renderSide()}
 // ---------- 行为 ----------
-function runEval(id){S.cur=id;S.mode='scan';S.side=true;renderSide();const pg=$('#pg');let w=0;const t=setInterval(()=>{w+=12+Math.random()*14;if(pg)pg.style.width=Math.min(w,100)+'%';if(w>=100){clearInterval(t);S.rep[id]=evaluate(id);S.mode='rep';renderTop();renderTree();renderMain(true);renderSide()}},180)}
-function focusIssue(iid,fromMk){const el=document.getElementById('mk-'+iid);document.querySelectorAll('.mk.focus,.it.focus').forEach(e=>e.classList.remove('focus'));
-  const owner=iid.replace(/_\d+$/,'');if(S.cur!==owner){S.cur=owner;S.mode='rep';S.side=true;renderSide()}
-  const it=document.getElementById('it-'+iid);if(el){el.classList.add('focus');el.scrollIntoView({block:'center',behavior:'smooth'})}if(it){it.classList.add('focus');if(fromMk)it.scrollIntoView({block:'nearest',behavior:'smooth'})}}
+function runEval(id){S.scan[id]=1;renderMain(true);let w=0;const t=setInterval(()=>{w+=12+Math.random()*14;const pg=document.getElementById('pg-'+id);if(pg)pg.style.width=Math.min(w,100)+'%';if(w>=100){clearInterval(t);delete S.scan[id];S.rep[id]=evaluate(id);S.open[id]=true;renderTop();renderTree();renderMain(true)}},180)}
+function focusIssue(iid,fromMk){document.querySelectorAll('.mk.focus,.it.focus').forEach(e=>e.classList.remove('focus'));
+  const el=document.getElementById('mk-'+iid),it=document.getElementById('it-'+iid);
+  if(el){el.classList.add('focus');if(!fromMk)el.scrollIntoView({block:'center',behavior:'smooth'})}
+  if(it){it.classList.add('focus');if(fromMk)it.scrollIntoView({block:'center',behavior:'smooth'})}}
 function doRewrite(id,note,silent){delete S.stale[id];const b=B[id];S.prev[id]=JSON.parse(JSON.stringify(b.paras));
   b.paras=b.paras.map(p=>{if(!p.t)return p;let t=p.t;b.iss.forEach(i=>{if(t.includes(i.q))t=t.replace(i.q,i.fix)});return{...p,t}});
-  delete S.rep[id];renderTop();renderTree();renderMain(true);if(!silent)toast('已重写「'+label(id)+'」'+(note?'（已按你的要求）':''))}
+  delete S.rep[id];delete S.open[id];renderTop();renderTree();renderMain(true);if(!silent)toast('已重写「'+label(id)+'」'+(note?'（已按你的要求）':''))}
 function openRw(id){S.rw=id;const d=deps(id);
   const warn=d.length?`<div class="warnbox"><b>⚠ 可能会影响其他部分</b><div>改动「${esc(label(id))}」后，已生成的下游内容可能与之不一致：</div><div class="aff">${d.map(x=>`<span>${esc(label(x))}</span>`).join('')}</div><div class="mut" style="font-size:12px">共 ${d.length} 处。是否连同下游一起重写？</div></div>`:'';
   const btns=d.length?`<button class="btn" data-act="closepop">取消</button><button class="btn" data-act="rwgo" data-scope="self">只重写本区块</button><button class="btn pri" data-act="rwgo" data-scope="all">全部重写（共 ${d.length+1} 处）</button>`:`<button class="btn" data-act="closepop">取消</button><button class="btn pri" data-act="rwgo" data-scope="self">开始重写</button>`;
@@ -221,11 +222,11 @@ document.addEventListener('click',e=>{
   const v=e.target.closest('[data-view]');if(v){S.view=v.dataset.view;$('#main').scrollTop=0;renderTop();renderTree();renderMain();return}
   const mk=e.target.closest('[data-mk]');if(mk){focusIssue(mk.dataset.mk,true);return}
   const it=e.target.closest('[data-it]');if(it){focusIssue(it.dataset.it,false);return}
-  const md=e.target.closest('[data-mode]');if(md){S.mode=md.dataset.mode==='rep'?(S.rep[S.cur]?'rep':'chat'):'chat';renderSide();return}
-  const ch=e.target.closest('[data-chip]');if(ch){const t=$('#rwn');t.value=(t.value?t.value+'，':'')+ch.dataset.chip;return}
+    const ch=e.target.closest('[data-chip]');if(ch){const t=$('#rwn');t.value=(t.value?t.value+'，':'')+ch.dataset.chip;return}
   const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act,id=a.dataset.id;
   if(act==='side'){S.side=!S.side;renderTop();renderSide()}
-  else if(act==='eval'){if(S.rep[id]){S.cur=id;S.mode='rep';S.side=true;renderSide();renderTop()}else runEval(id)}
+  else if(act==='eval'){if(S.scan[id])return;if(S.rep[id]){S.open[id]=!S.open[id];renderMain(true)}else runEval(id)}
+  else if(act==='rpclose'){S.open[id]=false;renderMain(true)}
   else if(act==='rw')openRw(id);
   else if(act==='closepop'){if(a.classList.contains('mask')&&e.target!==a)return;$('#ov').innerHTML=''}
   else if(act==='rwgo'){const n=$('#rwn').value.trim();const id2=S.rw,all=a.dataset.scope==='all',d=deps(id2);$('#ov').innerHTML='';toast('正在重写…');
