@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>澜幕 · 区块评估 / 重写</title>
+<style>
+/* 每个创作区块右上角三枚图标：总节点 / 评估 / 重写；非全屏时 AI 助手自动收起，机器人图标呼出 */
+:root{--bg:#EDF3F6;--surface:#fff;--s2:#F3F8FA;--ink:#0F2B36;--ink2:#476471;--mut:#7D95A1;--line:#D6E4EA;--teal:#17828A;--teal2:#1A6F9A;--tealbg:#E4F4F3;--red:#E5484D;--redbg:#FDECEC;--amber:#D98E04;--ambbg:#FFF4DC;--green:#1E9E6A;--grnbg:#E3F6EE;--shadow:0 14px 40px rgba(15,43,54,.18);--f:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;--fs:"Noto Serif SC","Songti SC",serif}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.7 var(--f);overflow:hidden}
+button,textarea{font:inherit;color:inherit}button{background:none;border:0;cursor:pointer;padding:0}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sp{flex:1}.mut{color:var(--mut)}
+.app{display:grid;grid-template-columns:76px minmax(0,1fr);height:100vh}
+.rail{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 0;font-size:12px;color:var(--mut)}
+.rail .lg{width:44px;height:44px;border-radius:12px;background:linear-gradient(150deg,var(--teal),var(--teal2));display:grid;place-items:center;color:#fff;margin-bottom:14px}
+.rail a{width:60px;padding:8px 0;border-radius:12px;display:grid;justify-items:center;gap:2px}.rail a.on{background:var(--tealbg);color:var(--teal);font-weight:700}
+.col{overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-width:0;height:100vh}
+.top{display:flex;align-items:center;gap:14px;padding:12px 22px;background:var(--surface);border-bottom:1px solid var(--line)}
+.top h1{font-size:16px;margin:0;white-space:nowrap}.top span,.steps *{white-space:nowrap}@media (max-width:1280px){.top>.mut,.steps>span:first-child,.steps>hr:nth-child(2){display:none}.steps{gap:5px;padding:6px 10px;font-size:12px}.steps hr{width:10px}.top{gap:10px;padding:12px 14px}}
+.steps{display:flex;align-items:center;gap:8px;padding:6px 16px;border:1px solid var(--line);border-radius:14px;font-size:13px;color:var(--ink2)}
+.steps button{display:inline-flex;align-items:center;gap:6px;color:var(--ink2)}.steps .n{width:22px;height:22px;border-radius:50%;background:#DCE6EB;color:var(--ink2);display:grid;place-items:center;font-size:11px}
+.steps button.on{color:var(--teal);font-weight:700}.steps button.on .n{background:var(--teal);color:#fff}.steps hr{width:22px;border:0;border-top:1px solid var(--line);margin:0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:13px}.chip i{width:8px;height:8px;border-radius:50%;background:var(--teal2)}
+.robot{position:relative;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--teal);background:var(--tealbg);border:1px solid color-mix(in srgb,var(--teal) 40%,var(--line))}
+.robot:hover,.robot.on{background:var(--teal);color:#fff}.robot svg.i{width:24px;height:24px}
+.robot::after{content:'';position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid #fff;display:none}.robot.dot::after{display:block}
+/* 自定义 tooltip：鼠标悬停显示文字 */
+[data-tip]{position:relative}
+[data-tip]::before{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0F2B36;color:#fff;font-size:12px;line-height:1;padding:7px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;z-index:80;font-weight:500}
+[data-tip]:hover::before{opacity:1}
+.top [data-tip="AI助手"]::before{left:auto;right:0;transform:none}
+.fab[data-tip]::before{top:auto;bottom:calc(100% + 10px);left:auto;right:0;transform:none}
+.ws{display:grid;grid-template-columns:200px minmax(0,1fr) auto;min-height:0}
+.tree{padding:18px 14px;border-right:1px solid var(--line);display:grid;gap:2px;align-content:start;font-size:14px;color:var(--ink2);background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.tree a{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;cursor:pointer}.tree a:hover{background:var(--s2)}.tree a.on{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 1px 0 var(--line)}
+.tree a .b{margin-left:auto;font-size:11px;font-weight:700;color:var(--red);background:var(--redbg);border-radius:9px;padding:0 7px}
+.main{overflow:auto;scroll-behavior:smooth}
+.doc{max-width:900px;margin:0 auto;padding:22px 30px 40vh;display:grid;gap:18px}
+.dh{display:flex;align-items:center;gap:10px}.dh h2{font-size:26px;margin:0;font-weight:900}.badge{font-size:12px;color:var(--green);background:var(--grnbg);padding:0 8px;border-radius:6px;font-weight:700}
+.hint{border:1.5px dashed #9CD3CF;background:var(--tealbg);color:var(--ink2);border-radius:14px;padding:9px 16px;font-size:13px}
+/* 区块：标题 + 右上角三图标 */
+.blk{display:grid;gap:8px}
+.bh{display:flex;align-items:center;gap:10px;min-height:44px}.bh h3{margin:0;font-size:18px;font-weight:800}.bh .no{font-family:ui-monospace,Menlo,monospace;color:var(--teal);font-size:13px}.bh .sub{font-size:12px;color:var(--mut)}
+.tools{margin-left:auto;display:flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.tb{position:relative;width:36px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--ink2)}.tb:hover{background:var(--s2);color:var(--teal)}
+.tb.act{color:var(--teal)}.tb.act.has{background:var(--redbg);color:var(--red)}
+.tb .c{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 3px}
+.tb.dis{opacity:.8}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px}
+.txt{background:#F2F6F8;border-radius:10px;padding:12px 14px;display:grid;gap:3px;font-size:14.5px;position:relative}
+.p b{font-weight:700}.p.act::before{content:"△ ";color:var(--mut)}.p.hd{font-weight:700;margin-top:4px}.p.meta{font-size:12.5px;color:var(--mut)}.p.dlg .par{color:var(--mut)}
+.mk{cursor:pointer;background:var(--redbg);text-decoration:underline wavy var(--red);text-decoration-thickness:1px;text-underline-offset:4px;border-radius:3px}
+.mk.warn{background:var(--ambbg);text-decoration-color:var(--amber)}
+.mk .nm{display:inline-grid;place-items:center;min-width:17px;height:17px;border-radius:9px;background:var(--red);color:#fff;font:700 10px/1 var(--f);margin-left:3px;vertical-align:2px;text-decoration:none}.mk.warn .nm{background:var(--amber)}
+.mk.focus{outline:2px solid var(--teal);outline-offset:1px;background:color-mix(in srgb,var(--teal) 18%,#fff)}
+.p.new{background:color-mix(in srgb,var(--green) 16%,transparent);border-radius:5px}
+.rwtag{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--green);padding:0 2px}.rwtag button{color:var(--teal);text-decoration:underline}
+/* 右侧栏 */
+.side{width:0;overflow:hidden;background:var(--surface);border-left:0;display:flex;flex-direction:column;min-height:0;transition:width .22s}
+.side.open{width:380px;border-left:1px solid var(--line)}
+.side>*{min-width:380px}
+.sh{display:flex;align-items:center;gap:6px;padding:12px 16px;border-bottom:1px solid var(--line)}.sh b{font-size:15px}.sh .x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--mut)}.sh .x:hover{background:var(--s2)}
+.stabs{display:flex;gap:4px}.stabs button{padding:4px 12px;border-radius:999px;color:var(--ink2);font-size:13px}.stabs button.on{background:var(--tealbg);color:var(--teal);font-weight:700}
+.sbody{flex:1;min-height:0;overflow:auto;padding:14px 16px;display:grid;gap:12px;align-content:start}
+.msg{background:var(--s2);border-radius:14px;padding:10px 12px;font-size:13.5px}.msg.me{background:var(--tealbg);justify-self:end;max-width:85%}
+.compose{margin:12px 16px 16px;border:1px solid var(--line);border-radius:16px;padding:10px 12px;display:grid;gap:8px}.compose textarea{border:0;outline:0;resize:none;height:56px;background:none;font-size:13.5px}
+.compose .r{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}
+.send{width:36px;height:34px;border-radius:10px;background:var(--teal);color:#fff;display:grid;place-items:center}
+/* 报告 */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:14px}
+.ring{--p:80;--rc:var(--green);width:84px;height:84px;border-radius:50%;background:conic-gradient(var(--rc) calc(var(--p)*1%),#E1EAEE 0);display:grid;place-items:center;position:relative}.ring::after{content:'';position:absolute;inset:8px;border-radius:50%;background:#fff}.ring b{position:relative;z-index:1;font:700 26px ui-monospace,Menlo,monospace}
+.st{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;padding:0 8px;border-radius:6px}.st.good{color:var(--green);background:var(--grnbg)}.st.warn{color:var(--amber);background:var(--ambbg)}.st.bad{color:var(--red);background:var(--redbg)}
+.dim{display:grid;grid-template-columns:78px minmax(0,1fr) 84px;gap:8px;align-items:center;font-size:12.5px}.dim .tr{height:8px;border-radius:4px;background:#E1EAEE;overflow:hidden}.dim .tr i{display:block;height:100%;border-radius:4px}.dim .v{display:flex;gap:4px;align-items:center;justify-content:flex-end;font-family:ui-monospace,Menlo,monospace}
+.sec{font-size:12px;color:var(--mut);margin:2px 0 -4px}
+.it{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:5px;cursor:pointer;background:#fff}.it:hover{border-color:#9CD3CF}.it.focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--tealbg)}
+.it .t{display:flex;gap:8px;align-items:center;font-weight:700;font-size:13.5px}
+.it .n{display:grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--red);color:#fff;font-size:11px;font-weight:700}.it.warn .n{background:var(--amber)}
+.it q{display:block;quotes:none;font-size:12.5px;color:var(--ink2);border-left:3px solid var(--line);padding-left:8px}
+.it .op{font-size:13px;color:var(--ink)}.it .go{font-size:11.5px;color:var(--teal)}
+.note{font-size:12px;color:var(--mut);background:var(--s2);border-radius:10px;padding:8px 10px}
+.scan{display:grid;gap:12px;place-items:center;text-align:center;padding:60px 10px;color:var(--ink2)}
+.pulse{width:76px;height:76px;border-radius:50%;background:var(--tealbg);color:var(--teal);display:grid;place-items:center;animation:pl 1.3s ease-in-out infinite}.pulse svg.i{width:36px;height:36px}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(23,130,138,.35)}100%{box-shadow:0 0 0 16px rgba(23,130,138,0)}}
+.prog{width:100%;height:8px;border-radius:4px;background:#E1EAEE;overflow:hidden}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--teal2));transition:width .2s}
+/* 浮层 */
+.pop{position:fixed;z-index:70;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:10px;width:250px;display:grid;gap:2px}
+.pop h5{margin:2px 6px 4px;font-size:12px;color:var(--mut);font-weight:500}
+.pop .row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;color:var(--ink2)}.pop .row.cur{background:var(--tealbg);color:var(--teal);font-weight:700}.pop .row .tg{margin-left:auto;font-size:11px;color:var(--mut)}
+.mask{position:fixed;inset:0;background:rgba(15,43,54,.35);z-index:75;display:grid;place-items:center}
+.dlg{background:#fff;border-radius:18px;width:min(460px,92vw);padding:18px;display:grid;gap:10px;box-shadow:var(--shadow)}.dlg h4{margin:0;font-size:16px}.dlg textarea{border:1px solid var(--line);border-radius:12px;padding:10px;height:84px;resize:none;outline:0}.dlg textarea:focus{border-color:var(--teal)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{border:1px solid var(--line);border-radius:999px;padding:1px 10px;font-size:12px;color:var(--ink2)}.chips button:hover{border-color:var(--teal);color:var(--teal)}
+.fr{display:flex;gap:8px;justify-content:flex-end}.btn{height:34px;padding:0 16px;border-radius:10px;border:1px solid var(--line);font-weight:600;background:#fff}.btn.pri{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;border-color:transparent}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#0F2B36;color:#fff;padding:9px 18px;border-radius:12px;z-index:99}
+.fab{position:fixed;right:22px;bottom:24px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;display:none;place-items:center;box-shadow:var(--shadow);z-index:40}.fab svg.i{width:28px;height:28px}
+.fab.show{display:grid}
+/* 非全屏：AI 助手变浮层，默认收起 */
+.narrow .side{position:fixed;right:0;top:65px;bottom:0;z-index:50;box-shadow:var(--shadow)}
+.narrow .side.open{width:min(400px,92vw)}.narrow .side>*{min-width:0}
+@media (max-width:900px){.ws{grid-template-columns:minmax(0,1fr)}.tree{display:none}.rail{display:none}.app{grid-template-columns:1fr}.steps{display:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<nav class="rail"><div class="lg"><svg class="i" viewBox="0 0 24 24" style="width:26px;height:26px"><path d="M2 14c2 0 3-2 5-2s3 2 5 2 3-2 5-2 3 2 5 2M2 19c2 0 3-2 5-2s3 2 5 2 3-2 5-2 3 2 5 2"/></svg></div><a>创作</a><a class="on">项目</a><a>剧本库</a><a>素材库</a><a>历史</a></nav>
+<div class="col"><header class="top" id="top"></header>
+<div class="ws" id="ws"><nav class="tree" id="tree"></nav><main class="main" id="main"></main><aside class="side" id="side"></aside></div></div></div>
+<button class="fab" id="fab" data-tip="AI助手" data-act="side" aria-label="AI助手"></button>
+<div id="ov"></div><div class="toast" id="toast" hidden></div>
+<script>
+(function(){'use strict';
+const IC={bot:'<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M10.5 4.5h3"/><circle cx="9" cy="13.5" r="1.2"/><circle cx="15" cy="13.5" r="1.2"/><path d="M2 13v2M22 13v2M10 17h4"/>',layers:'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',check:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2.2 2.2L15.5 10.5"/>',redo:'<path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',send:'<path d="M4 12l16-8-6 16-3-7z"/>',pulse:'<path d="M3 12h4l2-6 4 12 2-6h6"/>'};
+const ic=k=>`<svg class="i" viewBox="0 0 24 24">${IC[k]}</svg>`;
+const $=s=>document.querySelector(s);const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(t._t);t._t=setTimeout(()=>t.hidden=true,2200)}
+// ---------- 演示数据（《她的第二张脸》） ----------
+const P=(l,t)=>({k:'p',l,t}),A=t=>({k:'act',t}),D=(w,p,t)=>({k:'dlg',w,p,t}),H=t=>({k:'hd',t}),M=t=>({k:'meta',t});
+const I=(q,sev,dim,title,op,fix)=>({q,sev,dim,title,op,fix});
+const NODE={cre:'创意',plan:'策划案',ol:'集纲',sc:'剧本'};
+const DIMS={cre:['设定新鲜度','人物动机','结构节奏','落地具体'],plan:['人物立体','关系张力','主线推进','风险把控'],ol:['冲突强度','期待点','转折','结尾钩子'],sc:['台词口语','动作可拍','对白交锋','结尾钩子']};
+const B={};
+B.cre={node:'cre',title:'核心创意',paras:[P('目标受众：','女频，主打才华碾压与身份反转的爽感'),P('故事类型：','现代豪门 × 艺术复仇'),P('一句话故事：','被豪门退婚的天才设计师，三年后以神秘大师身份归来，用一场场艺术展揭露仇家的丑恶，在名利场之巅完成复仇与自我价值的双重加冕。'),
+ P('节奏规划：','1-10集：女主以“Echo”身份受邀回国，在晚宴上与前未婚夫及其新欢重逢。11-30集：女主接下委托，暗中布局。31-60集：抄袭丑闻爆发，新欢身败名裂，女主牵扯出当年被退婚的真相。61-80集：女主举办个人全球巡展，公布自己就是沈清禾。'),
+ P('结局基调建议：','女主站在自己的作品前，接受全世界的掌声。她完成了复仇，也找到了比爱情更重要的东西——自我。'),
+ P('完整创意：','三年前，沈清禾是珠宝设计界一颗冉冉升起的新星，也是周时予的未婚妻。林婉清不仅抢走了她的未婚夫，更在一次设计大赛中，用卑劣手段污蔑沈清禾抄袭，让她身败名裂。周家顺势退婚，将她彻底打入深渊。')],
+ iss:[I('用一场场艺术展揭露仇家的丑恶，在名利场之巅完成复仇与自我价值的双重加冕','warn','设定新鲜度','一句话故事过长、过抽象','一句话要能“一口气说完”：谁、要什么、被什么挡住。现在一句里有 3 层意思，读者记不住。','用一场艺术展揭穿仇家，赢回自己的名字'),
+  I('31-60集：抄袭丑闻爆发','bad','结构节奏','31–60 集中段缺少反转','一个阶段横跨 30 集却只有一个事件，中段（约第 45 集）容易疲软。建议在中点加一次反转，让观众重新押注。','31-45集：抄袭丑闻爆发；第46集反转：对方反咬她才是抄袭者'),
+  I('找到了比爱情更重要的东西——自我','warn','落地具体','结局落点抽象','“找到自我”拍不出来。请换成一个能被镜头捕捉的动作或物件，观众才会记住。','亲手退回了周家的订婚戒指订单，转身走进自己的工作室'),
+  I('用卑劣手段污蔑沈清禾抄袭','bad','人物动机','反派手段一笔带过','整部戏的仇恨来自这一件事，却没有具体事件，观众无法为女主愤怒。建议补一个可拍的场景。','在决赛前一晚偷换设计稿，并匿名举报沈清禾抄袭')]};
+B.plan={node:'plan',title:'策划案',paras:[P('题材定位：','现代豪门 × 艺术复仇，80 集竖屏短剧，女频。'),P('沈清禾（女主）：','天才珠宝设计师，隐忍、克制，擅长用作品说话。'),P('林婉清（反派）：','豪门千金，表面温柔，实际控制欲极强。'),P('周时予（前未婚夫）：','周家少爷，懦弱摇摆，在两个女人之间不断后悔。'),
+ P('主线结构：','一卡（1-10）宴会重逢；二卡（11-26）暗中布局；三卡（27-62）抄袭反转；结局段（63-80）巡展加冕。'),P('核心爽点：','每 3 集一次身份揭露，每次都是一次精准打脸。'),P('风险提示：','无。')],
+ iss:[I('隐忍、克制，擅长用作品说话','warn','人物立体','女主缺少缺点和弱点','只有优点的女主很难让人担心。建议加一个会被反派利用的软肋（如对母亲遗作的执念）。','隐忍、克制，擅长用作品说话；但对母亲留下的遗作毫无抵抗力'),
+  I('在两个女人之间不断后悔','bad','关系张力','周时予的功能不清','“后悔”不是行动。他在主线里要么帮女主、要么害女主，请明确他每一卡的立场变化。','在一卡动摇、二卡暗中帮女主、三卡被林婉清逼着站队'),
+  I('无。','bad','风险把控','风险提示为空','抄袭题材、珠宝品牌露出、真人设计师撞名都是常见风险，请至少列出 2 条及对应预案。','抄袭桥段需避免对标真实案件；珠宝品牌用虚构名；设计师名需查重')]};
+const OL=[['神秘大师归来赴宴','国际珠宝晚宴，众星云集。林婉清挽着未婚夫周时予，享受着众人的恭维。主持人宣布神秘设计大师Echo首次公开亮相，沈清禾身着简约礼服，佩戴着自己设计的荆棘项链，以高贵冷艳的姿态步入会场。她的出现让周时予瞬间僵住，眼神中充满震惊与难以置信。','林婉清在公开场合认出沈清禾，试图用天价委托设计订婚戒指的方式，当众羞辱她。','观众期待看到沈清禾如何应对公开刁难。','沈清禾不仅没有拒绝，反而欣然接下委托。','沈清禾看着林婉清，用全场都能听到的清晰声音说道：“我的设计，只配得上最精彩的故事。”'],
+ ['一句话反将一军','沈清禾接下委托后，提出一个条件：戒指的设计过程必须全程公开。林婉清骑虎难下，只能答应。周时予试图私下找她谈话，被她拒绝。','林婉清被迫答应公开设计过程。','观众期待看到沈清禾如何利用“公开”做局。','周时予发现沈清禾手上的旧伤疤。','周时予看着她的手腕，喃喃道：“这道疤……”'],
+ ['荆棘之吻设计初现','沈清禾的工作室，她正专注地绘制戒指草图。助理发现草图和三年前大赛的作品高度相似。林婉清的人暗中拍下草图。','林婉清试图提前拿到草图，再次栽赃抄袭。','观众期待看沈清禾是否察觉有人偷拍。','草图其实是故意留下的诱饵。','沈清禾对着镜头轻声说：“拍清楚一点。”'],
+ ['抄袭的陷阱','林婉清当着媒体展示偷来的草图，指控Echo抄袭。沈清禾在直播中拿出完整的设计手稿时间戳，一击反杀。','林婉清公开指控，沈清禾公开反驳。','观众期待看到时间戳的真相。','手稿上的时间戳显示，这套设计早于林婉清作品三年。','全场寂静，林婉清手里的话筒掉在了地上。']];
+OL.forEach((e,i)=>{B['ol'+(i+1)]={node:'ol',no:'第'+(i+1)+'集',title:e[0],paras:[P('集名：',e[0]),P('剧情过程：',e[1]),P('【冲突】',e[2]),P('【期待点】',e[3]),P('【转折】',e[4]),P('【结尾钩子】',e[5])],iss:[]}});
+B.ol1.iss=[I('眼神中充满震惊与难以置信','warn','冲突强度','写成了心理描写','“眼神中充满……”拍不出来，请换成可见的动作（手里的香槟杯停在半空）。','手里的香槟杯停在半空，整个人僵在原地'),
+ I('沈清禾不仅没有拒绝，反而欣然接下委托。','bad','转折','转折缺少代价','接下委托太顺，观众不会紧张。请给她一个代价：必须在三天内交出设计，且不能用旧作。','沈清禾接下委托，但被要求三天内交稿且不能用旧作。')];
+B.ol2.iss=[I('观众期待看到沈清禾如何利用“公开”做局。','warn','期待点','期待点是旁白式描述','期待点要落在一个悬念上，例如“她到底想让谁在直播里出丑”。','观众想知道：她要在直播里让谁出丑？'),
+ I('周时予看着她的手腕，喃喃道：“这道疤……”','bad','结尾钩子','钩子偏弱','这句台词只引出疑问，没有逼出下一集的行动。建议让他做出一个动作（冲过去抓住她的手腕）。','周时予冲过去抓住她的手腕：“这道疤，是谁给你的？”')];
+B.ol3.iss=[I('助理发现草图和三年前大赛的作品高度相似','bad','冲突强度','冲突发生得太快','发现相似直接成立，缺少铺垫。请在前面加一次助理的怀疑和沈清禾的否认。','助理起初没发现，直到翻出大赛旧图才惊呼：“这两张……”')];
+B.ol4.iss=[I('一击反杀','warn','冲突强度','结果写在了过程里','“一击反杀”是结论，应该写成具体一步：她如何拿出时间戳。','沈清禾点开云端备份，屏幕上显示三年前的创建时间')];
+// 剧本
+const SCN=[
+ ['神秘大师归来赴宴',[H('### 场1-1'),H('夜 内 半岛酒店宴会厅'),M('出场人物：沈清禾、林婉清、周时予'),A('宴会厅大门被侍者推开。沈清禾站在门口，灯光从她背后涌入，将她整个人勾出一道冷厉的轮廓。'),D('主持人','VO','让我们欢迎，国际珠宝设计大师——Echo。'),A('周时予手里的香槟杯停在半空，整个人僵在原地，眼神死死钉在沈清禾脸上。'),D('林婉清','挽紧周时予的手臂，压低声音','时予，你怎么了？'),D('周时予','OS','这张脸……不可能，当年的事情已经过去了三年，我以为她再也不会出现在任何人面前。'),A('林婉清顺着周时予的目光看过去，脸上的笑容瞬间凝固，心里涌起一阵强烈的恐慌。')]],
+ ['一句话反将一军',[H('### 场2-1'),H('日 内 沈清禾工作室'),M('出场人物：沈清禾、周时予'),D('周时予','急切','清禾，我们谈谈，我可以解释当年发生的一切，你给我一次机会，哪怕只是五分钟，好不好？'),D('沈清禾','平静','设计图在桌上，要谈，谈戒指。'),A('周时予的目光落在她的手腕上。'),D('周时予','低声','这道疤……')]],
+ ['荆棘之吻设计初现',[H('### 场3-1'),H('夜 内 沈清禾工作室'),M('出场人物：沈清禾、助理小夏'),A('沈清禾专注地绘制草图，窗外霓虹闪烁。'),D('小夏','惊讶','老师，这张草图的线条，好像三年前那场大赛的作品……'),D('沈清禾','不抬头','拍清楚一点。'),A('她感到一阵释然，仿佛终于等到了这一刻。')]]];
+SCN.forEach((e,i)=>{B['sc'+(i+1)]={node:'sc',no:'EP0'+(i+1),title:e[0],paras:e[1],iss:[]}});
+B.sc1.iss=[I('这张脸……不可能，当年的事情已经过去了三年，我以为她再也不会出现在任何人面前。','bad','台词口语','台词过长，一口气说完','这句有 36 字，真人念会喘。短剧台词一句只说一件事，建议拆成两三句。','这张脸……不可能。（顿）三年了，她不该回来。'),
+ I('心里涌起一阵强烈的恐慌','warn','动作可拍','内心活动无法拍摄','镜头拍不到“心里”。请换成可见的反应（指尖发白、手包滑落）。','手包从指间滑落，她下意识去抓周时予的袖口')];
+B.sc2.iss=[I('清禾，我们谈谈，我可以解释当年发生的一切，你给我一次机会，哪怕只是五分钟，好不好？','bad','台词口语','台词过长，信息过多','单句 40 字，包含三个诉求。拆开并加入沈清禾的打断，才有来有回。','清禾，我们谈谈。——我可以解释当年的事。'),
+ I('这道疤……','warn','结尾钩子','结尾钩子不够狠','集尾停在半句话上，没有下一集的动作。请落一个会引发后果的动作或信息。','这道疤……是谁给你的？')];
+B.sc3.iss=[I('她感到一阵释然，仿佛终于等到了这一刻。','warn','动作可拍','内心活动无法拍摄','“感到”“仿佛”都是心理描写。请写成她做的事：抬眼看镜头、嘴角微扬。','她抬眼望向暗处的镜头，嘴角微微扬起。')];
+const TXT=id=>B[id].paras.map(p=>(p.l||'')+(p.w||'')+(p.t||'')).join('\n');
+// ---------- 状态 ----------
+const S={view:'cre',side:false,mode:'chat',rep:{},cur:null,prev:{},msgs:[['ai','你好，我是 AI 助手。可以直接对话，或补充后续创作要求。区块右上角有「评估」和「重写」。']],pop:null,rw:null};
+const mq=matchMedia('(min-width:1280px)');let WIDE=mq.matches;S.side=WIDE;
+const VIEWS=[['cre','创意生成'],['plan','策划案'],['ol','集纲 · 一卡','1-10'],['sc','剧本 · 短剧','1-9']];
+const blocksOf=v=>v==='cre'?['cre']:v==='plan'?['plan']:v==='ol'?['ol1','ol2','ol3','ol4']:['sc1','sc2','sc3'];
+// ---------- 评估（Demo 规则；正式版由模型按同样维度出报告） ----------
+function evaluate(id){const b=B[id],txt=TXT(id);
+  const found=b.iss.filter(i=>txt.includes(i.q)).map(i=>{let pos=0;for(let k=0;k<b.paras.length;k++){const t=b.paras[k].t||'';const x=t.indexOf(i.q);if(x>=0){pos=k*1e4+x;break}}return{...i,pos}}).sort((a,c)=>a.pos-c.pos).map((i,k)=>({...i,n:k+1}));
+  const ds=DIMS[b.node].map(d=>{const pen=found.filter(i=>i.dim===d).reduce((s,i)=>s+(i.sev==='bad'?30:16),0);return[d,Math.max(35,94-pen-(d.length%3)*2)]});
+  const score=Math.round(ds.reduce((s,d)=>s+d[1],0)/ds.length);return{issues:found,dims:ds,score}}
+const band=v=>v>=75?'good':v>=60?'warn':'bad';const BL={good:['✓','良好'],warn:['!','一般'],bad:['✕','待加强']};
+const stt=v=>{const b=band(v);return`<span class="st ${b}">${BL[b][0]} ${BL[b][1]}</span>`};
+// ---------- 渲染 ----------
+function renderTop(){const v=S.view;const sn=[['cre','创意生成'],['plan','策划案'],['ol','集纲'],['sc','剧本']];
+  $('#top').innerHTML=`<button class="tb" style="width:28px" data-act="noop">‹</button><h1>她的第二张脸</h1><div class="steps"><span>开始创作</span><hr>${sn.map((s,i)=>`<button data-view="${s[0]}" class="${v===s[0]?'on':''}"><span class="n">${i+1}</span>${s[1]}</button>${'<hr>'}`).join('')}<button><span class="n">5</span>导出</button></div><span class="sp"></span><span class="mut" style="font-size:13px">✓ 已自动保存</span><span class="chip"><i></i>DeepSeek-V4 Pro ⌄</span><button class="robot ${S.side?'on':''}" data-tip="AI助手" data-act="side" aria-label="AI助手">${ic('bot')}</button>`}
+function renderTree(){$('#tree').innerHTML=VIEWS.map(([k,n,r])=>{const c=blocksOf(k).reduce((s,id)=>s+(S.rep[id]?S.rep[id].issues.length:0),0);return`<a data-view="${k}" class="${S.view===k?'on':''}">${n}${r?`<span class="mut" style="margin-left:auto;font-size:12px">${r}</span>`:''}${c?`<span class="b" ${r?'':''}>${c}</span>`:''}</a>`}).join('')}
+function paraHtml(p,rep){let t=esc(p.t||'');const raw=p.t||'';
+  if(rep){for(const i of rep.issues){const q=esc(i.q);if(raw.includes(i.q)){t=t.replace(q,`<span class="mk ${i.sev==='bad'?'':'warn'}" id="mk-${i.id}" data-mk="${i.id}">${q}<span class="nm">${i.n}</span></span>`)}}}
+  if(p.k==='act')return`<div class="p act">${t}</div>`;if(p.k==='hd')return`<div class="p hd">${esc(p.t)}</div>`;if(p.k==='meta')return`<div class="p meta">${esc(p.t)}</div>`;
+  if(p.k==='dlg')return`<div class="p dlg"><b>${esc(p.w)}</b> <span class="par">（${esc(p.p)}）</span>：${t}</div>`;
+  return`<div class="p">${p.l?`<b>${esc(p.l)}</b>`:''}${t}</div>`}
+function toolsHtml(id){const r=S.rep[id];const n=r?r.issues.length:0;
+  return`<div class="tools"><button class="tb dis" data-tip="总节点（后续开放）" data-act="nodes" data-id="${id}">${ic('layers')}</button><button class="tb act ${n?'has':''}" data-tip="评估${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="eval" data-id="${id}">${ic('check')}${n?`<span class="c">${n}</span>`:''}</button><button class="tb" data-tip="重写${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="rw" data-id="${id}">${ic('redo')}</button></div>`}
+function blockHtml(id){const b=B[id],r=S.rep[id];id=id;b.iss.forEach((i,k)=>i.id=i.id||id+'_'+k);
+  const head=b.no?`<span class="no">${b.no}</span><h3>${esc(b.title)}</h3>`:`<h3>${esc(b.title)}</h3>`;
+  return`<section class="blk" id="blk-${id}"><div class="bh">${head}${toolsHtml(id)}</div>${S.prev[id]?`<div class="rwtag">✓ 已重写 · 红标已清除，可再点「评估」复查 <button data-act="undo" data-id="${id}">撤销重写</button></div>`:''}<div class="card"><div class="txt">${b.paras.map(p=>paraHtml(p,r)).join('')}</div></div></section>`}
+function renderMain(keep){const m=$('#main');const st=m.scrollTop;const v=S.view;
+  const title=v==='cre'?'创意生成':v==='plan'?'策划案':v==='ol'?'集纲 · 一卡':'短剧剧本';
+  m.innerHTML=`<div class="doc"><div class="dh"><h2>她的第二张脸</h2><span class="badge">${v==='sc'?'已生成':'已编辑 · v2'}</span><span class="mut">身份博弈流 | 80 集</span></div><div class="hint">✎ 正文支持整块自由编辑，修改后会自动保存；按 Esc 可撤销当前正在编辑的一处。每个区块右上角可「评估」「重写」。</div>${blocksOf(v).map(blockHtml).join('')}</div>`;
+  if(keep)m.scrollTop=st}
+function renderSide(){const sd=$('#side');sd.classList.toggle('open',S.side);$('#fab').classList.toggle('show',!S.side);
+  $('#fab').innerHTML=ic('bot');const hasRep=S.cur&&S.rep[S.cur];
+  const tabs=`<div class="stabs"><button data-mode="chat" class="${S.mode==='chat'?'on':''}">AI 助手</button>${S.mode!=='chat'||hasRep?`<button data-mode="rep" class="${S.mode!=='chat'?'on':''}">评估报告</button>`:''}</div>`;
+  let body='';
+  if(S.mode==='chat'){body=`<div class="sbody" id="sb">${S.msgs.map(m=>`<div class="msg ${m[0]==='me'?'me':''}">${esc(m[1])}</div>`).join('')}</div><div class="compose"><textarea id="inp" placeholder="和 AI 助手对话，或补充后续创作要求"></textarea><div class="r"><span>作用于：${esc(scopeName())}</span><span class="sp"></span><button class="send" data-act="send">${ic('send')}</button></div></div>`}
+  else if(S.mode==='scan'){body=`<div class="sbody"><div class="scan"><div class="pulse">${ic('pulse')}</div><b>正在评估「${esc(label(S.cur))}」…</b><div class="prog"><i id="pg"></i></div><span class="mut" style="font-size:12px">评估只出报告，不改动原文</span></div></div>`}
+  else{const r=S.rep[S.cur];const b=band(r.score);const col={good:'var(--green)',warn:'var(--amber)',bad:'var(--red)'};
+    body=`<div class="sbody"><div class="hero"><div class="ring" style="--p:${r.score};--rc:${col[b]}"><b>${r.score}</b></div><div style="display:grid;gap:4px"><b>${esc(label(S.cur))}</b>${stt(r.score)}<span class="mut" style="font-size:12px">共 ${r.issues.length} 处意见 · ${r.issues.filter(i=>i.sev==='bad').length} 处需修改</span></div></div>
+    <div class="sec">分项</div><div style="display:grid;gap:8px">${r.dims.map(d=>`<div class="dim"><span>${d[0]}</span><span class="tr"><i style="width:${d[1]}%;background:${col[band(d[1])]}"></i></span><span class="v">${d[1]} ${stt(d[1])}</span></div>`).join('')}</div>
+    <div class="sec">修改意见（点击跳转到原文）</div>${r.issues.length?r.issues.map(i=>`<div class="it ${i.sev}" id="it-${i.id}" data-it="${i.id}"><div class="t"><span class="n">${i.n}</span>${esc(i.title)}<span class="st ${i.sev}" style="margin-left:auto">${i.sev==='bad'?'✕ 需修改':'! 建议'}</span></div><q>${esc(i.q.length>38?i.q.slice(0,38)+'…':i.q)}</q><div class="op">${esc(i.op)}</div><div class="go">↗ 定位到原文</div></div>`).join(''):`<div class="msg">✓ 没有发现需要修改的问题。</div>`}
+    <div class="note">评估只给意见，不改动、不重写原文。需要修改请点该区块右上角的「重写」。</div></div>`}
+  sd.innerHTML=`<div class="sh">${tabs}<button class="x" data-act="side" aria-label="关闭">${ic('x')}</button></div>${body}`}
+const label=id=>{const b=B[id];return b.no?`${NODE[b.node]} · ${b.no}`:b.title};
+const scopeName=()=>({cre:'创意生成',plan:'策划案',ol:'集纲 · 一卡',sc:'短剧剧本'})[S.view];
+function renderAll(){renderTop();renderTree();renderMain();renderSide()}
+// ---------- 行为 ----------
+function runEval(id){S.cur=id;S.mode='scan';S.side=true;renderSide();const pg=$('#pg');let w=0;const t=setInterval(()=>{w+=12+Math.random()*14;if(pg)pg.style.width=Math.min(w,100)+'%';if(w>=100){clearInterval(t);S.rep[id]=evaluate(id);S.mode='rep';renderTop();renderTree();renderMain(true);renderSide()}},180)}
+function focusIssue(iid,fromMk){const el=document.getElementById('mk-'+iid);document.querySelectorAll('.mk.focus,.it.focus').forEach(e=>e.classList.remove('focus'));
+  const owner=iid.replace(/_\d+$/,'');if(S.cur!==owner){S.cur=owner;S.mode='rep';S.side=true;renderSide()}
+  const it=document.getElementById('it-'+iid);if(el){el.classList.add('focus');el.scrollIntoView({block:'center',behavior:'smooth'})}if(it){it.classList.add('focus');if(fromMk)it.scrollIntoView({block:'nearest',behavior:'smooth'})}}
+function doRewrite(id,note){const b=B[id];S.prev[id]=JSON.parse(JSON.stringify(b.paras));
+  b.paras=b.paras.map(p=>{if(!p.t)return p;let t=p.t;b.iss.forEach(i=>{if(t.includes(i.q))t=t.replace(i.q,i.fix)});return{...p,t}});
+  delete S.rep[id];renderTop();renderTree();renderMain(true);toast('已重写「'+label(id)+'」'+(note?'（已按你的要求）':''))}
+function openNodes(btn){const r=btn.getBoundingClientRect();const cur=B[btn.dataset.id].node;
+  S.pop=`<div class="pop" style="top:${r.bottom+8}px;left:${Math.max(8,r.right-250)}px"><h5>总节点 · 跨阶段评估 / 重写（后续开放）</h5>${Object.entries(NODE).map(([k,n])=>`<div class="row ${k===cur?'cur':''}">${n}<span class="tg">${k===cur?'当前':'后续开放'}</span></div>`).join('')}</div>`;$('#ov').innerHTML=`<div class="mask" style="background:none;display:block" data-act="closepop"></div>${S.pop}`}
+function openRw(id){S.rw=id;const e=B[id].node;$('#ov').innerHTML=`<div class="mask" data-act="closepop"><div class="dlg"><h4>重写 · ${esc(label(id))}</h4><span class="mut" style="font-size:13px">只重写这一块，其它内容不动。可补充要求（选填）：</span><textarea id="rwn" placeholder="例如：台词更口语、结尾钩子更狠"></textarea><div class="chips"><button data-chip="台词更口语">台词更口语</button><button data-chip="结尾钩子更狠">结尾钩子更狠</button><button data-chip="冲突再强一点">冲突再强一点</button></div><div class="fr"><button class="btn" data-act="closepop">取消</button><button class="btn pri" data-act="rwgo">开始重写</button></div></div></div>`}
+document.addEventListener('click',e=>{
+  const v=e.target.closest('[data-view]');if(v){S.view=v.dataset.view;$('#main').scrollTop=0;renderTop();renderTree();renderMain();return}
+  const mk=e.target.closest('[data-mk]');if(mk){focusIssue(mk.dataset.mk,true);return}
+  const it=e.target.closest('[data-it]');if(it){focusIssue(it.dataset.it,false);return}
+  const md=e.target.closest('[data-mode]');if(md){S.mode=md.dataset.mode==='rep'?(S.rep[S.cur]?'rep':'chat'):'chat';renderSide();return}
+  const ch=e.target.closest('[data-chip]');if(ch){const t=$('#rwn');t.value=(t.value?t.value+'，':'')+ch.dataset.chip;return}
+  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act,id=a.dataset.id;
+  if(act==='side'){S.side=!S.side;renderTop();renderSide()}
+  else if(act==='eval'){if(S.rep[id]){S.cur=id;S.mode='rep';S.side=true;renderSide();renderTop()}else runEval(id)}
+  else if(act==='rw')openRw(id);else if(act==='nodes')openNodes(a);
+  else if(act==='closepop'){if(a.classList.contains('mask')&&e.target!==a)return;$('#ov').innerHTML=''}
+  else if(act==='rwgo'){const n=$('#rwn').value.trim();const id2=S.rw;$('#ov').innerHTML='';toast('正在重写…');setTimeout(()=>doRewrite(id2,n),900)}
+  else if(act==='undo'){B[id].paras=S.prev[id];delete S.prev[id];renderMain(true);toast('已撤销重写')}
+  else if(act==='send'){const t=$('#inp');const x=t.value.trim();if(!x)return;S.msgs.push(['me',x]);S.msgs.push(['ai','收到。（演示：这里会按「'+scopeName()+'」处理你的要求）']);renderSide();const sb=$('#sb');sb.scrollTop=sb.scrollHeight}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#ov').innerHTML=''});
+function applyMQ(){WIDE=mq.matches;$('#app').classList.toggle('narrow',!WIDE);S.side=WIDE;renderTop();renderSide()}
+mq.addEventListener('change',applyMQ);$('#app').classList.toggle('narrow',!WIDE);
+window.__S=S;renderAll();
+})();
+</script>
+</body>
+</html>
