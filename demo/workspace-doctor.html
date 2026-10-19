@@ -58,7 +58,9 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .mk .nm{display:inline-grid;place-items:center;min-width:17px;height:17px;border-radius:9px;background:var(--red);color:#fff;font:700 10px/1 var(--f);margin-left:3px;vertical-align:2px;text-decoration:none}.mk.warn .nm{background:var(--amber)}
 .mk.focus{outline:2px solid var(--teal);outline-offset:1px;background:color-mix(in srgb,var(--teal) 18%,#fff)}
 .p.new{background:color-mix(in srgb,var(--green) 16%,transparent);border-radius:5px}
-.rwtag{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--green);padding:0 2px}.rwtag.stale{color:var(--amber)}.rwtag button{color:var(--teal);text-decoration:underline}
+.rwtag{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--green);padding:0 2px}.verbar{display:flex;align-items:center;gap:10px;font-size:12.5px;background:var(--grnbg);border:1px solid #BFE6D3;border-radius:12px;padding:6px 12px;flex-wrap:wrap}.verbar.back{background:var(--ambbg);border-color:#F1D28A}.verbar .vt{font-weight:700;color:var(--green)}.verbar.back .vt{color:var(--amber)}.verbar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:2px 10px;font-weight:600;color:var(--teal)}.verbar button:hover{border-color:var(--teal)}
+del{background:#FDE3E3;color:#B3262B;text-decoration:line-through}ins{background:#D5F3E4;color:#116B45;text-decoration:none}.legend{display:flex;gap:14px;font-size:12px}.chead{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;font-weight:700;color:var(--ink2)}.cmp{display:grid;gap:8px}.crow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cc{border-radius:10px;padding:8px 10px;font-size:13.5px;line-height:1.75}.cc.o{background:#FBF4F4}.cc.n{background:#F1FAF5}@media (max-width:900px){.crow,.chead{grid-template-columns:1fr}}
+.rwtag.stale{color:var(--amber)}.rwtag button{color:var(--teal);text-decoration:underline}
 /* 右侧栏 */
 .side{width:0;overflow:hidden;background:var(--surface);border-left:0;display:flex;flex-direction:column;min-height:0;transition:width .22s}
 .side{position:relative}.side.open{width:var(--sw,380px);border-left:1px solid var(--line)}.side.drag{transition:none}
@@ -159,9 +161,20 @@ B.sc1.iss=[I('这张脸……不可能，当年的事情已经过去了三年，
 B.sc2.iss=[I('清禾，我们谈谈，我可以解释当年发生的一切，你给我一次机会，哪怕只是五分钟，好不好？','bad','台词口语','台词过长，信息过多','单句 40 字，包含三个诉求。拆开并加入沈清禾的打断，才有来有回。','清禾，我们谈谈。——我可以解释当年的事。'),
  I('这道疤……','warn','结尾钩子','结尾钩子不够狠','集尾停在半句话上，没有下一集的动作。请落一个会引发后果的动作或信息。','这道疤……是谁给你的？')];
 B.sc3.iss=[I('她感到一阵释然，仿佛终于等到了这一刻。','warn','动作可拍','内心活动无法拍摄','“感到”“仿佛”都是心理描写。请写成她做的事：抬眼看镜头、嘴角微扬。','她抬眼望向暗处的镜头，嘴角微微扬起。')];
+const RW={
+ cre:{2:'被豪门退婚的天才设计师，三年后以神秘大师“Echo”之名回国，用一场艺术展揭穿仇家，赢回自己的名字。',3:'1-10集：Echo受邀回国，晚宴上与前未婚夫、新欢重逢，被当众刁难。11-30集：她接下订婚戒委托，暗中布局，同时以新作在圈内崛起。31-45集：抄袭丑闻爆发；第46集反转：对方反咬她才是抄袭者。46-60集：沈清禾拿出证据反击，牵出当年退婚的真相。61-80集：个人全球巡展，公布自己就是沈清禾。',4:'女主站在自己的作品前，接受全世界的掌声。她亲手退回周家的订婚戒指订单，转身走进自己的工作室。',5:'三年前，沈清禾是珠宝设计界冉冉升起的新星，也是周时予的未婚妻。大赛决赛前一晚，林婉清偷换了她的设计稿，并匿名举报她抄袭；沈清禾一夜之间身败名裂，周家当晚退婚，把她赶出了圈子。'},
+ plan1:{0:'天才珠宝设计师，隐忍克制，擅长用作品说话；唯一的软肋是母亲留下的遗作。三年前被退婚后，以“Echo”身份归来。',1:'豪门千金，表面温柔，实际控制欲极强；习惯用钱和人脉解决问题，从不亲自动手。',2:'周家少爷，懦弱摇摆。一卡动摇，二卡暗中帮女主，三卡被林婉清逼着站队。'},
+ plan2:{0:'现代豪门 × 艺术复仇，80 集竖屏短剧，女频，主打才华碾压与身份反转。',2:'每 3 集一次身份揭露，每次都以一个可拍的打脸动作收尾。',3:'①抄袭桥段避免对标真实案件；②珠宝品牌使用虚构名；③设计师名需查重。预案：上线前法务过审。'},
+ ol1:{1:'国际珠宝晚宴，众星云集。林婉清挽着未婚夫周时予接受恭维。主持人宣布神秘设计大师Echo首次亮相，沈清禾佩戴自己设计的荆棘项链步入会场。周时予手里的香槟杯停在半空，整个人僵在原地。',4:'沈清禾接下委托，但被要求三天内交稿且不能用旧作。',5:'沈清禾看着林婉清，全场都听得清：“我的设计，只配得上最精彩的故事。”'},
+ ol2:{1:'沈清禾接下委托后提出条件：设计过程全程直播。林婉清骑虎难下只能答应。周时予私下想找她谈话，被她当面拒绝。',3:'观众想知道：她要在直播里让谁出丑？',5:'周时予冲过去抓住她的手腕：“这道疤，是谁给你的？”'},
+ ol3:{1:'沈清禾的工作室，她正专注绘制戒指草图。助理起初没发现异样，直到翻出大赛旧图才惊呼：“这两张……”林婉清的人暗中拍下草图。',5:'沈清禾对着镜头轻声说：“拍清楚一点。”随后把草图推到了灯光下。'},
+ ol4:{1:'林婉清当着媒体展示偷来的草图，指控Echo抄袭。沈清禾点开云端备份，屏幕上显示三年前的创建时间。',5:'全场寂静，林婉清手里的话筒掉在地上，砸出一声刺耳的回响。'},
+ sc1:{3:'宴会厅大门被侍者推开。沈清禾站在门口，灯光从身后涌入，勾出一道冷厉的轮廓。'},
+ sc2:{5:'周时予的目光落在她手腕的旧疤上，喉结滚动了一下。'},
+ sc3:{3:'沈清禾伏案绘制草图，窗外霓虹闪烁，笔尖没有停。',4:'老师，这张草图的线条……和三年前那场大赛的作品好像。'}};
 const TXT=id=>B[id].paras.map(p=>(p.l||'')+(p.w||'')+(p.t||'')).join('\n');
 // ---------- 状态 ----------
-const S={open:{},scan:{},stale:{},w:380,view:'cre',side:false,mode:'chat',rep:{},cur:null,prev:{},msgs:[['ai','你好，我是 AI 助手。可以直接对话，或补充后续创作要求。区块右上角有「评估」和「重写」。']],pop:null,rw:null};
+const S={ver:{},cmp:{},open:{},scan:{},stale:{},w:380,view:'cre',side:false,mode:'chat',rep:{},cur:null,prev:{},msgs:[['ai','你好，我是 AI 助手。可以直接对话，或补充后续创作要求。区块右上角有「评估」和「重写」。']],pop:null,rw:null};
 const mq=matchMedia('(min-width:1280px)');let WIDE=mq.matches;S.side=WIDE;
 const VIEWS=[['cre','创意生成'],['plan','策划案'],['ol','集纲 · 一卡','1-10'],['sc','剧本 · 短剧','1-9']];
 const blocksOf=v=>v==='cre'?['cre']:v==='plan'?['plan1','plan2']:v==='ol'?['ol1','ol2','ol3','ol4']:['sc1','sc2','sc3'];
@@ -185,7 +198,7 @@ function toolsHtml(id){const r=S.rep[id];const n=r?r.issues.length:0;
   return`<div class="tools"><button class="tb act ${r?'got':''} ${n?'has':''} ${r&&S.open[id]?'open':''}" data-act="eval" data-id="${id}">${ic('check')}<span>${r?'评估报告':'评估'}</span>${n?`<span class="c">${n}</span>`:''}</button><button class="tb" data-act="rw" data-id="${id}">${ic('redo')}<span>重写</span></button></div>`}
 function blockHtml(id){const b=B[id],r=S.rep[id];id=id;b.iss.forEach((i,k)=>i.id=i.id||id+'_'+k);
   const head=b.no?`<span class="no">${b.no}</span><h3>${esc(b.title)}</h3>`:`<h3>${esc(b.title)}</h3>`;
-  return`<section class="blk" id="blk-${id}"><div class="bh">${head}${toolsHtml(id)}</div>${S.stale[id]?`<div class="rwtag stale">⚠ 上游内容已改动，本区块可能需要同步 <button data-act="rw" data-id="${id}">去重写</button></div>`:''}${S.prev[id]?`<div class="rwtag">✓ 已重写 · 红标已清除，可再点「评估」复查 <button data-act="undo" data-id="${id}">撤销重写</button></div>`:''}${S.scan[id]?scanHtml(id):(r&&S.open[id]?reportHtml(id):'')}<div class="card"><div class="txt">${b.paras.map(p=>paraHtml(p,S.open[id]?r:null)).join('')}</div></div></section>`}
+  return`<section class="blk" id="blk-${id}"><div class="bh">${head}${toolsHtml(id)}</div>${S.stale[id]?`<div class="rwtag stale">⚠ 上游内容已改动，本区块可能需要同步 <button data-act="rw" data-id="${id}">去重写</button></div>`:''}${verBar(id)}${S.cmp[id]&&S.ver[id]?cmpHtml(id):''}${S.scan[id]?scanHtml(id):(r&&S.open[id]?reportHtml(id):'')}<div class="card"><div class="txt">${b.paras.map(p=>paraHtml(p,S.open[id]?r:null)).join('')}</div></div></section>`}
 function renderMain(keep){const m=$('#main');const st=m.scrollTop;const v=S.view;
   const title=v==='cre'?'创意生成':v==='plan'?'策划案':v==='ol'?'集纲 · 一卡':'短剧剧本';
   m.innerHTML=`<div class="doc"><div class="dh"><h2>她的第二张脸</h2><span class="badge">${v==='sc'?'已生成':'已编辑 · v2'}</span><span class="mut">身份博弈流 | 80 集</span></div><div class="hint">✎ 正文支持整块自由编辑，修改后会自动保存；按 Esc 可撤销当前正在编辑的一处。每个区块右上角可「评估」「重写」。</div>${blocksOf(v).map(blockHtml).join('')}</div>`;
@@ -211,9 +224,31 @@ function focusIssue(iid,fromMk){document.querySelectorAll('.mk.focus,.it.focus')
   const el=document.getElementById('mk-'+iid),it=document.getElementById('it-'+iid);
   if(el){el.classList.add('focus');if(!fromMk)el.scrollIntoView({block:'center',behavior:'smooth'})}
   if(it){it.classList.add('focus');if(fromMk)it.scrollIntoView({block:'center',behavior:'smooth'})}}
-function doRewrite(id,note,silent){delete S.stale[id];const b=B[id];S.prev[id]=JSON.parse(JSON.stringify(b.paras));
-  b.paras=b.paras.map(p=>{if(!p.t)return p;let t=p.t;b.iss.forEach(i=>{if(t.includes(i.q))t=t.replace(i.q,i.fix)});return{...p,t}});
-  delete S.rep[id];delete S.open[id];renderTop();renderTree();renderMain(true);if(!silent)toast('已重写「'+label(id)+'」'+(note?'（已按你的要求）':''))}
+const clone=o=>JSON.parse(JSON.stringify(o));
+function rewriteParas(id,paras){const b=B[id];return paras.map((p,i)=>{if(!p.t)return p;let t=p.t;b.iss.forEach(x=>{if(t.includes(x.q))t=t.replace(x.q,x.fix)});if(RW[id]&&RW[id][i]!==undefined)t=RW[id][i];return{...p,t}})}
+const nChg=v=>v.orig.filter((p,i)=>p.t!==v.nw[i].t).length;
+function doRewrite(id,note,silent){delete S.stale[id];const b=B[id];const orig=S.ver[id]?S.ver[id].orig:clone(b.paras);const nw=rewriteParas(id,orig);
+  S.ver[id]={orig,nw,note,cur:'nw',n:(S.ver[id]?S.ver[id].n:1)+1};b.paras=clone(nw);S.cmp[id]=true;
+  delete S.rep[id];delete S.open[id];renderTop();renderTree();renderMain(true);if(!silent)toast('已重写「'+label(id)+'」，下方是前后对比')}
+function useVer(id,w){const v=S.ver[id];v.cur=w;B[id].paras=clone(w==='nw'?v.nw:v.orig);delete S.rep[id];delete S.open[id];renderTop();renderTree();renderMain(true);toast(w==='nw'?'已恢复重写版':'已回退到原版本')}
+// 字符级 diff（LCS），用于前后对比
+function diff(a,b){const n=a.length,m=b.length,T=Array.from({length:n+1},()=>new Uint16Array(m+1));for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)T[i][j]=a[i]===b[j]?T[i+1][j+1]+1:Math.max(T[i+1][j],T[i][j+1]);
+  const ops=[];let i=0,j=0;const add=(t,c)=>{const l=ops[ops.length-1];if(l&&l.t===t)l.s+=c;else ops.push({t,s:c})};
+  while(i<n&&j<m){if(a[i]===b[j]){add('=',a[i]);i++;j++}else if(T[i+1][j]>=T[i][j+1]){add('-',a[i++])}else{add('+',b[j++])}}
+  while(i<n)add('-',a[i++]);while(j<m)add('+',b[j++]);
+  // 短的相同片段（<4 字）并入前后改动，避免碎片化
+  const g=[];ops.forEach((o,k)=>{if(o.t==='='&&o.s.length<4&&k>0&&k<ops.length-1){g.push({t:'-',s:o.s},{t:'+',s:o.s})}else g.push(o)});
+  let L='',R='',dl='',ir='';const fl=()=>{if(dl)L+=`<del>${esc(dl)}</del>`;if(ir)R+=`<ins>${esc(ir)}</ins>`;dl=ir=''};
+  g.forEach(o=>{if(o.t==='='){fl();L+=esc(o.s);R+=esc(o.s)}else if(o.t==='-')dl+=o.s;else ir+=o.s});fl();return[L,R]}
+function verBar(id){const v=S.ver[id];if(!v)return'';const n=nChg(v);
+  return v.cur==='nw'?`<div class="verbar"><span class="vt">✓ 已重写 · v${v.n}</span><span class="mut">改动 ${n} 处${v.note?' · 要求：'+esc(v.note):''}</span><span class="sp"></span><button data-act="cmp" data-id="${id}">${S.cmp[id]?'收起对比':'查看对比'}</button><button data-act="ver" data-id="${id}" data-v="orig">回退到原版本</button></div>`
+  :`<div class="verbar back"><span class="vt">↩ 已回退到原版本</span><span class="mut">重写版仍保留</span><span class="sp"></span><button data-act="cmp" data-id="${id}">${S.cmp[id]?'收起对比':'查看对比'}</button><button data-act="ver" data-id="${id}" data-v="nw">恢复重写版</button></div>`}
+function cmpHtml(id){const v=S.ver[id];const rows=[];let same=0;
+  v.orig.forEach((p,i)=>{if(!p.t)return;if(p.t===v.nw[i].t){same++;return}const[l,r]=diff(p.t,v.nw[i].t);const lb=p.l||(p.k==='dlg'?p.w+'：':'');rows.push(`<div class="crow"><div class="cc o">${lb?`<b>${esc(lb)}</b>`:''}${l}</div><div class="cc n">${lb?`<b>${esc(lb)}</b>`:''}${r}</div></div>`)});
+  return`<div class="rp"><div class="rph"><b>重写前后对比</b><span class="mut" style="font-size:12px">${esc(label(id))} · 改动 ${rows.length} 处，另有 ${same} 处未改动</span><button class="rpx" data-act="cmp" data-id="${id}" aria-label="收起对比">${ic('x')}</button></div>
+  <div class="legend"><span><del>删除 / 被替换</del></span><span><ins>新增 / 替换为</ins></span></div>
+  <div class="chead"><span>原版本</span><span>重写版 v${v.n}</span></div><div class="cmp">${rows.join('')||'<div class="msg">重写后没有文字变化。</div>'}</div>
+  <div class="fr">${v.cur==='nw'?`<button class="btn" data-act="ver" data-id="${id}" data-v="orig">回退到原版本</button><button class="btn pri" data-act="cmp" data-id="${id}">保留重写版，收起</button>`:`<button class="btn pri" data-act="ver" data-id="${id}" data-v="nw">恢复重写版</button>`}</div></div>`}
 function openRw(id){S.rw=id;const d=deps(id);
   const warn=d.length?`<div class="warnbox"><b>⚠ 可能会影响其他部分</b><div>改动「${esc(label(id))}」后，已生成的下游内容可能与之不一致：</div><div class="aff">${d.map(x=>`<span>${esc(label(x))}</span>`).join('')}</div><div class="mut" style="font-size:12px">共 ${d.length} 处。是否连同下游一起重写？</div></div>`:'';
   const btns=d.length?`<button class="btn" data-act="closepop">取消</button><button class="btn" data-act="rwgo" data-scope="self">只重写本区块</button><button class="btn pri" data-act="rwgo" data-scope="all">全部重写（共 ${d.length+1} 处）</button>`:`<button class="btn" data-act="closepop">取消</button><button class="btn pri" data-act="rwgo" data-scope="self">开始重写</button>`;
@@ -232,7 +267,8 @@ document.addEventListener('click',e=>{
   else if(act==='rwgo'){const n=$('#rwn').value.trim();const id2=S.rw,all=a.dataset.scope==='all',d=deps(id2);$('#ov').innerHTML='';toast('正在重写…');
     if(!all){setTimeout(()=>{doRewrite(id2,n,d.length);if(d.length){d.forEach(x=>S.stale[x]=1);renderMain(true);toast('已只重写本区块；下游 '+d.length+' 处标记为「上游已改动」')}},900)}
     else{const q=[id2,...d];let k=0;const step=()=>{doRewrite(q[k],n,true);k++;if(k<q.length){toast('正在同步重写 '+k+'/'+q.length+'…');setTimeout(step,450)}else toast('已全部重写，共 '+q.length+' 处')};setTimeout(step,700)}}
-  else if(act==='undo'){B[id].paras=S.prev[id];delete S.prev[id];renderMain(true);toast('已撤销重写')}
+  else if(act==='cmp'){S.cmp[id]=!S.cmp[id];renderMain(true)}
+  else if(act==='ver')useVer(id,a.dataset.v)
   else if(act==='send'){const t=$('#inp');const x=t.value.trim();if(!x)return;S.msgs.push(['me',x]);S.msgs.push(['ai','收到。（演示：这里会按「'+scopeName()+'」处理你的要求）']);renderSide();const sb=$('#sb');sb.scrollTop=sb.scrollHeight}
 });
 let drag=false;
