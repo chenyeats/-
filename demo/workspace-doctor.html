@@ -50,19 +50,21 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .tb.dis{opacity:.8}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px}
 .txt{background:#F2F6F8;border-radius:10px;padding:12px 14px;display:grid;gap:3px;font-size:14.5px;position:relative}
-.p b{font-weight:700}.p.act::before{content:"△ ";color:var(--mut)}.p.hd{font-weight:700;margin-top:4px}.p.meta{font-size:12.5px;color:var(--mut)}.p.dlg .par{color:var(--mut)}
+.p b{font-weight:700}.p.act::before{content:"△ ";color:var(--mut)}.p.hd{font-weight:700;margin-top:4px}.p.meta{font-size:12.5px;color:var(--mut)}.p.dg .par{color:var(--mut)}
 .mk{cursor:pointer;background:var(--redbg);text-decoration:underline wavy var(--red);text-decoration-thickness:1px;text-underline-offset:4px;border-radius:3px}
 .mk.warn{background:var(--ambbg);text-decoration-color:var(--amber)}
 .mk .nm{display:inline-grid;place-items:center;min-width:17px;height:17px;border-radius:9px;background:var(--red);color:#fff;font:700 10px/1 var(--f);margin-left:3px;vertical-align:2px;text-decoration:none}.mk.warn .nm{background:var(--amber)}
 .mk.focus{outline:2px solid var(--teal);outline-offset:1px;background:color-mix(in srgb,var(--teal) 18%,#fff)}
 .p.new{background:color-mix(in srgb,var(--green) 16%,transparent);border-radius:5px}
-.rwtag{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--green);padding:0 2px}.rwtag button{color:var(--teal);text-decoration:underline}
+.rwtag{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--green);padding:0 2px}.rwtag.stale{color:var(--amber)}.rwtag button{color:var(--teal);text-decoration:underline}
 /* 右侧栏 */
 .side{width:0;overflow:hidden;background:var(--surface);border-left:0;display:flex;flex-direction:column;min-height:0;transition:width .22s}
-.side.open{width:380px;border-left:1px solid var(--line)}
-.side>*{min-width:380px}
+.side{position:relative}.side.open{width:var(--sw,380px);border-left:1px solid var(--line)}.side.drag{transition:none}
+.side>*:not(.grip){min-width:var(--sw,380px)}
+.side>.compose:not(.grip){min-width:calc(var(--sw,380px) - 32px)}.narrow .side>.compose:not(.grip){min-width:0}.grip{position:absolute;left:0;top:0;bottom:0;width:8px;cursor:col-resize;z-index:5;min-width:0}.grip::after{content:'';position:absolute;left:2px;top:50%;height:44px;width:4px;margin-top:-22px;border-radius:2px;background:var(--line);transition:background .15s}.grip:hover::after,.side.drag .grip::after{background:var(--teal)}
 .sh{display:flex;align-items:center;gap:6px;padding:12px 16px;border-bottom:1px solid var(--line)}.sh b{font-size:15px}.sh .x{margin-left:auto;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--mut)}.sh .x:hover{background:var(--s2)}
 .stabs{display:flex;gap:4px}.stabs button{padding:4px 12px;border-radius:999px;color:var(--ink2);font-size:13px}.stabs button.on{background:var(--tealbg);color:var(--teal);font-weight:700}
+.warnbox{background:var(--ambbg);border:1px solid #F1D28A;border-radius:12px;padding:10px 12px;display:grid;gap:6px;font-size:13px}.aff{display:flex;gap:6px;flex-wrap:wrap}.aff span{background:#fff;border:1px solid #F1D28A;border-radius:999px;padding:0 10px;font-size:12px}
 .sbody{flex:1;min-height:0;overflow:auto;padding:14px 16px;display:grid;gap:12px;align-content:start}
 .msg{background:var(--s2);border-radius:14px;padding:10px 12px;font-size:13.5px}.msg.me{background:var(--tealbg);justify-self:end;max-width:85%}
 .compose{margin:12px 16px 16px;border:1px solid var(--line);border-radius:16px;padding:10px 12px;display:grid;gap:8px}.compose textarea{border:0;outline:0;resize:none;height:56px;background:none;font-size:13.5px}
@@ -89,7 +91,7 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .pop h5{margin:2px 6px 4px;font-size:12px;color:var(--mut);font-weight:500}
 .pop .row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;color:var(--ink2)}.pop .row.cur{background:var(--tealbg);color:var(--teal);font-weight:700}.pop .row .tg{margin-left:auto;font-size:11px;color:var(--mut)}
 .mask{position:fixed;inset:0;background:rgba(15,43,54,.35);z-index:75;display:grid;place-items:center}
-.dlg{background:#fff;border-radius:18px;width:min(460px,92vw);padding:18px;display:grid;gap:10px;box-shadow:var(--shadow)}.dlg h4{margin:0;font-size:16px}.dlg textarea{border:1px solid var(--line);border-radius:12px;padding:10px;height:84px;resize:none;outline:0}.dlg textarea:focus{border-color:var(--teal)}
+.dlg{background:#fff;border-radius:18px;width:min(520px,92vw);padding:18px;display:grid;gap:10px;box-shadow:var(--shadow)}.dlg h4{margin:0;font-size:16px}.dlg textarea{border:1px solid var(--line);border-radius:12px;padding:10px;height:84px;resize:none;outline:0}.dlg textarea:focus{border-color:var(--teal)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chips button{border:1px solid var(--line);border-radius:999px;padding:1px 10px;font-size:12px;color:var(--ink2)}.chips button:hover{border-color:var(--teal);color:var(--teal)}
 .fr{display:flex;gap:8px;justify-content:flex-end}.btn{height:34px;padding:0 16px;border-radius:10px;border:1px solid var(--line);font-weight:600;background:#fff}.btn.pri{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;border-color:transparent}
 .toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#0F2B36;color:#fff;padding:9px 18px;border-radius:12px;z-index:99}
@@ -97,7 +99,7 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 .fab.show{display:grid}
 /* 非全屏：AI 助手变浮层，默认收起 */
 .narrow .side{position:fixed;right:0;top:65px;bottom:0;z-index:50;box-shadow:var(--shadow)}
-.narrow .side.open{width:min(400px,92vw)}.narrow .side>*{min-width:0}
+.narrow .side.open{width:min(var(--sw,400px),92vw)}.narrow .side>*:not(.grip){min-width:0}
 @media (max-width:900px){.ws{grid-template-columns:minmax(0,1fr)}.tree{display:none}.rail{display:none}.app{grid-template-columns:1fr}.steps{display:none}}
 </style>
 </head>
@@ -128,11 +130,11 @@ B.cre={node:'cre',title:'核心创意',paras:[P('目标受众：','女频，主�
   I('31-60集：抄袭丑闻爆发','bad','结构节奏','31–60 集中段缺少反转','一个阶段横跨 30 集却只有一个事件，中段（约第 45 集）容易疲软。建议在中点加一次反转，让观众重新押注。','31-45集：抄袭丑闻爆发；第46集反转：对方反咬她才是抄袭者'),
   I('找到了比爱情更重要的东西——自我','warn','落地具体','结局落点抽象','“找到自我”拍不出来。请换成一个能被镜头捕捉的动作或物件，观众才会记住。','亲手退回了周家的订婚戒指订单，转身走进自己的工作室'),
   I('用卑劣手段污蔑沈清禾抄袭','bad','人物动机','反派手段一笔带过','整部戏的仇恨来自这一件事，却没有具体事件，观众无法为女主愤怒。建议补一个可拍的场景。','在决赛前一晚偷换设计稿，并匿名举报沈清禾抄袭')]};
-B.plan={node:'plan',title:'策划案',paras:[P('题材定位：','现代豪门 × 艺术复仇，80 集竖屏短剧，女频。'),P('沈清禾（女主）：','天才珠宝设计师，隐忍、克制，擅长用作品说话。'),P('林婉清（反派）：','豪门千金，表面温柔，实际控制欲极强。'),P('周时予（前未婚夫）：','周家少爷，懦弱摇摆，在两个女人之间不断后悔。'),
- P('主线结构：','一卡（1-10）宴会重逢；二卡（11-26）暗中布局；三卡（27-62）抄袭反转；结局段（63-80）巡展加冕。'),P('核心爽点：','每 3 集一次身份揭露，每次都是一次精准打脸。'),P('风险提示：','无。')],
+B.plan1={node:'plan',title:'人物小传',paras:[P('沈清禾（女主）：','天才珠宝设计师，隐忍、克制，擅长用作品说话。三年前被退婚后以“Echo”身份归来。'),P('林婉清（反派）：','豪门千金，表面温柔，实际控制欲极强。'),P('周时予（前未婚夫）：','周家少爷，懦弱摇摆，在两个女人之间不断后悔。')],
  iss:[I('隐忍、克制，擅长用作品说话','warn','人物立体','女主缺少缺点和弱点','只有优点的女主很难让人担心。建议加一个会被反派利用的软肋（如对母亲遗作的执念）。','隐忍、克制，擅长用作品说话；但对母亲留下的遗作毫无抵抗力'),
-  I('在两个女人之间不断后悔','bad','关系张力','周时予的功能不清','“后悔”不是行动。他在主线里要么帮女主、要么害女主，请明确他每一卡的立场变化。','在一卡动摇、二卡暗中帮女主、三卡被林婉清逼着站队'),
-  I('无。','bad','风险把控','风险提示为空','抄袭题材、珠宝品牌露出、真人设计师撞名都是常见风险，请至少列出 2 条及对应预案。','抄袭桥段需避免对标真实案件；珠宝品牌用虚构名；设计师名需查重')]};
+  I('在两个女人之间不断后悔','bad','关系张力','周时予的功能不清','“后悔”不是行动。他在主线里要么帮女主、要么害女主，请明确他每一卡的立场变化。','在一卡动摇、二卡暗中帮女主、三卡被林婉清逼着站队')]};
+B.plan2={node:'plan',title:'策划案',paras:[P('题材定位：','现代豪门 × 艺术复仇，80 集竖屏短剧，女频。'),P('主线结构：','一卡（1-10）宴会重逢；二卡（11-26）暗中布局；三卡（27-62）抄袭反转；结局段（63-80）巡展加冕。'),P('核心爽点：','每 3 集一次身份揭露，每次都是一次精准打脸。'),P('风险提示：','无。')],
+ iss:[I('无。','bad','风险把控','风险提示为空','抄袭题材、珠宝品牌露出、真人设计师撞名都是常见风险，请至少列出 2 条及对应预案。','抄袭桥段需避免对标真实案件；珠宝品牌用虚构名；设计师名需查重')]};
 const OL=[['神秘大师归来赴宴','国际珠宝晚宴，众星云集。林婉清挽着未婚夫周时予，享受着众人的恭维。主持人宣布神秘设计大师Echo首次公开亮相，沈清禾身着简约礼服，佩戴着自己设计的荆棘项链，以高贵冷艳的姿态步入会场。她的出现让周时予瞬间僵住，眼神中充满震惊与难以置信。','林婉清在公开场合认出沈清禾，试图用天价委托设计订婚戒指的方式，当众羞辱她。','观众期待看到沈清禾如何应对公开刁难。','沈清禾不仅没有拒绝，反而欣然接下委托。','沈清禾看着林婉清，用全场都能听到的清晰声音说道：“我的设计，只配得上最精彩的故事。”'],
  ['一句话反将一军','沈清禾接下委托后，提出一个条件：戒指的设计过程必须全程公开。林婉清骑虎难下，只能答应。周时予试图私下找她谈话，被她拒绝。','林婉清被迫答应公开设计过程。','观众期待看到沈清禾如何利用“公开”做局。','周时予发现沈清禾手上的旧伤疤。','周时予看着她的手腕，喃喃道：“这道疤……”'],
  ['荆棘之吻设计初现','沈清禾的工作室，她正专注地绘制戒指草图。助理发现草图和三年前大赛的作品高度相似。林婉清的人暗中拍下草图。','林婉清试图提前拿到草图，再次栽赃抄袭。','观众期待看沈清禾是否察觉有人偷拍。','草图其实是故意留下的诱饵。','沈清禾对着镜头轻声说：“拍清楚一点。”'],
@@ -157,10 +159,10 @@ B.sc2.iss=[I('清禾，我们谈谈，我可以解释当年发生的一切，你
 B.sc3.iss=[I('她感到一阵释然，仿佛终于等到了这一刻。','warn','动作可拍','内心活动无法拍摄','“感到”“仿佛”都是心理描写。请写成她做的事：抬眼看镜头、嘴角微扬。','她抬眼望向暗处的镜头，嘴角微微扬起。')];
 const TXT=id=>B[id].paras.map(p=>(p.l||'')+(p.w||'')+(p.t||'')).join('\n');
 // ---------- 状态 ----------
-const S={view:'cre',side:false,mode:'chat',rep:{},cur:null,prev:{},msgs:[['ai','你好，我是 AI 助手。可以直接对话，或补充后续创作要求。区块右上角有「评估」和「重写」。']],pop:null,rw:null};
+const S={stale:{},w:380,view:'cre',side:false,mode:'chat',rep:{},cur:null,prev:{},msgs:[['ai','你好，我是 AI 助手。可以直接对话，或补充后续创作要求。区块右上角有「评估」和「重写」。']],pop:null,rw:null};
 const mq=matchMedia('(min-width:1280px)');let WIDE=mq.matches;S.side=WIDE;
 const VIEWS=[['cre','创意生成'],['plan','策划案'],['ol','集纲 · 一卡','1-10'],['sc','剧本 · 短剧','1-9']];
-const blocksOf=v=>v==='cre'?['cre']:v==='plan'?['plan']:v==='ol'?['ol1','ol2','ol3','ol4']:['sc1','sc2','sc3'];
+const blocksOf=v=>v==='cre'?['cre']:v==='plan'?['plan1','plan2']:v==='ol'?['ol1','ol2','ol3','ol4']:['sc1','sc2','sc3'];
 // ---------- 评估（Demo 规则；正式版由模型按同样维度出报告） ----------
 function evaluate(id){const b=B[id],txt=TXT(id);
   const found=b.iss.filter(i=>txt.includes(i.q)).map(i=>{let pos=0;for(let k=0;k<b.paras.length;k++){const t=b.paras[k].t||'';const x=t.indexOf(i.q);if(x>=0){pos=k*1e4+x;break}}return{...i,pos}}).sort((a,c)=>a.pos-c.pos).map((i,k)=>({...i,n:k+1}));
@@ -175,13 +177,13 @@ function renderTree(){$('#tree').innerHTML=VIEWS.map(([k,n,r])=>{const c=blocksO
 function paraHtml(p,rep){let t=esc(p.t||'');const raw=p.t||'';
   if(rep){for(const i of rep.issues){const q=esc(i.q);if(raw.includes(i.q)){t=t.replace(q,`<span class="mk ${i.sev==='bad'?'':'warn'}" id="mk-${i.id}" data-mk="${i.id}">${q}<span class="nm">${i.n}</span></span>`)}}}
   if(p.k==='act')return`<div class="p act">${t}</div>`;if(p.k==='hd')return`<div class="p hd">${esc(p.t)}</div>`;if(p.k==='meta')return`<div class="p meta">${esc(p.t)}</div>`;
-  if(p.k==='dlg')return`<div class="p dlg"><b>${esc(p.w)}</b> <span class="par">（${esc(p.p)}）</span>：${t}</div>`;
+  if(p.k==='dlg')return`<div class="p dg"><b>${esc(p.w)}</b> <span class="par">（${esc(p.p)}）</span>：${t}</div>`;
   return`<div class="p">${p.l?`<b>${esc(p.l)}</b>`:''}${t}</div>`}
 function toolsHtml(id){const r=S.rep[id];const n=r?r.issues.length:0;
-  return`<div class="tools"><button class="tb dis" data-tip="总节点（后续开放）" data-act="nodes" data-id="${id}">${ic('layers')}</button><button class="tb act ${n?'has':''}" data-tip="评估${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="eval" data-id="${id}">${ic('check')}${n?`<span class="c">${n}</span>`:''}</button><button class="tb" data-tip="重写${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="rw" data-id="${id}">${ic('redo')}</button></div>`}
+  return`<div class="tools"><button class="tb act ${n?'has':''}" data-tip="评估${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="eval" data-id="${id}">${ic('check')}${n?`<span class="c">${n}</span>`:''}</button><button class="tb" data-tip="重写${B[id].node==='cre'||B[id].node==='plan'?'':'本集'}" data-act="rw" data-id="${id}">${ic('redo')}</button></div>`}
 function blockHtml(id){const b=B[id],r=S.rep[id];id=id;b.iss.forEach((i,k)=>i.id=i.id||id+'_'+k);
   const head=b.no?`<span class="no">${b.no}</span><h3>${esc(b.title)}</h3>`:`<h3>${esc(b.title)}</h3>`;
-  return`<section class="blk" id="blk-${id}"><div class="bh">${head}${toolsHtml(id)}</div>${S.prev[id]?`<div class="rwtag">✓ 已重写 · 红标已清除，可再点「评估」复查 <button data-act="undo" data-id="${id}">撤销重写</button></div>`:''}<div class="card"><div class="txt">${b.paras.map(p=>paraHtml(p,r)).join('')}</div></div></section>`}
+  return`<section class="blk" id="blk-${id}"><div class="bh">${head}${toolsHtml(id)}</div>${S.stale[id]?`<div class="rwtag stale">⚠ 上游内容已改动，本区块可能需要同步 <button data-act="rw" data-id="${id}">去重写</button></div>`:''}${S.prev[id]?`<div class="rwtag">✓ 已重写 · 红标已清除，可再点「评估」复查 <button data-act="undo" data-id="${id}">撤销重写</button></div>`:''}<div class="card"><div class="txt">${b.paras.map(p=>paraHtml(p,r)).join('')}</div></div></section>`}
 function renderMain(keep){const m=$('#main');const st=m.scrollTop;const v=S.view;
   const title=v==='cre'?'创意生成':v==='plan'?'策划案':v==='ol'?'集纲 · 一卡':'短剧剧本';
   m.innerHTML=`<div class="doc"><div class="dh"><h2>她的第二张脸</h2><span class="badge">${v==='sc'?'已生成':'已编辑 · v2'}</span><span class="mut">身份博弈流 | 80 集</span></div><div class="hint">✎ 正文支持整块自由编辑，修改后会自动保存；按 Esc 可撤销当前正在编辑的一处。每个区块右上角可「评估」「重写」。</div>${blocksOf(v).map(blockHtml).join('')}</div>`;
@@ -197,7 +199,9 @@ function renderSide(){const sd=$('#side');sd.classList.toggle('open',S.side);$('
     <div class="sec">分项</div><div style="display:grid;gap:8px">${r.dims.map(d=>`<div class="dim"><span>${d[0]}</span><span class="tr"><i style="width:${d[1]}%;background:${col[band(d[1])]}"></i></span><span class="v">${d[1]} ${stt(d[1])}</span></div>`).join('')}</div>
     <div class="sec">修改意见（点击跳转到原文）</div>${r.issues.length?r.issues.map(i=>`<div class="it ${i.sev}" id="it-${i.id}" data-it="${i.id}"><div class="t"><span class="n">${i.n}</span>${esc(i.title)}<span class="st ${i.sev}" style="margin-left:auto">${i.sev==='bad'?'✕ 需修改':'! 建议'}</span></div><q>${esc(i.q.length>38?i.q.slice(0,38)+'…':i.q)}</q><div class="op">${esc(i.op)}</div><div class="go">↗ 定位到原文</div></div>`).join(''):`<div class="msg">✓ 没有发现需要修改的问题。</div>`}
     <div class="note">评估只给意见，不改动、不重写原文。需要修改请点该区块右上角的「重写」。</div></div>`}
-  sd.innerHTML=`<div class="sh">${tabs}<button class="x" data-act="side" aria-label="关闭">${ic('x')}</button></div>${body}`}
+  sd.innerHTML=`<div class="grip" data-grip title="拖动调整宽度，双击恢复默认"></div><div class="sh">${tabs}<button class="x" data-act="side" aria-label="关闭">${ic('x')}</button></div>${body}`}
+const ALL=['plan1','plan2','ol1','ol2','ol3','ol4','sc1','sc2','sc3'];
+function deps(id){const n=B[id].node;if(n==='cre')return ALL;if(n==='plan')return ALL.filter(x=>/^(ol|sc)/.test(x));if(n==='ol'){const k='sc'+id.slice(2);return B[k]?[k]:[]}return[]}
 const label=id=>{const b=B[id];return b.no?`${NODE[b.node]} · ${b.no}`:b.title};
 const scopeName=()=>({cre:'创意生成',plan:'策划案',ol:'集纲 · 一卡',sc:'短剧剧本'})[S.view];
 function renderAll(){renderTop();renderTree();renderMain();renderSide()}
@@ -206,12 +210,13 @@ function runEval(id){S.cur=id;S.mode='scan';S.side=true;renderSide();const pg=$(
 function focusIssue(iid,fromMk){const el=document.getElementById('mk-'+iid);document.querySelectorAll('.mk.focus,.it.focus').forEach(e=>e.classList.remove('focus'));
   const owner=iid.replace(/_\d+$/,'');if(S.cur!==owner){S.cur=owner;S.mode='rep';S.side=true;renderSide()}
   const it=document.getElementById('it-'+iid);if(el){el.classList.add('focus');el.scrollIntoView({block:'center',behavior:'smooth'})}if(it){it.classList.add('focus');if(fromMk)it.scrollIntoView({block:'nearest',behavior:'smooth'})}}
-function doRewrite(id,note){const b=B[id];S.prev[id]=JSON.parse(JSON.stringify(b.paras));
+function doRewrite(id,note,silent){delete S.stale[id];const b=B[id];S.prev[id]=JSON.parse(JSON.stringify(b.paras));
   b.paras=b.paras.map(p=>{if(!p.t)return p;let t=p.t;b.iss.forEach(i=>{if(t.includes(i.q))t=t.replace(i.q,i.fix)});return{...p,t}});
-  delete S.rep[id];renderTop();renderTree();renderMain(true);toast('已重写「'+label(id)+'」'+(note?'（已按你的要求）':''))}
-function openNodes(btn){const r=btn.getBoundingClientRect();const cur=B[btn.dataset.id].node;
-  S.pop=`<div class="pop" style="top:${r.bottom+8}px;left:${Math.max(8,r.right-250)}px"><h5>总节点 · 跨阶段评估 / 重写（后续开放）</h5>${Object.entries(NODE).map(([k,n])=>`<div class="row ${k===cur?'cur':''}">${n}<span class="tg">${k===cur?'当前':'后续开放'}</span></div>`).join('')}</div>`;$('#ov').innerHTML=`<div class="mask" style="background:none;display:block" data-act="closepop"></div>${S.pop}`}
-function openRw(id){S.rw=id;const e=B[id].node;$('#ov').innerHTML=`<div class="mask" data-act="closepop"><div class="dlg"><h4>重写 · ${esc(label(id))}</h4><span class="mut" style="font-size:13px">只重写这一块，其它内容不动。可补充要求（选填）：</span><textarea id="rwn" placeholder="例如：台词更口语、结尾钩子更狠"></textarea><div class="chips"><button data-chip="台词更口语">台词更口语</button><button data-chip="结尾钩子更狠">结尾钩子更狠</button><button data-chip="冲突再强一点">冲突再强一点</button></div><div class="fr"><button class="btn" data-act="closepop">取消</button><button class="btn pri" data-act="rwgo">开始重写</button></div></div></div>`}
+  delete S.rep[id];renderTop();renderTree();renderMain(true);if(!silent)toast('已重写「'+label(id)+'」'+(note?'（已按你的要求）':''))}
+function openRw(id){S.rw=id;const d=deps(id);
+  const warn=d.length?`<div class="warnbox"><b>⚠ 可能会影响其他部分</b><div>改动「${esc(label(id))}」后，已生成的下游内容可能与之不一致：</div><div class="aff">${d.map(x=>`<span>${esc(label(x))}</span>`).join('')}</div><div class="mut" style="font-size:12px">共 ${d.length} 处。是否连同下游一起重写？</div></div>`:'';
+  const btns=d.length?`<button class="btn" data-act="closepop">取消</button><button class="btn" data-act="rwgo" data-scope="self">只重写本区块</button><button class="btn pri" data-act="rwgo" data-scope="all">全部重写（共 ${d.length+1} 处）</button>`:`<button class="btn" data-act="closepop">取消</button><button class="btn pri" data-act="rwgo" data-scope="self">开始重写</button>`;
+  $('#ov').innerHTML=`<div class="mask" data-act="closepop"><div class="dlg"><h4>重写 · ${esc(label(id))}</h4>${warn}<span class="mut" style="font-size:13px">补充要求（选填）：</span><textarea id="rwn" placeholder="例如：台词更口语、结尾钩子更狠"></textarea><div class="chips"><button data-chip="台词更口语">台词更口语</button><button data-chip="结尾钩子更狠">结尾钩子更狠</button><button data-chip="冲突再强一点">冲突再强一点</button></div><div class="fr">${btns}</div></div></div>`}
 document.addEventListener('click',e=>{
   const v=e.target.closest('[data-view]');if(v){S.view=v.dataset.view;$('#main').scrollTop=0;renderTop();renderTree();renderMain();return}
   const mk=e.target.closest('[data-mk]');if(mk){focusIssue(mk.dataset.mk,true);return}
@@ -221,12 +226,21 @@ document.addEventListener('click',e=>{
   const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act,id=a.dataset.id;
   if(act==='side'){S.side=!S.side;renderTop();renderSide()}
   else if(act==='eval'){if(S.rep[id]){S.cur=id;S.mode='rep';S.side=true;renderSide();renderTop()}else runEval(id)}
-  else if(act==='rw')openRw(id);else if(act==='nodes')openNodes(a);
+  else if(act==='rw')openRw(id);
   else if(act==='closepop'){if(a.classList.contains('mask')&&e.target!==a)return;$('#ov').innerHTML=''}
-  else if(act==='rwgo'){const n=$('#rwn').value.trim();const id2=S.rw;$('#ov').innerHTML='';toast('正在重写…');setTimeout(()=>doRewrite(id2,n),900)}
+  else if(act==='rwgo'){const n=$('#rwn').value.trim();const id2=S.rw,all=a.dataset.scope==='all',d=deps(id2);$('#ov').innerHTML='';toast('正在重写…');
+    if(!all){setTimeout(()=>{doRewrite(id2,n,d.length);if(d.length){d.forEach(x=>S.stale[x]=1);renderMain(true);toast('已只重写本区块；下游 '+d.length+' 处标记为「上游已改动」')}},900)}
+    else{const q=[id2,...d];let k=0;const step=()=>{doRewrite(q[k],n,true);k++;if(k<q.length){toast('正在同步重写 '+k+'/'+q.length+'…');setTimeout(step,450)}else toast('已全部重写，共 '+q.length+' 处')};setTimeout(step,700)}}
   else if(act==='undo'){B[id].paras=S.prev[id];delete S.prev[id];renderMain(true);toast('已撤销重写')}
   else if(act==='send'){const t=$('#inp');const x=t.value.trim();if(!x)return;S.msgs.push(['me',x]);S.msgs.push(['ai','收到。（演示：这里会按「'+scopeName()+'」处理你的要求）']);renderSide();const sb=$('#sb');sb.scrollTop=sb.scrollHeight}
 });
+let drag=false;
+document.addEventListener('pointerdown',e=>{if(e.target.closest('[data-grip]')){drag=true;$('#side').classList.add('drag');e.preventDefault()}});
+document.addEventListener('pointermove',e=>{if(!drag)return;setW(innerWidth-e.clientX)});
+document.addEventListener('pointerup',()=>{if(drag){drag=false;$('#side').classList.remove('drag')}});
+document.addEventListener('dblclick',e=>{if(e.target.closest('[data-grip]'))setW(380)});
+function setW(w){S.w=Math.max(300,Math.min(680,Math.round(w)));document.documentElement.style.setProperty('--sw',S.w+'px');try{localStorage.setItem('wd-sw',S.w)}catch(_){}}
+try{const w=+localStorage.getItem('wd-sw');if(w)setW(w)}catch(_){}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#ov').innerHTML=''});
 function applyMQ(){WIDE=mq.matches;$('#app').classList.toggle('narrow',!WIDE);S.side=WIDE;renderTop();renderSide()}
 mq.addEventListener('change',applyMQ);$('#app').classList.toggle('narrow',!WIDE);
